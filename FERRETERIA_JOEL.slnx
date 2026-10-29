@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="FERRETERIA_Web/FERRETERIA_Web.csproj" />
+  <Project Path="ServicioReportes/ServicioReportes.csproj" />
+  <Project Path="ServicioUsuarios/ServicioUsuarios.csproj" />
+  <Project Path="ServicioVentas/ServicioVentas.csproj" />
+</Solution>
