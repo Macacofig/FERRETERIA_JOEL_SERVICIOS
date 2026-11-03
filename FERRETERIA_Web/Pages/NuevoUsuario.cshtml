@@ -1,0 +1,42 @@
+@page
+@model FERRETERIA_Web.Pages.NuevoUsuarioModel
+@{
+    ViewData["Title"] = "Nuevo usuario";
+}
+
+<div class="container py-4" style="max-width: 760px;">
+    <p class="text-muted mb-1">Administración · Personal</p>
+    <h1>Nuevo usuario</h1>
+    <p class="text-muted">La cuenta queda inactiva hasta que el usuario defina su contraseña mediante el correo de activación.</p>
+
+    @if (!string.IsNullOrWhiteSpace(Model.Mensaje))
+    {
+        <div class="alert alert-success" role="status">@Model.Mensaje</div>
+    }
+    @if (!string.IsNullOrWhiteSpace(Model.Error))
+    {
+        <div class="alert alert-danger" role="alert">@Model.Error</div>
+    }
+
+    <form method="post" class="card card-body">
+        <div class="mb-3">
+            <label class="form-label" asp-for="Solicitud.NombreCompleto">Nombre completo</label>
+            <input class="form-control" asp-for="Solicitud.NombreCompleto" maxlength="150" required />
+        </div>
+        <div class="mb-3">
+            <label class="form-label" asp-for="Solicitud.Correo">Correo electrónico</label>
+            <input class="form-control" asp-for="Solicitud.Correo" type="email" maxlength="150" required />
+        </div>
+        <div class="mb-3">
+            <label class="form-label" asp-for="Solicitud.Rol">Rol</label>
+            <select class="form-select" asp-for="Solicitud.Rol" required>
+                <option value="EmpleadoVenta">EmpleadoVenta</option>
+                <option value="Administrador">Administrador</option>
+            </select>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-page="/Personal" class="btn btn-outline-secondary">Cancelar</a>
+            <button type="submit" class="btn btn-primary">Crear cuenta</button>
+        </div>
+    </form>
+</div>

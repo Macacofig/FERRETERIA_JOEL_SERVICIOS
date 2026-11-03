@@ -1,0 +1,35 @@
+@page
+@model FERRETERIA_Web.Pages.ActivarCuentaModel
+@{
+    ViewData["Title"] = "Activar cuenta";
+}
+
+<div class="container py-4" style="max-width: 520px;">
+    <h1>Activar cuenta</h1>
+    <p class="text-muted">Defina su contraseña inicial para activar la cuenta.</p>
+
+    @if (!string.IsNullOrWhiteSpace(Model.Mensaje))
+    {
+        <div class="alert @(Model.Activada ? "alert-success" : "alert-danger")" role="status">@Model.Mensaje</div>
+    }
+
+    @if (!Model.Activada)
+    {
+        <form method="post" asp-route-token="@Request.Query["token"]" class="card card-body">
+            <div class="mb-3">
+                <label class="form-label" asp-for="Solicitud.Password">Contraseña</label>
+                <input class="form-control" asp-for="Solicitud.Password" type="password" minlength="8" autocomplete="new-password" required />
+                <div class="form-text">Mínimo 8 caracteres, con una mayúscula, una minúscula, un número y un carácter especial.</div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label" asp-for="Solicitud.PasswordConfirmacion">Confirmar contraseña</label>
+                <input class="form-control" asp-for="Solicitud.PasswordConfirmacion" type="password" minlength="8" autocomplete="new-password" required />
+            </div>
+            <button type="submit" class="btn btn-primary">Activar cuenta</button>
+        </form>
+    }
+    else
+    {
+        <a asp-page="/Login" class="btn btn-primary">Ir a iniciar sesión</a>
+    }
+</div>

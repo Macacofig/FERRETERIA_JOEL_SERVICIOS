@@ -1,0 +1,36 @@
+@page
+@model FERRETERIA_Web.Pages.LoginModel
+@{
+    ViewData["Title"] = "Iniciar sesión";
+}
+
+<div class="container py-5" style="max-width: 520px;">
+    <h1 class="mb-3">Iniciar sesión</h1>
+    <p class="text-muted">Acceso al sistema interno de Ferretería Joel.</p>
+
+    @if (!string.IsNullOrWhiteSpace(Model.Mensaje))
+    {
+        <div class="alert alert-danger" role="alert">@Model.Mensaje</div>
+    }
+
+    <form method="post" class="card card-body">
+        <div class="mb-3">
+            <label class="form-label" asp-for="Solicitud.NombreUsuario">Nombre de usuario</label>
+            <input class="form-control"
+                   asp-for="Solicitud.NombreUsuario"
+                   maxlength="100"
+                   autocomplete="username"
+                   required />
+        </div>
+        <div class="mb-3">
+            <label class="form-label" asp-for="Solicitud.Password">Contraseña</label>
+            <input class="form-control"
+                   asp-for="Solicitud.Password"
+                   type="password"
+                   maxlength="64"
+                   autocomplete="current-password"
+                   required />
+        </div>
+        <button type="submit" class="btn btn-primary">Ingresar</button>
+    </form>
+</div>
