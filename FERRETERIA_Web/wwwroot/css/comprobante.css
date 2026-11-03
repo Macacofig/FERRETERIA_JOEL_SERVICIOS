@@ -1,0 +1,264 @@
+/* FERRETERÍA JOEL — Comprobante / recibo de venta. */
+
+.fj-page-comprobante .comprobante {
+    max-width: 46rem;
+    margin: 0 auto;
+    background: var(--fondo-elevado);
+    border: 0.0625rem solid var(--borde-suave);
+    border-radius: var(--radius);
+    box-shadow: var(--sombra-card);
+    padding: 1.75rem;
+}
+
+.comprobante-cabecera {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 0.0625rem solid var(--borde-suave);
+}
+
+.comprobante-titulo {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.comprobante-logo {
+    width: 2.4rem;
+    height: 2.4rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    background: var(--amarillo-bg);
+    color: var(--accent);
+}
+
+.comprobante-logo svg {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+.comprobante-marca {
+    display: flex;
+    flex-direction: column;
+}
+
+.comprobante-marca strong {
+    font-size: 1.15rem;
+    letter-spacing: 0.02em;
+}
+
+.comprobante-marca span {
+    color: var(--accent);
+}
+
+.comprobante-marca small {
+    color: var(--texto-ter);
+    font-size: 0.8rem;
+    margin-top: 0.15rem;
+}
+
+.comprobante-datos {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.2rem;
+    font-family: var(--ff-mono);
+    font-size: 0.85rem;
+    color: var(--texto-sec);
+}
+
+.comprobante-estado {
+    padding: 0.15rem 0.6rem;
+    border-radius: var(--radius-pill);
+    font-family: var(--ff-sans);
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.comprobante-estado.es-registrada {
+    background: var(--amarillo-bg);
+    color: var(--success);
+}
+
+.comprobante-estado.es-anulada {
+    background: #fdecea;
+    color: var(--danger);
+}
+
+.comprobante-cliente {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin: 1.25rem 0;
+}
+
+.comprobante-cliente dt {
+    font-size: 0.75rem;
+    color: var(--texto-ter);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.comprobante-cliente dd {
+    margin: 0.15rem 0 0;
+    font-weight: 600;
+    color: var(--texto);
+}
+
+.comprobante-cliente dd .comprobante-ci {
+    display: block;
+    margin-top: 0.1rem;
+    font-size: 0.85rem;
+    font-weight: 400;
+    color: var(--texto-ter);
+}
+
+.comprobante-tabla {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.comprobante-tabla th {
+    text-align: left;
+    font-size: 0.75rem;
+    color: var(--texto-ter);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 0.4rem 0.5rem;
+    border-bottom: 0.0625rem solid var(--borde);
+}
+
+.comprobante-tabla td {
+    padding: 0.55rem 0.5rem;
+    border-bottom: 0.0625rem solid var(--borde-suave);
+    vertical-align: top;
+}
+
+.comprobante-tabla td strong,
+.comprobante-tabla td small {
+    display: block;
+}
+
+.comprobante-tabla td small {
+    color: var(--texto-ter);
+    font-family: var(--ff-mono);
+    font-size: 0.78rem;
+}
+
+.comprobante-num {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.comprobante-totales {
+    margin-top: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.3rem;
+}
+
+.comprobante-totales > div {
+    display: flex;
+    gap: 2.5rem;
+    color: var(--texto-sec);
+}
+
+.comprobante-totales small {
+    color: var(--texto-ter);
+    font-size: 0.75rem;
+}
+
+.comprobante-totales .comprobante-total {
+    color: var(--texto);
+    font-size: 1.1rem;
+    font-weight: 800;
+    border-top: 0.0625rem solid var(--borde);
+    padding-top: 0.5rem;
+}
+
+.comprobante-total-literal {
+    margin-top: 0.75rem;
+    padding-top: 0.5rem;
+    border-top: 0.0625rem dashed var(--borde);
+    color: var(--texto-sec);
+    font-size: 0.85rem;
+    text-align: left;
+    text-transform: uppercase;
+}
+
+.comprobante-total-literal strong {
+    color: var(--texto);
+    font-weight: 700;
+}
+
+.comprobante-anulada {
+    margin-top: 1.25rem;
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-sm);
+    background: #fdecea;
+    color: var(--danger);
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.comprobante-pie {
+    margin: 1.25rem 0 0;
+    padding-top: 0.9rem;
+    border-top: 0.0625rem dashed var(--borde);
+    color: var(--texto-ter);
+    font-size: 0.8rem;
+    text-align: center;
+}
+
+.comprobante-acciones {
+    max-width: 46rem;
+    margin: 1.25rem auto 0;
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+}
+
+/* ---------- Impresión ---------- */
+
+@media print {
+    body {
+        background: #fff !important;
+    }
+
+    .fj-header,
+    .fj-footer,
+    .fj-page-head,
+    .comprobante-acciones {
+        display: none !important;
+    }
+
+    .fj-main {
+        padding: 0 !important;
+        background: #fff !important;
+    }
+
+    .fj-container {
+        max-width: none !important;
+        padding: 0 !important;
+    }
+
+    .comprobante {
+        box-shadow: none !important;
+        border: none !important;
+        max-width: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    .comprobante-tabla td,
+    .comprobante-tabla th {
+        border-color: #999 !important;
+    }
+}

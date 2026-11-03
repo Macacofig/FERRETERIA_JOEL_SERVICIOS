@@ -1,0 +1,101 @@
+@page
+@model FERRETERIA__Joel.Pages.BitacoraModel
+@{
+    ViewData["Title"] = "Bitácora";
+    ViewData["ActiveMenu"] = "Bitacora";
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/productos.css" asp-append-version="true" />
+}
+
+<div class="fj-container fj-page-products">
+
+    <section class="fj-page-head">
+        <p class="fj-eyebrow">Módulo · Auditoría</p>
+        <h1>Bitácora</h1>
+        <p class="fj-page-sub">Eventos de sesión y operaciones INSERT, UPDATE y DELETE registrados por el servicio de usuarios. No se almacenan contraseñas, hashes ni tokens.</p>
+    </section>
+
+    @if (!string.IsNullOrWhiteSpace(Model.MensajeError))
+    {
+        <div class="fj-alert" role="alert">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
+            <span>@Model.MensajeError</span>
+        </div>
+    }
+
+    <div class="fj-card fj-table-card">
+        <div class="fj-table-wrap">
+            <table class="fj-table">
+                <thead>
+                    <tr>
+                        <th scope="col">Fecha y hora</th>
+                        <th scope="col">Responsable</th>
+                        <th scope="col">Rol</th>
+                        <th scope="col">Operación</th>
+                        <th scope="col">Entidad</th>
+                        <th scope="col" class="fj-td-estado">Registro</th>
+                        <th scope="col" class="fj-td-estado">Resultado</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @if (Model.Registros.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="7" class="fj-table-vacio">
+                                <div class="fj-empty">
+                                    <span class="fj-empty-ico" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /></svg>
+                                    </span>
+                                    <p>Sin registros de auditoría</p>
+                                    <span>Cuando se realicen operaciones, aparecerán aquí.</span>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+
+                    @foreach (var registro in Model.Registros)
+                    {
+                        string operacion = registro.Accion?.ToUpperInvariant() ?? "";
+                        string claseOperacion = operacion switch
+                        {
+                            "INSERT" => "var(--success)",
+                            "UPDATE" => "var(--warning)",
+                            "DELETE" => "var(--danger)",
+                            _ => "var(--texto-ter)"
+                        };
+
+                        <tr>
+                            <td class="fj-td-secundario">
+                                @registro.FechaHora.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss")
+                            </td>
+                            <td>
+                                <span class="fj-nombre">@(string.IsNullOrWhiteSpace(registro.NombreUsuario) ? "—" : registro.NombreUsuario)</span>
+                                @if (registro.IdUsuario.HasValue)
+                                {
+                                    <span class="fj-nombre-sub">ID @registro.IdUsuario</span>
+                                }
+                            </td>
+                            <td class="fj-td-secundario">@registro.TipoUsuario</td>
+                            <td>
+                                <span class="fj-pill" style="--pill: @claseOperacion;">@operacion</span>
+                            </td>
+                            <td class="fj-td-secundario">
+                                @(string.IsNullOrWhiteSpace(registro.Entidad) ? "—" : registro.Entidad)
+                            </td>
+                            <td class="fj-td-estado">
+                                @(registro.IdRegistroAfectado?.ToString() ?? "—")
+                            </td>
+                            <td class="fj-td-estado">
+                                <span class="fj-pill" style="--pill: @(registro.Resultado == "EXITOSO" ? "var(--success)" : "var(--danger)");">
+                                    @registro.Resultado
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

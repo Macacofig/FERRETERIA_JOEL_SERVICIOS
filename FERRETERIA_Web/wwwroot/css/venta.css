@@ -1,0 +1,368 @@
+/* FERRETERÍA JOEL — Pantalla de registro de venta. */
+
+/* ---------- Disposición general (30% / 70% en escritorio) ---------- */
+
+.fj-page-venta .fj-venta-grid {
+    display: grid;
+    grid-template-columns: 30% 1fr;
+    gap: var(--fv-gap);
+    align-items: start;
+}
+
+.fj-venta-panel {
+    padding: var(--fv-panel-pad);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    min-width: 0;
+}
+
+.fj-venta-titulo {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--texto);
+}
+
+/* ---------- Buscadores ---------- */
+
+.fj-buscador {
+    position: relative;
+}
+
+.fj-buscador input {
+    width: 100%;
+    height: var(--fv-control-h);
+    padding: 0 0.875rem;
+    border: 0.0625rem solid var(--borde);
+    border-radius: var(--fv-radio);
+    background: var(--fondo-elevado);
+    color: var(--texto);
+    font: inherit;
+}
+
+.fj-buscador input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 0.1875rem var(--amarillo-bg);
+}
+
+.fj-resultados {
+    position: absolute;
+    z-index: 30;
+    top: calc(100% + 0.25rem);
+    left: 0;
+    right: 0;
+    max-height: 16rem;
+    overflow-y: auto;
+    background: var(--fondo-elevado);
+    border: 0.0625rem solid var(--borde);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--sombra-card);
+    padding: 0.25rem;
+}
+
+.fj-resultado {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    width: 100%;
+    padding: 0.55rem 0.7rem;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+    font: inherit;
+    color: var(--texto);
+}
+
+.fj-resultado:hover:not(:disabled),
+.fj-resultado:focus-visible {
+    background: var(--fondo-panel);
+    outline: none;
+}
+
+.fj-resultado:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+
+.fj-resultado-titulo {
+    font-weight: 600;
+}
+
+.fj-resultado-sub {
+    font-size: 0.8rem;
+    color: var(--texto-ter);
+}
+
+.fj-resultado-vacio {
+    margin: 0;
+    padding: 0.6rem 0.7rem;
+    font-size: 0.85rem;
+    color: var(--texto-ter);
+}
+
+.fj-seleccion {
+    margin: 0.6rem 0 0;
+    padding: 0.55rem 0.7rem;
+    border-radius: var(--radius-sm);
+    background: var(--fondo-panel);
+    color: var(--texto);
+    font-size: 0.9rem;
+}
+
+.fj-seleccion-ico {
+    color: var(--success);
+    font-weight: 700;
+    margin-right: 0.35rem;
+}
+
+/* ---------- Tabla de líneas ---------- */
+
+.fj-venta-tabla-wrap {
+    max-height: 22rem;
+    overflow-y: auto;
+    overflow-x: auto;
+}
+
+.fj-venta-vacio {
+    margin: 0;
+}
+
+#tablaLineas thead th:nth-child(2) {
+    white-space: nowrap;
+}
+
+#tablaLineas th:nth-child(2),
+#tablaLineas td:nth-child(2) {
+    width: 6rem;
+}
+
+#tablaLineas th:nth-child(3),
+#tablaLineas td:nth-child(3) {
+    width: 7rem;
+}
+
+#tablaLineas th:nth-child(4),
+#tablaLineas td:nth-child(4) {
+    width: 7rem;
+}
+
+#tablaLineas th:nth-child(5),
+#tablaLineas td:nth-child(5) {
+    width: 8rem;
+}
+
+#tablaLineas th:nth-child(6),
+#tablaLineas td:nth-child(6) {
+    width: 3.5rem;
+}
+
+.fj-cantidad-input {
+    width: 4.5rem;
+    height: 2.25rem;
+    padding: 0 0.55rem;
+    border: 0.0625rem solid var(--borde);
+    border-radius: var(--fv-radio);
+    background: var(--fondo-elevado);
+    color: var(--texto);
+    font: inherit;
+    text-align: right;
+}
+
+.fj-cantidad-input:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+/* ---------- Totales ---------- */
+
+.fj-venta-totales {
+    margin-top: auto;
+    border-top: 0.0625rem solid var(--borde-suave);
+    padding-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.fj-venta-total-fila {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    color: var(--texto-sec);
+    font-size: 0.95rem;
+}
+
+.fj-venta-total-nota {
+    color: var(--texto-ter);
+    font-size: 0.8rem;
+}
+
+.fj-venta-total-final {
+    margin-top: 0.35rem;
+    padding-top: 0.6rem;
+    border-top: 0.0625rem dashed var(--borde);
+    color: var(--texto);
+    font-size: 1.35rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+}
+
+.fj-venta-total-final #totalFinal {
+    font-variant-numeric: tabular-nums;
+}
+
+.fj-venta-politica {
+    margin: 0.2rem 0 0;
+    font-size: 0.8rem;
+    color: var(--success);
+}
+
+.fj-venta-acciones {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 0.5rem;
+}
+
+.fj-venta-acciones .fj-btn {
+    min-width: 11rem;
+}
+
+/* ---------- Éxito (compacto, en fila en escritorio) ---------- */
+
+.venta-alerta-exito {
+    align-items: flex-start;
+    padding: 0.75rem 1rem;
+    margin-bottom: var(--fv-gap);
+}
+
+.venta-alerta-exito > svg {
+    width: 1rem;
+    height: 1rem;
+    margin-top: 0.125rem;
+}
+
+.venta-exito {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: 1.125rem;
+    row-gap: 0.25rem;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.venta-exito-nota {
+    flex-basis: 100%;
+    font-size: 0.8rem;
+    color: var(--texto-sec);
+}
+
+.venta-exito-accion {
+    margin-left: auto;
+    margin-top: 0;
+    white-space: nowrap;
+}
+
+/* ---------- Alta de cliente desde la venta ---------- */
+
+.fj-form-ayuda {
+    margin: 0.35rem 0 0;
+    font-size: 0.85rem;
+    color: var(--texto-ter);
+}
+
+.fj-link-btn {
+    background: none;
+    border: 0;
+    padding: 0;
+    color: var(--accent);
+    font: inherit;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.fj-link-btn:hover {
+    text-decoration: none;
+}
+
+.fj-optional {
+    color: var(--texto-ter);
+    font-weight: 400;
+}
+
+#nuevoClienteModal {
+    z-index: 2100;
+}
+
+#nuevoClienteIntro {
+    margin-bottom: 0;
+}
+
+.fj-modal-dialog-form {
+    max-width: 30rem;
+    max-height: calc(100vh - 2rem);
+    overflow-y: auto;
+}
+
+.fj-modal-dialog-form .fj-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+}
+
+.fj-modal-dialog-form .fj-modal-actions {
+    justify-content: flex-end;
+    margin-top: 1.25rem;
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 60rem) {
+    .fj-page-venta .fj-venta-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 640px) {
+    .venta-exito-accion {
+        flex-basis: 100%;
+        margin-left: 0;
+    }
+
+    .venta-exito {
+        column-gap: 0.625rem;
+    }
+
+    .fj-venta-acciones .fj-btn {
+        width: 100%;
+    }
+
+    #tablaLineas th:nth-child(2),
+    #tablaLineas td:nth-child(2) {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    /* En pantallas muy estrechas se oculta el Importe por línea y se
+       reducen las columnas numéricas para que la tabla no se recorte
+       (el total se muestra debajo). La tabla es desplazable si hiciera falta. */
+    #tablaLineas th:nth-child(5),
+    #tablaLineas td:nth-child(5) {
+        display: none;
+    }
+
+    #tablaLineas th:nth-child(3),
+    #tablaLineas td:nth-child(3) {
+        width: 5.5rem;
+    }
+
+    #tablaLineas th:nth-child(4),
+    #tablaLineas td:nth-child(4) {
+        width: 5rem;
+    }
+}

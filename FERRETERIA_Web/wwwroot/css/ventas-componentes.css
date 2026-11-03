@@ -1,0 +1,370 @@
+/* ============================================================
+   FERRETERÍA JOEL · Componentes compartidos del módulo Ventas
+   ------------------------------------------------------------
+   Encabezados, tablas, alertas, celdas, botones-icono y estado
+   vacío. Estas clases base vivían solo en productos.css, que las
+   vistas de Ventas no cargan: por eso los SVG sin tamaño crecían
+   (iconos gigantes) y las tablas quedaban sin formato.
+
+   Este archivo se carga únicamente en las páginas del módulo
+   (Registrar venta, Historial y Comprobante), por lo que no
+   afecta a los demás módulos.
+   ============================================================ */
+
+/* ---------- Tokens del módulo ----------
+   Medidas y espaciados unificados para todo el módulo Ventas.
+   Quedan aquí (y no en site.css) porque son exclusivas de este
+   módulo y no deben influir en los demás. */
+:root {
+    --fv-radio: 0.625rem;            /* radio de controles y alertas */
+    --fv-control-h: 2.625rem;        /* altura estándar de inputs/buscadores */
+    --fv-panel-pad: 1.5rem;          /* padding interno de las tarjetas */
+    --fv-gap: 1.25rem;               /* separación entre tarjetas/paneles */
+    --fv-toolbar-gap: 1rem;          /* margen inferior de la barra de herramientas */
+    --fv-alerta-pad: 0.875rem 1.125rem;
+    --fv-alerta-bot: 1.25rem;
+    --fv-accion: 2rem;               /* botones-icono de las tablas */
+    --fv-accion-ico: 1.0625rem;      /* tamaño del icono en botones-icono */
+    --fv-tabla-pad: 15px 20px;       /* padding de las celdas de tabla */
+    --fv-tabla-fs: 0.9rem;           /* tamaño de letra de las tablas */
+    --fv-th-fs: 0.68rem;             /* tamaño de letra de los encabezados */
+}
+
+/* ---------- Encabezado de página ---------- */
+.fj-page-head {
+    margin-bottom: 30px;
+}
+
+.fj-page-head h1 {
+    margin: 0 0 6px;
+    font-size: clamp(1.7rem, 3.6vw, 2.4rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+}
+
+.fj-page-sub {
+    margin: 0;
+    color: var(--texto-sec);
+    font-size: 0.95rem;
+}
+
+/* ---------- Alertas e información ---------- */
+.fj-alert,
+.fj-notice {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: var(--fv-alerta-pad);
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    margin-bottom: var(--fv-alerta-bot);
+}
+
+.fj-alert svg,
+.fj-notice svg {
+    width: 18px;
+    height: 18px;
+    flex: none;
+}
+
+.fj-alert {
+    background: rgba(255, 69, 58, 0.09);
+    border: 1px solid rgba(255, 69, 58, 0.3);
+    color: var(--danger);
+}
+
+.fj-alert-success {
+    background: rgba(46, 204, 113, 0.09);
+    border-color: rgba(46, 204, 113, 0.32);
+    color: var(--success);
+}
+
+.fj-alert-lista {
+    margin: 6px 0 0;
+    padding-left: 20px;
+    line-height: 1.5;
+}
+
+.fj-notice {
+    background: var(--amarillo-bg);
+    border: 1px solid var(--amarillo-borde);
+    color: var(--texto-sec);
+}
+
+.fj-notice strong {
+    color: var(--amarillo-texto);
+}
+
+/* ---------- Barra de herramientas (contador / acciones) ---------- */
+.fj-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: var(--fv-toolbar-gap);
+}
+
+.fj-toolbar-count {
+    margin: 0;
+    color: var(--texto-sec);
+    font-size: 0.88rem;
+}
+
+.fj-toolbar-count strong {
+    color: var(--texto);
+    font-size: 1rem;
+}
+
+.fj-toolbar-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+
+.fj-toolbar-actions .fj-btn svg {
+    width: 1.0625rem;
+    height: 1.0625rem;
+}
+
+/* ---------- Tabla ---------- */
+.fj-table-card {
+    overflow: hidden;
+}
+
+.fj-table-wrap {
+    overflow-x: hidden;
+    max-width: 100%;
+}
+
+.fj-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: var(--fv-tabla-fs);
+    table-layout: fixed;
+}
+
+.fj-table thead th {
+    padding: var(--fv-tabla-pad);
+    font-size: var(--fv-th-fs);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--texto-ter);
+    border-bottom: 1px solid var(--borde);
+    background: var(--fondo-panel);
+    white-space: normal;
+    overflow-wrap: break-word;
+}
+
+.fj-table tbody td {
+    padding: var(--fv-tabla-pad);
+    border-bottom: 1px solid var(--borde-suave);
+    vertical-align: middle;
+    overflow-wrap: break-word;
+}
+
+.fj-table tbody tr {
+    transition: background 0.12s ease;
+}
+
+.fj-table tbody tr:hover {
+    background: rgba(0, 0, 0, 0.035);
+}
+
+.fj-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* ---------- Celdas y contenido ---------- */
+.fj-codigo {
+    display: inline-block;
+    white-space: nowrap;
+    font-family: var(--ff-mono);
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--amarillo-texto);
+    background: var(--amarillo-bg);
+    border: 1px solid var(--amarillo-borde);
+    padding: 4px 10px;
+    border-radius: 6px;
+    letter-spacing: 0.04em;
+    line-height: 1.3;
+}
+
+.fj-nombre {
+    display: block;
+    font-weight: 650;
+    color: var(--texto);
+}
+
+.fj-nombre-sub {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--texto-ter);
+    margin-top: 1px;
+}
+
+.fj-td-secundario {
+    color: var(--texto-sec);
+}
+
+.fj-td-precio {
+    white-space: nowrap;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.fj-precio {
+    font-weight: 650;
+    color: var(--texto);
+}
+
+.fj-currency {
+    color: var(--texto-ter);
+    font-size: 0.78rem;
+    margin-left: 2px;
+}
+
+.fj-td-cantidad {
+    white-space: nowrap;
+}
+
+.fj-td-estado {
+    white-space: nowrap;
+}
+
+.fj-td-acciones {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.fj-acciones {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    justify-content: flex-end;
+}
+
+/* ---------- Botones-icono (iconos 16–20 px) ---------- */
+.fj-btn-icon {
+    width: var(--fv-accion);
+    height: var(--fv-accion);
+    padding: 0;
+    border-radius: 0.5rem;
+    flex: none;
+}
+
+.fj-btn-icon svg {
+    width: var(--fv-accion-ico);
+    height: var(--fv-accion-ico);
+}
+
+/* ---------- Ficha de detalle (modal) ---------- */
+.fj-detalle {
+    margin: 0 0 1.5rem;
+    text-align: left;
+    display: grid;
+    gap: 0.875rem;
+}
+
+.fj-detalle dt {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--texto-ter);
+    margin-bottom: 0.1875rem;
+}
+
+.fj-detalle dd {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: var(--texto-sec);
+    overflow-wrap: anywhere;
+}
+
+/* ---------- Estado vacío (ilustración 48–64 px) ---------- */
+.fj-table tbody td.fj-table-vacio {
+    padding: 0;
+}
+
+.fj-empty {
+    padding: 56px 20px;
+    text-align: center;
+}
+
+.fj-empty-ico {
+    display: inline-flex;
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+    align-items: center;
+    justify-content: center;
+    background: var(--fondo-panel);
+    color: var(--texto-ter);
+    margin-bottom: 14px;
+}
+
+.fj-empty-ico svg {
+    width: 56px;
+    height: 56px;
+}
+
+.fj-empty p {
+    margin: 0 0 4px;
+    font-weight: 700;
+    color: var(--texto);
+}
+
+.fj-empty > span:last-child {
+    display: block;
+    color: var(--texto-ter);
+    font-size: 0.84rem;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1024px) {
+    .fj-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .fj-toolbar-actions {
+        justify-content: flex-end;
+    }
+
+    .fj-codigo,
+    .fj-nombre-sub,
+    .fj-td-secundario {
+        white-space: normal;
+    }
+
+    .fj-table thead th,
+    .fj-table tbody td {
+        padding: 12px 12px;
+    }
+}
+
+@media (max-width: 640px) {
+    .fj-table {
+        font-size: 0.82rem;
+    }
+
+    .fj-table thead th,
+    .fj-table tbody td {
+        padding: 10px 8px;
+    }
+
+    .fj-toolbar-actions {
+        justify-content: stretch;
+    }
+
+    .fj-toolbar-actions .fj-btn {
+        flex: 1;
+    }
+}

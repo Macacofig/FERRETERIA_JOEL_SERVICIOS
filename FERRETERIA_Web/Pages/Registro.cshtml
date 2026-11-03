@@ -1,0 +1,149 @@
+@page
+@model FERRETERIA__Joel.Pages.RegistroModel
+@{
+    ViewData["Title"] = "Registrar empleado";
+    ViewData["ActiveMenu"] = "Registro";
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/productos.css" asp-append-version="true" />
+}
+
+<div class="fj-container fj-page-products">
+    <section class="fj-page-head">
+        <p class="fj-eyebrow">Administración · Personal</p>
+        <h1>Registrar empleado</h1>
+        <p class="fj-page-sub">Crea cuentas con rol <strong>EmpleadoVenta</strong> o <strong>Administrador</strong>. El empleado definirá su contraseña desde el enlace que reciba por correo.</p>
+    </section>
+
+    @if (TempData["Mensaje"] != null)
+    {
+        <div class="fj-alert fj-alert-success" role="status">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>
+            <div>
+                <span>@TempData["Mensaje"]</span>
+            </div>
+        </div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(Model.NombreUsuarioGenerado))
+    {
+        <div class="fj-alert fj-alert-success" role="status">
+            <div>
+                <span>El nombre de usuario generado es <strong>@Model.NombreUsuarioGenerado</strong>. El empleado puede iniciar sesión con él o con su correo.</span>
+            </div>
+        </div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(Model.EnlaceActivacion))
+    {
+        <div class="fj-alert" role="status">
+            <div>
+                <strong>Modo desarrollo (sin SMTP configurado).</strong>
+                <p>El enlace de activación no se envió por correo. Cópialo aquí para probar el flujo:</p>
+                <p><a href="@Model.EnlaceActivacion">@Model.EnlaceActivacion</a></p>
+            </div>
+        </div>
+    }
+
+    @if (Model.Errores.Any())
+    {
+        <div class="fj-alert" role="alert">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
+            <div>
+                <strong>No se pudo completar la operación:</strong>
+                <ul class="fj-alert-lista">
+                    @foreach (var error in Model.Errores)
+                    {
+                        <li>@error</li>
+                    }
+                </ul>
+
+                @if (!string.IsNullOrWhiteSpace(Model.CorreoDuplicado))
+                {
+                    @if (Model.CorreoDuplicadoPendiente)
+                    {
+                        <p style="margin:.75rem 0 .5rem;">
+                            La cuenta <strong>@Model.CorreoDuplicado</strong> aún no fue activada.
+                            Puede reenviarle el enlace de activación.
+                        </p>
+                        <form method="post" asp-page-handler="ReenviarCorreo" style="display:inline;">
+                            <input type="hidden" name="correo" value="@Model.CorreoDuplicado" />
+                            <button type="submit" class="fj-btn fj-btn-primary" style="padding:.35rem .8rem;font-size:.85rem;">
+                                Reenviar enlace de activación
+                            </button>
+                        </form>
+                    }
+                    else
+                    {
+                        <p style="margin:.75rem 0 .5rem;">
+                            La cuenta <strong>@Model.CorreoDuplicado</strong> ya está activa.
+                            Si el empleado olvidó su contraseña, deberá restablecerla.
+                        </p>
+                    }
+                }
+            </div>
+        </div>
+    }
+
+    <form method="post" asp-page-handler="Registrar" class="fj-card fj-form" novalidate>
+        <div class="fj-form-grid">
+            <div class="fj-form-field @(Model.ErroresCampo.ContainsKey("Rol") ? "fj-form-field-error" : "")">
+                <label class="fj-form-label" asp-for="Solicitud.Rol">Tipo de empleado</label>
+                <select class="fj-input" asp-for="Solicitud.Rol" required>
+                    <option value="EmpleadoVenta">EmpleadoVenta</option>
+                    <option value="Administrador">Administrador</option>
+                </select>
+                <span class="fj-form-hint">El rol determina los permisos del nuevo usuario.</span>
+                @if (Model.ErroresCampo.TryGetValue("Rol", out var errorRol))
+                {
+                    <p class="fj-form-error" role="alert">@errorRol</p>
+                }
+            </div>
+
+            <div class="fj-form-field @(Model.ErroresCampo.ContainsKey("Nombre") ? "fj-form-field-error" : "")">
+                <label class="fj-form-label" asp-for="Solicitud.Nombre">Nombre</label>
+                <input class="fj-input" asp-for="Solicitud.Nombre" maxlength="100" placeholder="Ej: María" required />
+                @if (Model.ErroresCampo.TryGetValue("Nombre", out var errorNombre))
+                {
+                    <p class="fj-form-error" role="alert">@errorNombre</p>
+                }
+            </div>
+
+            <div class="fj-form-field @(Model.ErroresCampo.ContainsKey("Apellido") ? "fj-form-field-error" : "")">
+                <label class="fj-form-label" asp-for="Solicitud.Apellido">Apellido</label>
+                <input class="fj-input" asp-for="Solicitud.Apellido" maxlength="100" placeholder="Ej: Gómez" required />
+                @if (Model.ErroresCampo.TryGetValue("Apellido", out var errorApellido))
+                {
+                    <p class="fj-form-error" role="alert">@errorApellido</p>
+                }
+            </div>
+
+            <div class="fj-form-field @(Model.ErroresCampo.ContainsKey("Telefono") ? "fj-form-field-error" : "")">
+                <label class="fj-form-label" asp-for="Solicitud.Telefono">Teléfono</label>
+                <input class="fj-input" asp-for="Solicitud.Telefono" maxlength="8" inputmode="numeric" placeholder="Ej: 71234567" required />
+                @if (Model.ErroresCampo.TryGetValue("Telefono", out var errorTelefono))
+                {
+                    <p class="fj-form-error" role="alert">@errorTelefono</p>
+                }
+            </div>
+
+            <div class="fj-form-field @(Model.ErroresCampo.ContainsKey("CorreoElectronico") ? "fj-form-field-error" : "")">
+                <label class="fj-form-label" asp-for="Solicitud.CorreoElectronico">Correo electrónico</label>
+                <input class="fj-input" asp-for="Solicitud.CorreoElectronico" type="email" maxlength="150" placeholder="correo@ejemplo.com" required />
+                <span class="fj-form-hint">A este correo llegará el enlace de activación (válido 10 minutos).</span>
+                @if (Model.ErroresCampo.TryGetValue("CorreoElectronico", out var errorCorreo))
+                {
+                    <p class="fj-form-error" role="alert">@errorCorreo</p>
+                }
+            </div>
+        </div>
+
+        <div class="fj-form-actions">
+            <a asp-page="/Personal" class="fj-btn fj-btn-ghost">Cancelar</a>
+            <button type="submit" class="fj-btn fj-btn-primary">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /></svg>
+                Crear cuenta
+            </button>
+        </div>
+    </form>
+</div>

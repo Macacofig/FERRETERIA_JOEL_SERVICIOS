@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Diagnostics;
 
-namespace FERRETERIA_Web.Pages
+namespace FERRETERIA__Joel.Pages
 {
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     [IgnoreAntiforgeryToken]
@@ -12,9 +12,10 @@ namespace FERRETERIA_Web.Pages
 
         public bool ShowRequestId => !string.IsNullOrEmpty(RequestId);
 
-        public void OnGet()
+        public Task OnGetAsync()
         {
             RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
+            return Task.CompletedTask;
         }
     }
 
