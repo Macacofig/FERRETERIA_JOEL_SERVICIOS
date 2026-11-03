@@ -13,11 +13,13 @@ builder.Configuration.AddEnvironmentVariables();
 builder.Configuration.AddInMemoryCollection(
     configuracionLocal);
 
-string claveUrl = configuracionLocal.GetValueOrDefault("UrlProteccion:Clave")
-    ?? configuracionLocal.GetValueOrDefault("Jwt:Key")
-    ?? builder.Configuration["UrlProteccion:Clave"]
-    ?? builder.Configuration["Jwt:Key"]
-    ?? string.Empty;
+string claveUrl = PrimeraNoVacia(
+    configuracionLocal.GetValueOrDefault("UrlProteccion:Clave"),
+    configuracionLocal.GetValueOrDefault("Jwt:Key"),
+    Environment.GetEnvironmentVariable("UrlProteccion__Clave"),
+    Environment.GetEnvironmentVariable("Jwt__Key"),
+    builder.Configuration["UrlProteccion:Clave"],
+    builder.Configuration["Jwt:Key"]);
 
 if (string.IsNullOrWhiteSpace(claveUrl))
 {
@@ -153,4 +155,10 @@ static Dictionary<string, string?> CargarVariablesEntorno(string directorio)
     }
 
     return variables;
+}
+
+static string PrimeraNoVacia(params string?[] valores)
+{
+    return valores.FirstOrDefault(valor => !string.IsNullOrWhiteSpace(valor))
+        ?? string.Empty;
 }

@@ -71,7 +71,10 @@ if (claveJwt.Length < 32)
 // El token de activaciÃ³n se cifra con una clave independiente cuando se
 // configura. Para el despliegue mÃ­nimo se deriva de Jwt:Key, de modo que el
 // .env solo necesita las variables JWT compartidas por los servicios.
-string claveUrl = builder.Configuration["UrlProteccion:Clave"] ?? claveJwt;
+string? claveUrlConfigurada = builder.Configuration["UrlProteccion:Clave"];
+string claveUrl = string.IsNullOrWhiteSpace(claveUrlConfigurada)
+    ? claveJwt
+    : claveUrlConfigurada;
 
 UrlProtectorApi.Inicializar(claveUrl);
 

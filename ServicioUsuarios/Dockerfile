@@ -21,4 +21,4 @@ EXPOSE 8080
 
 COPY --from=build /app/publish .
 
-ENTRYPOINT ["dotnet", "ServicioUsuarios.dll"]
+ENTRYPOINT ["dotnet", "FERRETERIA__Joel.ServicioUsuarios.dll"]
