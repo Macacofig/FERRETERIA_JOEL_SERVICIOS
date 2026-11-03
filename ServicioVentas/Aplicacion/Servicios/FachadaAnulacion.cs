@@ -25,7 +25,6 @@ namespace ServicioVentas.Aplicacion.Servicios
         private readonly IUnidadDeTrabajo _unidadDeTrabajo;
         private readonly IContextoUsuario _contextoUsuario;
         private readonly FachadaActualizacionStock _stock;
-        private readonly MySqlProductoRepository _productos;
         private readonly MySqlCategoriaRepository _categorias;
 
         public FachadaAnulacion(
@@ -35,7 +34,6 @@ namespace ServicioVentas.Aplicacion.Servicios
             IUnidadDeTrabajo unidadDeTrabajo,
             IContextoUsuario contextoUsuario,
             FachadaActualizacionStock stock,
-            MySqlProductoRepository productos,
             MySqlCategoriaRepository categorias)
         {
             _ventas = ventas;
@@ -44,7 +42,6 @@ namespace ServicioVentas.Aplicacion.Servicios
             _unidadDeTrabajo = unidadDeTrabajo;
             _contextoUsuario = contextoUsuario;
             _stock = stock;
-            _productos = productos;
             _categorias = categorias;
         }
 
