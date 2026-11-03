@@ -1,7 +1,7 @@
-namespace FERRETERIA__Joel.Aplicacion.Modelos
+﻿namespace FERRETERIA__Joel.Aplicacion.Modelos
 {
     /// <summary>
-    /// Datos de la identidad autenticada. Solo los empleados inician sesión,
+    /// Datos de la identidad autenticada. Solo los empleados inician sesiÃ³n,
     /// con rol operativo Administrador o EmpleadoVenta.
     /// </summary>
     public class SesionUsuario
@@ -19,3 +19,4 @@ namespace FERRETERIA__Joel.Aplicacion.Modelos
         public string Rol { get; init; } = string.Empty;
     }
 }
+

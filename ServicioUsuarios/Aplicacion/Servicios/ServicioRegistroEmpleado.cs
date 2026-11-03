@@ -1,4 +1,4 @@
-using FERRETERIA__Joel.Aplicacion.Modelos;
+﻿using FERRETERIA__Joel.Aplicacion.Modelos;
 using FERRETERIA__Joel.Dominio.Constantes;
 using FERRETERIA__Joel.Dominio.Entidades;
 using FERRETERIA__Joel.Dominio.Puertos;
@@ -7,14 +7,14 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
 {
     /// <summary>
     /// Alta de personal autorizada por un administrador. Valida los datos,
-    /// verifica que el correo sea único, genera el nombre de usuario, asigna el
+    /// verifica que el correo sea Ãºnico, genera el nombre de usuario, asigna el
     /// rol elegido y crea la cuenta en estado PendienteActivacion con un token
-    /// de activación. La contraseña queda nula y el enlace de activación se
-    /// envía por correo (válido 10 minutos).
+    /// de activaciÃ³n. La contraseÃ±a queda nula y el enlace de activaciÃ³n se
+    /// envÃ­a por correo (vÃ¡lido 10 minutos).
     /// </summary>
     public class ServicioRegistroEmpleado
     {
-        /// <summary>Vigencia del token de activación.</summary>
+        /// <summary>Vigencia del token de activaciÃ³n.</summary>
         public static readonly TimeSpan VigenciaToken =
             TimeSpan.FromMinutes(10);
 
@@ -53,7 +53,7 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
             {
                 erroresCampo[
                     nameof(IRegistroCredenciales.CorreoElectronico)] =
-                    "El correo ya está registrado.";
+                    "El correo ya estÃ¡ registrado.";
             }
 
             if (erroresCampo.Any())
@@ -112,7 +112,7 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
         }
 
         /// <summary>
-        /// Reenvía el enlace de activación a un empleado pendiente. Genera un
+        /// ReenvÃ­a el enlace de activaciÃ³n a un empleado pendiente. Genera un
         /// token nuevo (invalida el anterior), reinicia su vigencia y vuelve a
         /// enviar el correo.
         /// </summary>
@@ -138,7 +138,7 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
                     Exitoso = false,
                     Errores = new List<string>
                     {
-                        "La cuenta ya está activa; no requiere activación."
+                        "La cuenta ya estÃ¡ activa; no requiere activaciÃ³n."
                     }
                 };
             }
@@ -182,7 +182,7 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
         }
 
         /// <summary>
-        /// Reenvía el enlace de activación a una cuenta pendiente identificada
+        /// ReenvÃ­a el enlace de activaciÃ³n a una cuenta pendiente identificada
         /// por su correo.
         /// </summary>
         public async Task<ResultadoRegistro> ReenviarPorCorreoAsync(string correo)
@@ -194,7 +194,7 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
                     Exitoso = false,
                     Errores = new List<string>
                     {
-                        "Debe indicar un correo electrónico."
+                        "Debe indicar un correo electrÃ³nico."
                     }
                 };
             }
@@ -222,7 +222,7 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
                     Exitoso = false,
                     Errores = new List<string>
                     {
-                        "La cuenta ya está activa; no requiere activación."
+                        "La cuenta ya estÃ¡ activa; no requiere activaciÃ³n."
                     }
                 };
             }
@@ -231,8 +231,8 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
         }
 
         /// <summary>
-        /// Indica si existe una cuenta con ese correo y está pendiente de
-        /// activación.
+        /// Indica si existe una cuenta con ese correo y estÃ¡ pendiente de
+        /// activaciÃ³n.
         /// </summary>
         public async Task<bool> EsCuentaPendienteAsync(string? correo)
         {
@@ -250,7 +250,7 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
         }
 
         /// <summary>
-        /// Lista los empleados pendientes de activación.
+        /// Lista los empleados pendientes de activaciÃ³n.
         /// </summary>
         public async Task<List<Empleado>> ObtenerPendientesAsync()
         {
@@ -277,7 +277,8 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
             }
 
             throw new InvalidOperationException(
-                "No fue posible generar un nombre de usuario único.");
+                "No fue posible generar un nombre de usuario Ãºnico.");
         }
     }
 }
+

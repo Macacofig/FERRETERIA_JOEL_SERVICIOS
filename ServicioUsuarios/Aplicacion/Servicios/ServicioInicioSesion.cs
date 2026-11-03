@@ -1,28 +1,28 @@
-using FERRETERIA__Joel.Aplicacion.Modelos;
+﻿using FERRETERIA__Joel.Aplicacion.Modelos;
 using FERRETERIA__Joel.Dominio.Constantes;
 using FERRETERIA__Joel.Dominio.Entidades;
 using FERRETERIA__Joel.Dominio.Puertos;
-using FERRETERIA__Joel.Dominio.Validaciones;
+using FERRETERIA__Joel.Dominio.Utilidades;
 
 namespace FERRETERIA__Joel.Aplicacion.Servicios
 {
-    // Inicio de sesión exclusivo para empleados: verifica la contraseña con
-    // el hasheador, comprueba que la cuenta esté activa y normaliza el rol a
+    // Inicio de sesiÃ³n exclusivo para empleados: verifica la contraseÃ±a con
+    // el hasheador, comprueba que la cuenta estÃ© activa y normaliza el rol a
     // los roles operativos del sistema (Administrador / EmpleadoVenta).
-    // Los clientes ya no inician sesión.
+    // Los clientes ya no inician sesiÃ³n.
     public class ServicioInicioSesion
     {
         private const string MensajeCredenciales =
-            "Correo o contraseña incorrectos.";
+            "Correo o contraseÃ±a incorrectos.";
 
         private const string MensajeFormato =
-            "Ingrese un correo y una contraseña válidos.";
+            "Ingrese un correo y una contraseÃ±a vÃ¡lidos.";
 
         private const string MensajeInactivo =
-            "La cuenta está inactiva. Contacte al administrador.";
+            "La cuenta estÃ¡ inactiva. Contacte al administrador.";
 
         private const string MensajePendienteActivacion =
-            "La cuenta aún no está activada. Revise el enlace enviado a su correo.";
+            "La cuenta aÃºn no estÃ¡ activada. Revise el enlace enviado a su correo.";
 
         private readonly IRepositoryEmpleado _repositorioEmpleado;
         private readonly IHasheadorContrasena _hasheador;
@@ -55,8 +55,8 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
                 };
             }
 
-            // Única operación que recupera el hash de la contraseña: el
-            // resto de lecturas del personal se hacen con la proyección
+            // Ãšnica operaciÃ³n que recupera el hash de la contraseÃ±a: el
+            // resto de lecturas del personal se hacen con la proyecciÃ³n
             // sin credenciales. El identificador puede ser el correo o el
             // nombre de usuario generado en el alta.
             Empleado? empleado =
@@ -137,7 +137,7 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
             };
         }
 
-        // Verifica la contraseña. Detecta contraseñas heredadas guardadas en
+        // Verifica la contraseÃ±a. Detecta contraseÃ±as heredadas guardadas en
         // texto plano (semillas) y marca que deben re-hashearse.
         private bool Coincide(
             string contrasena,
@@ -178,3 +178,4 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
         }
     }
 }
+

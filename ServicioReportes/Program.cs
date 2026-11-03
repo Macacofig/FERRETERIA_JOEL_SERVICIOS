@@ -1,18 +1,28 @@
+using Microsoft.OpenApi.Models;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "ServicioReportes",
+        Version = "v1",
+        Description = "API de reportes y estadísticas."
+    });
+});
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+app.UseSwagger();
+app.UseSwaggerUI(options =>
 {
-    app.MapOpenApi();
-}
+    options.SwaggerEndpoint("/swagger/v1/swagger.json", "ServicioReportes v1");
+});
 
 // Solo se redirige a HTTPS si el servicio está configurado con un endpoint
 // HTTPS. En Docker la API escucha en http://+:8080 y una redirección dejaría

@@ -8,7 +8,7 @@ namespace FERRETERIA__Joel.Pages
 {
     /// <summary>
     /// Cierre de sesión. Revoca el JWT en ServicioUsuarios, elimina la sesión
-    /// de Redis y borra la cookie de autenticación del front.
+        /// y borra la sesión y la cookie de autenticación del front.
     /// </summary>
     public class LogoutModel : PageModel
     {

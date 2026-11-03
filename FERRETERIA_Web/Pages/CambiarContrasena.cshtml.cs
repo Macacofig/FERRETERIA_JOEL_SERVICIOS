@@ -69,7 +69,6 @@ namespace FERRETERIA__Joel.Pages
                 // El servicio revoca los tokens previos: la sesión actual ya no
                 // sirve. Se cierra ordenadamente y se pide un login nuevo.
                 HttpContext.Session.Remove(UsuariosApiCliente.ClaveSesionJwt);
-                HttpContext.Session.Remove("SesionRedisKey");
 
                 await HttpContext.SignOutAsync(
                     CookieAuthenticationDefaults.AuthenticationScheme);

@@ -1,4 +1,4 @@
-namespace FERRETERIA__Joel.Dominio.Puertos
+﻿namespace FERRETERIA__Joel.Dominio.Puertos
 {
     public interface IHasheadorContrasena
     {
@@ -7,3 +7,4 @@ namespace FERRETERIA__Joel.Dominio.Puertos
         bool Verificar(string contrasena, string hash);
     }
 }
+

@@ -1,8 +1,8 @@
-namespace FERRETERIA__Joel.Dominio.Entidades
+﻿namespace FERRETERIA__Joel.Dominio.Entidades
 {
     /// <summary>
-    /// Fila de la bitácora. Reutiliza la tabla existente
-    /// <c>bitacora_sesion</c>: <c>Accion</c> guarda tanto los eventos de sesión
+    /// Fila de la bitÃ¡cora. Reutiliza la tabla existente
+    /// <c>bitacora_sesion</c>: <c>Accion</c> guarda tanto los eventos de sesiÃ³n
     /// (login/logout) como las operaciones CRUD (INSERT/UPDATE/DELETE).
     /// </summary>
     public class RegistroBitacora
@@ -19,13 +19,14 @@ namespace FERRETERIA__Joel.Dominio.Entidades
 
         public DateTime FechaHora { get; set; }
 
-        /// <summary>Tabla o entidad afectada por la operación.</summary>
+        /// <summary>Tabla o entidad afectada por la operaciÃ³n.</summary>
         public string? Entidad { get; set; }
 
         /// <summary>Identificador del registro afectado.</summary>
         public int? IdRegistroAfectado { get; set; }
 
-        /// <summary>Resultado de la operación: EXITOSO o FALLIDO.</summary>
+        /// <summary>Resultado de la operaciÃ³n: EXITOSO o FALLIDO.</summary>
         public string Resultado { get; set; } = "EXITOSO";
     }
 }
+

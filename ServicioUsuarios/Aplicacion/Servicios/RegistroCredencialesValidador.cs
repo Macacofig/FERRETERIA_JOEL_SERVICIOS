@@ -1,45 +1,44 @@
-using FERRETERIA__Joel.Aplicacion.Modelos;
-using FERRETERIA__Joel.Dominio.ConfiguracionValidacion;
+﻿using FERRETERIA__Joel.Aplicacion.Modelos;
 using FERRETERIA__Joel.Dominio.Constantes;
-using FERRETERIA__Joel.Dominio.Validaciones;
+using FERRETERIA__Joel.Dominio.Utilidades;
 
 namespace FERRETERIA__Joel.Aplicacion.Servicios
 {
     /// <summary>
-    /// Valida las credenciales comunes al alta de personal (nombres, teléfono,
-    /// correo y rol) y, por separado, la contraseña que el empleado define al
+    /// Valida las credenciales comunes al alta de personal (nombres, telÃ©fono,
+    /// correo y rol) y, por separado, la contraseÃ±a que el empleado define al
     /// activar su cuenta.
     /// </summary>
     public class RegistroCredencialesValidador
     {
         private const string MensajeNombre =
-            "El nombre es obligatorio, debe tener máximo 100 caracteres y solo admite letras y espacios.";
+            "El nombre es obligatorio, debe tener mÃ¡ximo 100 caracteres y solo admite letras y espacios.";
 
         private const string MensajeApellido =
-            "El apellido es obligatorio, debe tener máximo 100 caracteres y solo admite letras y espacios.";
+            "El apellido es obligatorio, debe tener mÃ¡ximo 100 caracteres y solo admite letras y espacios.";
 
         private const string MensajeTelefono =
-            "El teléfono debe tener 8 dígitos y comenzar con 5, 6, 7 u 8.";
+            "El telÃ©fono debe tener 8 dÃ­gitos y comenzar con 5, 6, 7 u 8.";
 
         private const string MensajeCorreo =
-            "El correo debe tener un formato válido, por ejemplo correo@ejemplo.com.";
+            "El correo debe tener un formato vÃ¡lido, por ejemplo correo@ejemplo.com.";
 
         private const string MensajeRol =
             "El rol debe ser Administrador o EmpleadoVenta.";
 
         private const string MensajeConfirmacion =
-            "La confirmación de la contraseña no coincide.";
+            "La confirmaciÃ³n de la contraseÃ±a no coincide.";
 
         private static readonly string MensajeContrasena =
-            $"La contraseña debe tener entre {ConfiguracionCredenciales.ContrasenaLongitudMinima} y "
+            $"La contraseÃ±a debe tener entre {ConfiguracionCredenciales.ContrasenaLongitudMinima} y "
             + $"{ConfiguracionCredenciales.ContrasenaLongitudMaxima} caracteres e incluir al menos una "
-            + "mayúscula, una minúscula, un número y un símbolo.";
+            + "mayÃºscula, una minÃºscula, un nÃºmero y un sÃ­mbolo.";
 
         private readonly CredencialesValidaciones _credenciales = new();
 
         /// <summary>
-        /// Valida los datos del alta de empleado. No valida contraseña: se
-        /// define después durante la activación por correo.
+        /// Valida los datos del alta de empleado. No valida contraseÃ±a: se
+        /// define despuÃ©s durante la activaciÃ³n por correo.
         /// </summary>
         public Dictionary<string, string> Validar(IRegistroCredenciales solicitud)
         {
@@ -74,7 +73,7 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
         }
 
         /// <summary>
-        /// Valida la contraseña y su confirmación durante la activación.
+        /// Valida la contraseÃ±a y su confirmaciÃ³n durante la activaciÃ³n.
         /// </summary>
         public Dictionary<string, string> ValidarContrasenaActivacion(
             string? contrasena,
@@ -110,4 +109,5 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
         }
     }
 }
+
 

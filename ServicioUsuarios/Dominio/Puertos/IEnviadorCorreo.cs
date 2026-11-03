@@ -1,15 +1,15 @@
-namespace FERRETERIA__Joel.Dominio.Puertos
+﻿namespace FERRETERIA__Joel.Dominio.Puertos
 {
     /// <summary>
-    /// Puerto de envío de correo. La aplicación depende de esta abstracción y
+    /// Puerto de envÃ­o de correo. La aplicaciÃ³n depende de esta abstracciÃ³n y
     /// la infraestructura decide el transporte (SMTP real o registro en el log
     /// cuando no hay servidor configurado en desarrollo).
     /// </summary>
     public interface IEnviadorCorreo
     {
         /// <summary>
-        /// Envía el correo de activación con el enlace que el empleado debe
-        /// abrir para definir su contraseña.
+        /// EnvÃ­a el correo de activaciÃ³n con el enlace que el empleado debe
+        /// abrir para definir su contraseÃ±a.
         /// </summary>
         Task EnviarActivacionAsync(
             string destinatario,
@@ -17,3 +17,4 @@ namespace FERRETERIA__Joel.Dominio.Puertos
             string enlaceActivacion);
     }
 }
+

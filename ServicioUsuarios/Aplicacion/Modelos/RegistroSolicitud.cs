@@ -1,12 +1,12 @@
-using FERRETERIA__Joel.Dominio.Constantes;
+﻿using FERRETERIA__Joel.Dominio.Constantes;
 
 namespace FERRETERIA__Joel.Aplicacion.Modelos
 {
     /// <summary>
     /// Datos del formulario de alta de empleado. El alta la realiza un
     /// administrador y puede crear cuentas con rol <c>Administrador</c> o
-    /// <c>EmpleadoVenta</c>. La contraseña se define después, mediante el
-    /// enlace de activación enviado al correo.
+    /// <c>EmpleadoVenta</c>. La contraseÃ±a se define despuÃ©s, mediante el
+    /// enlace de activaciÃ³n enviado al correo.
     /// </summary>
     public class RegistroSolicitud : IRegistroCredenciales
     {
@@ -22,3 +22,4 @@ namespace FERRETERIA__Joel.Aplicacion.Modelos
         public string Rol { get; set; } = RolesSistema.EmpleadoVenta;
     }
 }
+

@@ -1,10 +1,10 @@
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 
 namespace FERRETERIA__Joel.Aplicacion.Servicios
 {
     /// <summary>
-    /// Genera los tokens de activación de cuenta. Se usa un valor aleatorio
-    /// criptográficamente seguro codificado en Base64Url, apto para viajar
+    /// Genera los tokens de activaciÃ³n de cuenta. Se usa un valor aleatorio
+    /// criptogrÃ¡ficamente seguro codificado en Base64Url, apto para viajar
     /// dentro de un enlace.
     /// </summary>
     public static class GeneradorTokenActivacion
@@ -22,3 +22,4 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
         }
     }
 }
+

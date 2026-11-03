@@ -1,4 +1,4 @@
-using FERRETERIA__Joel.Aplicacion.Modelos;
+﻿using FERRETERIA__Joel.Aplicacion.Modelos;
 using FERRETERIA__Joel.Dominio.Constantes;
 using FERRETERIA__Joel.Dominio.Entidades;
 using FERRETERIA__Joel.Dominio.Puertos;
@@ -6,9 +6,9 @@ using FERRETERIA__Joel.Dominio.Puertos;
 namespace FERRETERIA__Joel.Aplicacion.Servicios
 {
     /// <summary>
-    /// Edición de los datos personales de una cuenta. No permite modificar la
-    /// contraseña desde el formulario genérico; audita quién realizó el cambio
-    /// en <c>IdEmpleadoResponsable</c> y conserva el estado y la activación.
+    /// EdiciÃ³n de los datos personales de una cuenta. No permite modificar la
+    /// contraseÃ±a desde el formulario genÃ©rico; audita quiÃ©n realizÃ³ el cambio
+    /// en <c>IdEmpleadoResponsable</c> y conserva el estado y la activaciÃ³n.
     /// </summary>
     public class ServicioEdicionEmpleado
     {
@@ -54,7 +54,7 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
                 && await _repositorio.ExistePorCorreoAsync(correo))
             {
                 errores[nameof(EdicionEmpleadoSolicitud.CorreoElectronico)] =
-                    "El correo ya está registrado.";
+                    "El correo ya estÃ¡ registrado.";
             }
 
             if (errores.Any())
@@ -97,3 +97,4 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
         }
     }
 }
+
