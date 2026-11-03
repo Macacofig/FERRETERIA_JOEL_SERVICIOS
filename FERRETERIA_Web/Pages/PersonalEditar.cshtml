@@ -1,0 +1,100 @@
+@page
+@model FERRETERIA__Joel.Pages.PersonalEditarModel
+@{
+    ViewData["Title"] = "Editar empleado";
+    ViewData["ActiveMenu"] = "Registro";
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/productos.css" asp-append-version="true" />
+}
+
+<div class="fj-container fj-page-products">
+    <section class="fj-page-head">
+        <p class="fj-eyebrow">Administración · Personal</p>
+        <h1>Editar empleado</h1>
+        <p class="fj-page-sub">Actualice los datos personales de la cuenta. La contraseña y el estado se gestionan por separado.</p>
+    </section>
+
+    @if (!string.IsNullOrWhiteSpace(Model.NombreUsuario))
+    {
+        <div class="fj-alert" role="status">
+            <div>
+                <span>Nombre de usuario: <strong>@Model.NombreUsuario</strong> (no cambia al editar los datos).</span>
+            </div>
+        </div>
+    }
+
+    @if (Model.Errores.Any())
+    {
+        <div class="fj-alert" role="alert">
+            <div>
+                <strong>No se pudo actualizar el empleado:</strong>
+                <ul class="fj-alert-lista">
+                    @foreach (var error in Model.Errores)
+                    {
+                        <li>@error</li>
+                    }
+                </ul>
+            </div>
+        </div>
+    }
+
+    <form method="post" class="fj-card fj-form" novalidate>
+        <input type="hidden" asp-for="Id" />
+
+        <div class="fj-form-grid">
+            <div class="fj-form-field @(Model.ErroresCampo.ContainsKey("Rol") ? "fj-form-field-error" : "")">
+                <label class="fj-form-label" asp-for="Solicitud.Rol">Tipo de empleado</label>
+                <select class="fj-input" asp-for="Solicitud.Rol" required>
+                    <option value="EmpleadoVenta">EmpleadoVenta</option>
+                    <option value="Administrador">Administrador</option>
+                </select>
+                @if (Model.ErroresCampo.TryGetValue("Rol", out var errorRol))
+                {
+                    <p class="fj-form-error" role="alert">@errorRol</p>
+                }
+            </div>
+
+            <div class="fj-form-field @(Model.ErroresCampo.ContainsKey("Nombre") ? "fj-form-field-error" : "")">
+                <label class="fj-form-label" asp-for="Solicitud.Nombre">Nombre</label>
+                <input class="fj-input" asp-for="Solicitud.Nombre" maxlength="100" required />
+                @if (Model.ErroresCampo.TryGetValue("Nombre", out var errorNombre))
+                {
+                    <p class="fj-form-error" role="alert">@errorNombre</p>
+                }
+            </div>
+
+            <div class="fj-form-field @(Model.ErroresCampo.ContainsKey("Apellido") ? "fj-form-field-error" : "")">
+                <label class="fj-form-label" asp-for="Solicitud.Apellido">Apellido</label>
+                <input class="fj-input" asp-for="Solicitud.Apellido" maxlength="100" required />
+                @if (Model.ErroresCampo.TryGetValue("Apellido", out var errorApellido))
+                {
+                    <p class="fj-form-error" role="alert">@errorApellido</p>
+                }
+            </div>
+
+            <div class="fj-form-field @(Model.ErroresCampo.ContainsKey("Telefono") ? "fj-form-field-error" : "")">
+                <label class="fj-form-label" asp-for="Solicitud.Telefono">Teléfono</label>
+                <input class="fj-input" asp-for="Solicitud.Telefono" maxlength="8" inputmode="numeric" required />
+                @if (Model.ErroresCampo.TryGetValue("Telefono", out var errorTelefono))
+                {
+                    <p class="fj-form-error" role="alert">@errorTelefono</p>
+                }
+            </div>
+
+            <div class="fj-form-field @(Model.ErroresCampo.ContainsKey("CorreoElectronico") ? "fj-form-field-error" : "")">
+                <label class="fj-form-label" asp-for="Solicitud.CorreoElectronico">Correo electrónico</label>
+                <input class="fj-input" asp-for="Solicitud.CorreoElectronico" type="email" maxlength="150" required />
+                @if (Model.ErroresCampo.TryGetValue("CorreoElectronico", out var errorCorreo))
+                {
+                    <p class="fj-form-error" role="alert">@errorCorreo</p>
+                }
+            </div>
+        </div>
+
+        <div class="fj-form-actions">
+            <a asp-page="/Personal" class="fj-btn fj-btn-ghost">Cancelar</a>
+            <button type="submit" class="fj-btn fj-btn-primary">Guardar cambios</button>
+        </div>
+    </form>
+</div>

@@ -1,10 +1,86 @@
 ﻿@page
-@model IndexModel
+@model FERRETERIA__Joel.Pages.IndexModel
 @{
-    ViewData["Title"] = "Home page";
+    ViewData["Title"] = "Ferretería Joel";
+    ViewData["ActiveMenu"] = "Home";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<section class="hero-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-7 hero-content">
+                <small class="hero-subtitle">FERRETERÍA JOEL · EST. 1998</small>
+                <h1 class="hero-title">
+                    HERRAMIENTAS
+                    <span class="d-block accent">AL ALCANCE</span>
+                    DE TU MANO!
+                </h1>
+                <div class="hero-underline"></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Nosotros section -->
+<section class="nosotros-hero">
+    <div class="container">
+        <h2>NOSOTROS</h2>
+    </div>
+</section>
+
+<section class="nosotros-main">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h5 class="nosotros-lead">Nuestra historia</h5>
+                <h3 class="display-6">Más de 25 años<br />sirviendo a la comunidad</h3>
+                <p class="mt-3">Ferretería Joel nació en 1998 de la mano de Joel Martínez, un maestro de obra con más de dos décadas de experiencia en construcción. Lo que comenzó como un pequeño local en el barrio Centro, con apenas 200 referencias de productos, se convirtió con los años en el punto de confianza de contratistas, plomeros, electricistas y familias de toda la región.</p>
+            </div>
+            <div class="col-lg-6">
+                <img src="/images/hero-ferreteria-2.jpg" alt="Tienda" class="img-fluid rounded" />
+            </div>
+        </div>
+
+        <div class="row timeline">
+            <div class="col-6 col-md-3 item">
+                <div class="year">1998</div>
+                <div class="separator" aria-hidden="true"></div>
+                <p class="desc">Apertura del local original en el Centro</p>
+            </div>
+            <div class="col-6 col-md-3 item">
+                <div class="year">2005</div>
+                <div class="separator" aria-hidden="true"></div>
+                <p class="desc">Ampliación a bodega de 800 m² y primer camión de reparto</p>
+            </div>
+            <div class="col-6 col-md-3 item">
+                <div class="year">2014</div>
+                <div class="separator" aria-hidden="true"></div>
+                <p class="desc">Ingreso de línea de herramientas eléctricas profesionales</p>
+            </div>
+            <div class="col-6 col-md-3 item">
+                <div class="year">2023</div>
+                <div class="separator" aria-hidden="true"></div>
+                <p class="desc">Lanzamiento del sistema de inventario digital</p>
+            </div>
+        </div>
+
+        <div class="row stats-row">
+            <div class="col-6 col-md-3 stat">
+                <div class="num">1,345+</div>
+                <div class="small">Productos</div>
+            </div>
+            <div class="col-6 col-md-3 stat">
+                <div class="num">8</div>
+                <div class="small">Categorías</div>
+            </div>
+            <div class="col-6 col-md-3 stat">
+                <div class="num">8</div>
+                <div class="small">Proveedores</div>
+            </div>
+            <div class="col-6 col-md-3 stat">
+                <div class="num">25+</div>
+                <div class="small">Años en el mercado</div>
+            </div>
+        </div>
+    </div>
+</section>

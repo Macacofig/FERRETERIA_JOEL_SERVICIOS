@@ -1,0 +1,11 @@
+@{
+    string activo = (string?)ViewData["ActiveMenu"] ?? "";
+}
+
+<li class="fj-menu-item @(activo == "Home" ? "is-active" : "")">
+    <a class="fj-menu-link" asp-page="/Index" aria-current="@(activo == "Home" ? "page" : null)">Home</a>
+</li>
+
+<li class="fj-menu-item @(activo == "Login" ? "is-active" : "")">
+    <a class="fj-menu-link" asp-page="/Login" aria-current="@(activo == "Login" ? "page" : null)">Iniciar sesión</a>
+</li>
