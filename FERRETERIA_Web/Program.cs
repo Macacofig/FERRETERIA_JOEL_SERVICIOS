@@ -6,15 +6,23 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
 
-CargarVariablesEntorno(builder.Environment.ContentRootPath);
-builder.Configuration.AddEnvironmentVariables();
+Dictionary<string, string?> configuracionLocal =
+    CargarVariablesEntorno(builder.Environment.ContentRootPath);
 
-string claveUrl = builder.Configuration["UrlProteccion:Clave"] ?? string.Empty;
+builder.Configuration.AddEnvironmentVariables();
+builder.Configuration.AddInMemoryCollection(
+    configuracionLocal);
+
+string claveUrl = configuracionLocal.GetValueOrDefault("UrlProteccion:Clave")
+    ?? configuracionLocal.GetValueOrDefault("Jwt:Key")
+    ?? builder.Configuration["UrlProteccion:Clave"]
+    ?? builder.Configuration["Jwt:Key"]
+    ?? string.Empty;
 
 if (string.IsNullOrWhiteSpace(claveUrl))
 {
     throw new InvalidOperationException(
-        "Falta 'UrlProteccion:Clave'. Defina UrlProteccion__Clave en el .env.");
+        "Falta 'Jwt:Key' o 'UrlProteccion:Clave' en el .env.");
 }
 
 UrlProtector.Inicializar(claveUrl);
@@ -98,8 +106,11 @@ app.MapRazorPages();
 
 app.Run();
 
-static void CargarVariablesEntorno(string directorio)
+static Dictionary<string, string?> CargarVariablesEntorno(string directorio)
 {
+    Dictionary<string, string?> variables = new(
+        StringComparer.OrdinalIgnoreCase);
+
     string? actual = Path.GetFullPath(directorio);
 
     for (int nivel = 0; nivel < 5 && actual is not null; nivel++)
@@ -127,15 +138,19 @@ static void CargarVariablesEntorno(string directorio)
                 string clave = texto[..separador].Trim();
                 string valor = texto[(separador + 1)..].Trim().Trim('"');
 
-                if (Environment.GetEnvironmentVariable(clave) is null)
+                variables[clave.Replace("__", ":", StringComparison.Ordinal)] = valor;
+
+                if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(clave)))
                 {
                     Environment.SetEnvironmentVariable(clave, valor);
                 }
             }
 
-            return;
+            return variables;
         }
 
         actual = Directory.GetParent(actual)?.FullName;
     }
+
+    return variables;
 }

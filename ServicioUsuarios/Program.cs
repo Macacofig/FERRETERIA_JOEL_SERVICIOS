@@ -12,8 +12,12 @@ var builder = WebApplication.CreateBuilder(args);
 
 // El .env de la raÃ­z aporta MySQL, JWT, protecciÃ³n de enlaces y SMTP.
 // Nunca se versiona.
-CargarVariablesEntorno(builder.Environment.ContentRootPath);
+Dictionary<string, string?> configuracionLocal =
+    CargarVariablesEntorno(builder.Environment.ContentRootPath);
+
 builder.Configuration.AddEnvironmentVariables();
+builder.Configuration.AddInMemoryCollection(
+    configuracionLocal);
 
 builder.Services.AddControllers();
 builder.Services.AddHttpContextAccessor();
@@ -53,7 +57,9 @@ builder.Services.AddSingleton<RevocacionTokens>();
 // JWT Bearer: Ãºnica tecnologÃ­a de autenticaciÃ³n de la API. Issuer, audience,
 // expiraciÃ³n y firma se validan en cada peticiÃ³n.
 // ---------------------------------------------------------------------------
-string claveJwt = builder.Configuration["Jwt:Key"] ?? string.Empty;
+string claveJwt = configuracionLocal.GetValueOrDefault("Jwt:Key")
+    ?? builder.Configuration["Jwt:Key"]
+    ?? string.Empty;
 
 if (claveJwt.Length < 32)
 {
@@ -62,14 +68,10 @@ if (claveJwt.Length < 32)
         + "de entorno Jwt__Key (archivo .env de la raÃ­z).");
 }
 
-// El token de activaciÃ³n se cifra con la misma clave/algoritmo que el front.
-string claveUrl = builder.Configuration["UrlProteccion:Clave"] ?? string.Empty;
-
-if (string.IsNullOrWhiteSpace(claveUrl))
-{
-    throw new InvalidOperationException(
-        "Falta 'UrlProteccion:Clave'. Defina UrlProteccion__Clave en el .env.");
-}
+// El token de activaciÃ³n se cifra con una clave independiente cuando se
+// configura. Para el despliegue mÃ­nimo se deriva de Jwt:Key, de modo que el
+// .env solo necesita las variables JWT compartidas por los servicios.
+string claveUrl = builder.Configuration["UrlProteccion:Clave"] ?? claveJwt;
 
 UrlProtectorApi.Inicializar(claveUrl);
 
@@ -174,14 +176,17 @@ app.MapGet("/health", () => Results.Ok(new
 
 app.Run();
 
-// Lee clave=valor del .env y define cada variable si aÃºn no existe.
-static void CargarVariablesEntorno(string directorio)
+// Lee clave=valor del .env sin modificar el entorno del proceso.
+static Dictionary<string, string?> CargarVariablesEntorno(string directorio)
 {
+    Dictionary<string, string?> variables = new(
+        StringComparer.OrdinalIgnoreCase);
+
     string? ruta = BuscarArchivoEnv(directorio);
 
     if (ruta is null)
     {
-        return;
+        return variables;
     }
 
     foreach (string linea in File.ReadAllLines(ruta))
@@ -203,11 +208,15 @@ static void CargarVariablesEntorno(string directorio)
         string clave = texto[..separador].Trim();
         string valor = texto[(separador + 1)..].Trim().Trim('"');
 
-        if (Environment.GetEnvironmentVariable(clave) is null)
+        variables[clave.Replace("__", ":", StringComparison.Ordinal)] = valor;
+
+        if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(clave)))
         {
             Environment.SetEnvironmentVariable(clave, valor);
         }
     }
+
+    return variables;
 }
 
 static string? BuscarArchivoEnv(string directorio)
