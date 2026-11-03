@@ -1,0 +1,122 @@
+# =============================================================================
+# FERRETERÍA JOEL — Docker Compose (2DaCompetenciaPart2)
+# Microservicios: ServicioVentas, ServicioUsuarios, ServicioReportes + MySQL
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # MySQL — Base de datos compartida por todos los microservicios
+  # ---------------------------------------------------------------------------
+  mysql:
+    image: mysql:8.0
+    container_name: ferreteria-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?defina MYSQL_ROOT_PASSWORD en .env}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-bdferreteria}
+    ports:
+      - "${MYSQL_PUERTO_HOST:-3307}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./Scripts/init-completo.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    networks:
+      - ferreteria-net
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
+      interval: 10s
+      timeout: 20s
+      retries: 10
+
+  # ---------------------------------------------------------------------------
+  # ServicioVentas — API de registro, historial y anulación de ventas
+  # ---------------------------------------------------------------------------
+  servicio-ventas:
+    build:
+      context: ./ServicioVentas
+      dockerfile: Dockerfile
+    container_name: ferreteria-ventas
+    restart: always
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "${SERVICIO_VENTAS_PUERTO:-5071}:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
+      - ConnectionStrings__MySqlConnection=Server=mysql;Database=${MYSQL_DATABASE:-bdferreteria};Uid=root;Pwd=${MYSQL_ROOT_PASSWORD};Port=3306;
+      - Jwt__Key=${Jwt__Key:?defina Jwt__Key en .env}
+      - Jwt__Issuer=${Jwt__Issuer:-FerreteriaJoel}
+      - Jwt__Audience=${Jwt__Audience:-FerreteriaJoel}
+    networks:
+      - ferreteria-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8080/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ---------------------------------------------------------------------------
+  # ServicioUsuarios — API de autenticación, empleados, sesiones
+  # ---------------------------------------------------------------------------
+  servicio-usuarios:
+    build:
+      context: ./ServicioUsuarios
+      dockerfile: Dockerfile
+    container_name: ferreteria-usuarios
+    restart: always
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "${SERVICIO_USUARIOS_PUERTO:-5072}:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
+      - ConnectionStrings__MySqlConnection=Server=mysql;Database=${MYSQL_DATABASE:-bdferreteria};Uid=root;Pwd=${MYSQL_ROOT_PASSWORD};Port=3306;
+      - Jwt__Key=${Jwt__Key:?defina Jwt__Key en .env}
+      - Jwt__Issuer=${Jwt__Issuer:-FerreteriaJoel}
+      - Jwt__Audience=${Jwt__Audience:-FerreteriaJoel}
+    networks:
+      - ferreteria-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8080/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ---------------------------------------------------------------------------
+  # ServicioReportes — API de reportes y estadísticas
+  # ---------------------------------------------------------------------------
+  servicio-reportes:
+    build:
+      context: ./ServicioReportes
+      dockerfile: Dockerfile
+    container_name: ferreteria-reportes
+    restart: always
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "${SERVICIO_REPORTES_PUERTO:-5073}:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
+      - ConnectionStrings__MySqlConnection=Server=mysql;Database=${MYSQL_DATABASE:-bdferreteria};Uid=root;Pwd=${MYSQL_ROOT_PASSWORD};Port=3306;
+      - Jwt__Key=${Jwt__Key:?defina Jwt__Key en .env}
+      - Jwt__Issuer=${Jwt__Issuer:-FerreteriaJoel}
+      - Jwt__Audience=${Jwt__Audience:-FerreteriaJoel}
+    networks:
+      - ferreteria-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8080/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  mysql_data:
+
+networks:
+  ferreteria-net:
+    driver: bridge
