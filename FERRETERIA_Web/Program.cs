@@ -1,10 +1,23 @@
 ﻿using System.Security.Claims;
+using FERRETERIA__Joel.Helpers;
 using FERRETERIA__Joel.Servicios;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
+
+CargarVariablesEntorno(builder.Environment.ContentRootPath);
 builder.Configuration.AddEnvironmentVariables();
+
+string claveUrl = builder.Configuration["UrlProteccion:Clave"] ?? string.Empty;
+
+if (string.IsNullOrWhiteSpace(claveUrl))
+{
+    throw new InvalidOperationException(
+        "Falta 'UrlProteccion:Clave'. Defina UrlProteccion__Clave en el .env.");
+}
+
+UrlProtector.Inicializar(claveUrl);
 
 builder.Services.AddRazorPages();
 builder.Services.AddHttpContextAccessor();
@@ -84,3 +97,45 @@ app.UseAuthorization();
 app.MapRazorPages();
 
 app.Run();
+
+static void CargarVariablesEntorno(string directorio)
+{
+    string? actual = Path.GetFullPath(directorio);
+
+    for (int nivel = 0; nivel < 5 && actual is not null; nivel++)
+    {
+        string ruta = Path.Combine(actual, ".env");
+
+        if (File.Exists(ruta))
+        {
+            foreach (string linea in File.ReadAllLines(ruta))
+            {
+                string texto = linea.Trim();
+
+                if (texto.Length == 0 || texto.StartsWith('#'))
+                {
+                    continue;
+                }
+
+                int separador = texto.IndexOf('=');
+
+                if (separador <= 0)
+                {
+                    continue;
+                }
+
+                string clave = texto[..separador].Trim();
+                string valor = texto[(separador + 1)..].Trim().Trim('"');
+
+                if (Environment.GetEnvironmentVariable(clave) is null)
+                {
+                    Environment.SetEnvironmentVariable(clave, valor);
+                }
+            }
+
+            return;
+        }
+
+        actual = Directory.GetParent(actual)?.FullName;
+    }
+}

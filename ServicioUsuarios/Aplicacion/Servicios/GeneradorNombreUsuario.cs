@@ -1,15 +1,15 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text;
 
 namespace FERRETERIA__Joel.Aplicacion.Servicios
 {
     /// <summary>
     /// Genera el nombre de usuario a partir del nombre y el apellido con una
-    /// convención determinista: primera letra del nombre + apellido completo,
-    /// sin acentos ni caracteres especiales y en minúsculas (por ejemplo
-    /// "María López" → "mlopez"). Si el valor ya existe se agrega un sufijo
-    /// numérico ("mlopez2", "mlopez3", ...). La base de datos además tiene un
-    /// índice único, de modo que dos solicitudes simultáneas no pueden dejar
+    /// convenciÃ³n determinista: primera letra del nombre + apellido completo,
+    /// sin acentos ni caracteres especiales y en minÃºsculas (por ejemplo
+    /// "MarÃ­a LÃ³pez" â†’ "mlopez"). Si el valor ya existe se agrega un sufijo
+    /// numÃ©rico ("mlopez2", "mlopez3", ...). La base de datos ademÃ¡s tiene un
+    /// Ã­ndice Ãºnico, de modo que dos solicitudes simultÃ¡neas no pueden dejar
     /// dos cuentas con el mismo usuario.
     /// </summary>
     public static class GeneradorNombreUsuario
@@ -82,3 +82,4 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
         }
     }
 }
+

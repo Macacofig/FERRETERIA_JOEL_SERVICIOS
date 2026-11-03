@@ -1,7 +1,7 @@
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using FERRETERIA__Joel.Dominio.Puertos;
 
-namespace FERRETERIA__Joel.ServicioUsuarios.Seguridad
+namespace FERRETERIA__Joel.Infraestructura.Servicios
 {
     /// <summary>
     /// Resuelve la identidad del empleado a partir del JWT validado. Es el
@@ -37,3 +37,4 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Seguridad
             Usuario?.FindFirstValue("nombre_usuario");
     }
 }
+

@@ -1,4 +1,4 @@
-namespace FERRETERIA__Joel.Aplicacion.Modelos
+﻿namespace FERRETERIA__Joel.Aplicacion.Modelos
 {
     /// <summary>
     /// Resultado del registro: indica si fue exitoso y, si no, los mensajes
@@ -10,11 +10,11 @@ namespace FERRETERIA__Joel.Aplicacion.Modelos
 
         public int Id { get; init; }
 
-        /// <summary>Nombre de usuario generado automáticamente en el alta.</summary>
+        /// <summary>Nombre de usuario generado automÃ¡ticamente en el alta.</summary>
         public string? NombreUsuario { get; init; }
 
         /// <summary>
-        /// Enlace de activación generado (solo se rellena en desarrollo, para
+        /// Enlace de activaciÃ³n generado (solo se rellena en desarrollo, para
         /// poder probar el flujo cuando no hay SMTP configurado).
         /// </summary>
         public string? EnlaceActivacion { get; init; }
@@ -24,3 +24,4 @@ namespace FERRETERIA__Joel.Aplicacion.Modelos
         public Dictionary<string, string> ErroresCampo { get; init; } = new();
     }
 }
+

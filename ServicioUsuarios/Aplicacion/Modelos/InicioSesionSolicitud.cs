@@ -1,7 +1,7 @@
-namespace FERRETERIA__Joel.Aplicacion.Modelos
+﻿namespace FERRETERIA__Joel.Aplicacion.Modelos
 {
     /// <summary>
-    /// Credenciales ingresadas en el formulario de inicio de sesión de empleado.
+    /// Credenciales ingresadas en el formulario de inicio de sesiÃ³n de empleado.
     /// </summary>
     public class InicioSesionSolicitud
     {
@@ -10,3 +10,4 @@ namespace FERRETERIA__Joel.Aplicacion.Modelos
         public string Contrasena { get; set; } = string.Empty;
     }
 }
+

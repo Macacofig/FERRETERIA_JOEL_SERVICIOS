@@ -109,7 +109,7 @@ namespace FERRETERIA__Joel.Pages
                 CookieAuthenticationDefaults.AuthenticationScheme,
                 new ClaimsPrincipal(identidad));
 
-            // El JWT queda en la sesión de servidor (Redis): el navegador solo
+            // El JWT queda en la sesión de servidor: el navegador solo
             // recibe la cookie de sesión HttpOnly, nunca el token.
             HttpContext.Session.SetString(
                 UsuariosApiCliente.ClaveSesionJwt,

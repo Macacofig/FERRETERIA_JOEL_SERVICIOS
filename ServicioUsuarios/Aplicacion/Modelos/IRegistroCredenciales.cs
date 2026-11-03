@@ -1,9 +1,9 @@
-namespace FERRETERIA__Joel.Aplicacion.Modelos
+﻿namespace FERRETERIA__Joel.Aplicacion.Modelos
 {
     /// <summary>
     /// Campos comunes al alta de personal autorizada por un administrador.
-    /// La contraseña ya no forma parte del alta: el empleado la define al
-    /// abrir el enlace de activación que recibe por correo.
+    /// La contraseÃ±a ya no forma parte del alta: el empleado la define al
+    /// abrir el enlace de activaciÃ³n que recibe por correo.
     /// </summary>
     public interface IRegistroCredenciales
     {
@@ -19,3 +19,4 @@ namespace FERRETERIA__Joel.Aplicacion.Modelos
         string Rol { get; }
     }
 }
+

@@ -1,4 +1,4 @@
-using MySql.Data.MySqlClient;
+﻿using MySql.Data.MySqlClient;
 
 namespace FERRETERIA__Joel.Infraestructura.Conexion
 {

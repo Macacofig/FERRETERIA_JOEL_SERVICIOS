@@ -1,16 +1,16 @@
-using System.Text.RegularExpressions;
-using FERRETERIA__Joel.Dominio.ConfiguracionValidacion;
+﻿using System.Text.RegularExpressions;
+using FERRETERIA__Joel.Dominio.Utilidades;
 
-namespace FERRETERIA__Joel.Dominio.Validaciones
+namespace FERRETERIA__Joel.Dominio.Utilidades
 {
     /// <summary>
     /// Reglas comunes de credenciales compartidas por el registro de
-    /// empleados y de clientes: nombres, teléfono, correo, contraseña y su
-    /// confirmación. No conoce ni consulta la base de datos.
+    /// empleados y de clientes: nombres, telÃ©fono, correo, contraseÃ±a y su
+    /// confirmaciÃ³n. No conoce ni consulta la base de datos.
     /// </summary>
     public class CredencialesValidaciones
     {
-        // 8 dígitos: celulares en Bolivia inician exclusivamente con 6 o 7
+        // 8 dÃ­gitos: celulares en Bolivia inician exclusivamente con 6 o 7
         private static readonly Regex FormatoTelefono =
             new(@"^[67][0-9]{7}$", RegexOptions.Compiled);
 

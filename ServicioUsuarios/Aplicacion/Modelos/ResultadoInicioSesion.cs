@@ -1,7 +1,7 @@
-namespace FERRETERIA__Joel.Aplicacion.Modelos
+﻿namespace FERRETERIA__Joel.Aplicacion.Modelos
 {
     /// <summary>
-    /// Resultado del inicio de sesión: indica si fue exitoso, el mensaje a
+    /// Resultado del inicio de sesiÃ³n: indica si fue exitoso, el mensaje a
     /// mostrar y, cuando corresponde, la identidad autenticada.
     /// </summary>
     public class ResultadoInicioSesion
@@ -13,3 +13,4 @@ namespace FERRETERIA__Joel.Aplicacion.Modelos
         public SesionUsuario? Usuario { get; init; }
     }
 }
+

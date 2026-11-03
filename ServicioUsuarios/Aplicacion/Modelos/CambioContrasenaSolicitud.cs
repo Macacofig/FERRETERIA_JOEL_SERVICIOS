@@ -1,7 +1,7 @@
-namespace FERRETERIA__Joel.Aplicacion.Modelos
+﻿namespace FERRETERIA__Joel.Aplicacion.Modelos
 {
     /// <summary>
-    /// Datos del formulario de cambio de contraseña de un empleado ya
+    /// Datos del formulario de cambio de contraseÃ±a de un empleado ya
     /// autenticado.
     /// </summary>
     public class CambioContrasenaSolicitud
@@ -13,3 +13,4 @@ namespace FERRETERIA__Joel.Aplicacion.Modelos
         public string ConfirmarContrasena { get; set; } = string.Empty;
     }
 }
+

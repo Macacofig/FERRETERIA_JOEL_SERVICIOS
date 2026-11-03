@@ -1,8 +1,8 @@
-namespace FERRETERIA__Joel.Aplicacion.Modelos
+﻿namespace FERRETERIA__Joel.Aplicacion.Modelos
 {
     /// <summary>
-    /// Datos del formulario de activación de cuenta: el empleado abre el
-    /// enlace recibido por correo (que trae el token) y define su contraseña.
+    /// Datos del formulario de activaciÃ³n de cuenta: el empleado abre el
+    /// enlace recibido por correo (que trae el token) y define su contraseÃ±a.
     /// </summary>
     public class ActivacionSolicitud
     {
@@ -13,3 +13,4 @@ namespace FERRETERIA__Joel.Aplicacion.Modelos
         public string ConfirmarContrasena { get; set; } = string.Empty;
     }
 }
+

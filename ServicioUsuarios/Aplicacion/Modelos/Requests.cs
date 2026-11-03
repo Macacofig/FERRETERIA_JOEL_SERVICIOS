@@ -1,4 +1,4 @@
-namespace FERRETERIA__Joel.ServicioUsuarios.Contratos
+﻿namespace FERRETERIA__Joel.Aplicacion.Modelos
 {
     public class LoginRequest
     {
@@ -44,3 +44,4 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Contratos
         public bool Exitoso { get; set; } = true;
     }
 }
+

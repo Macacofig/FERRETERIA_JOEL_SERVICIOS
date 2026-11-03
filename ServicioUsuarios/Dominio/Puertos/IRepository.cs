@@ -1,7 +1,7 @@
-namespace FERRETERIA__Joel.Dominio.Puertos
+﻿namespace FERRETERIA__Joel.Dominio.Puertos
 {
     /// <summary>
-    /// Contrato base de persistencia. Todas las operaciones son asíncronas
+    /// Contrato base de persistencia. Todas las operaciones son asÃ­ncronas
     /// para no bloquear el hilo durante el acceso a la base de datos.
     /// </summary>
     public interface IRepository<T>
@@ -11,3 +11,4 @@ namespace FERRETERIA__Joel.Dominio.Puertos
         Task<int> InsertarAsync(T entidad);
     }
 }
+

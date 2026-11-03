@@ -1,7 +1,7 @@
-namespace FERRETERIA__Joel.Aplicacion.Modelos
+﻿namespace FERRETERIA__Joel.Aplicacion.Modelos
 {
     /// <summary>
-    /// Resultado del cambio de contraseña. Los errores por campo se muestran
+    /// Resultado del cambio de contraseÃ±a. Los errores por campo se muestran
     /// junto a cada entrada del formulario.
     /// </summary>
     public class ResultadoCambioContrasena
@@ -31,3 +31,4 @@ namespace FERRETERIA__Joel.Aplicacion.Modelos
         }
     }
 }
+

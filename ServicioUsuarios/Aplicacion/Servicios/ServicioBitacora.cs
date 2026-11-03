@@ -1,14 +1,14 @@
-using FERRETERIA__Joel.Dominio.Constantes;
+﻿using FERRETERIA__Joel.Dominio.Constantes;
 using FERRETERIA__Joel.Dominio.Entidades;
 using FERRETERIA__Joel.Infraestructura.Repositorios;
 
 namespace FERRETERIA__Joel.Aplicacion.Servicios
 {
     /// <summary>
-    /// Bitácora de sesiones y de operaciones CRUD. Registra el empleado
-    /// autenticado (identificador, nombre y rol), la operación, la entidad, el
+    /// BitÃ¡cora de sesiones y de operaciones CRUD. Registra el empleado
+    /// autenticado (identificador, nombre y rol), la operaciÃ³n, la entidad, el
     /// registro afectado, la fecha/hora y el resultado. Nunca recibe ni guarda
-    /// contraseñas, hashes, JWT o tokens de activación.
+    /// contraseÃ±as, hashes, JWT o tokens de activaciÃ³n.
     /// </summary>
     public class ServicioBitacora
     {
@@ -50,7 +50,7 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
         }
 
         /// <summary>
-        /// Registra una operación CRUD real. <paramref name="exitoso"/> se
+        /// Registra una operaciÃ³n CRUD real. <paramref name="exitoso"/> se
         /// traduce a EXITOSO/FALLIDO. El identificador del responsable debe
         /// provenir siempre del JWT validado, nunca de un valor enviado por el
         /// cliente.
@@ -102,3 +102,4 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
         }
     }
 }
+

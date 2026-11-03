@@ -1,4 +1,4 @@
-using FERRETERIA__Joel.Aplicacion.Modelos;
+﻿using FERRETERIA__Joel.Aplicacion.Modelos;
 using FERRETERIA__Joel.Dominio.Constantes;
 using FERRETERIA__Joel.Dominio.Entidades;
 using FERRETERIA__Joel.Dominio.Puertos;
@@ -6,15 +6,15 @@ using FERRETERIA__Joel.Dominio.Puertos;
 namespace FERRETERIA__Joel.Aplicacion.Servicios
 {
     /// <summary>
-    /// Gestión del personal: consulta del listado y del ciclo de vida de las
-    /// cuentas (baja lógica y reactivación).
+    /// GestiÃ³n del personal: consulta del listado y del ciclo de vida de las
+    /// cuentas (baja lÃ³gica y reactivaciÃ³n).
     ///
     /// <para>
-    /// La baja es <em>lógica</em>: la fila no se borra nunca, se cambia su
+    /// La baja es <em>lÃ³gica</em>: la fila no se borra nunca, se cambia su
     /// estado a <see cref="EstadoEmpleado.Inactivo"/>. De ese modo el
-    /// histórico de ventas, los comprobantes y la auditoría siguen siendo
-    /// trazables, y la cuenta deja de poder iniciar sesión porque el proceso
-    /// de autenticación exige el estado activo.
+    /// histÃ³rico de ventas, los comprobantes y la auditorÃ­a siguen siendo
+    /// trazables, y la cuenta deja de poder iniciar sesiÃ³n porque el proceso
+    /// de autenticaciÃ³n exige el estado activo.
     /// </para>
     /// </summary>
     public class ServicioPersonal
@@ -34,8 +34,8 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
         }
 
         /// <summary>
-        /// Lista el personal con la proyección sin credenciales: la contraseña
-        /// y el token de activación nunca llegan a la interfaz.
+        /// Lista el personal con la proyecciÃ³n sin credenciales: la contraseÃ±a
+        /// y el token de activaciÃ³n nunca llegan a la interfaz.
         /// </summary>
         public async Task<List<Empleado>> ListarAsync()
         {
@@ -43,9 +43,9 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
         }
 
         /// <summary>
-        /// Reenvía el enlace de activación a una cuenta pendiente (Estado -1):
+        /// ReenvÃ­a el enlace de activaciÃ³n a una cuenta pendiente (Estado -1):
         /// genera un token nuevo y vuelve a enviar el correo. Se usa cuando el
-        /// enlace anterior venció o se perdió.
+        /// enlace anterior venciÃ³ o se perdiÃ³.
         /// </summary>
         public async Task<ResultadoPersonal> ReenviarActivacionAsync(
             int idEmpleado)
@@ -55,7 +55,7 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
                 return new ResultadoPersonal
                 {
                     Exitoso = false,
-                    Mensaje = "El empleado indicado no es válido."
+                    Mensaje = "El empleado indicado no es vÃ¡lido."
                 };
             }
 
@@ -69,7 +69,7 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
                     Exitoso = false,
                     IdEmpleado = idEmpleado,
                     Mensaje = resultado.Errores.FirstOrDefault()
-                        ?? "No se pudo reenviar el enlace de activación."
+                        ?? "No se pudo reenviar el enlace de activaciÃ³n."
                 };
             }
 
@@ -79,13 +79,13 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
                 IdEmpleado = idEmpleado,
                 Estado = EstadoEmpleado.PendienteActivacion,
                 Mensaje =
-                    "Se reenvió el enlace de activación al correo del empleado."
+                    "Se reenviÃ³ el enlace de activaciÃ³n al correo del empleado."
             };
         }
 
         /// <summary>
         /// Da de baja a un empleado: la cuenta pasa a estado inactivo sin
-        /// borrado físico y deja de poder iniciar sesión.
+        /// borrado fÃ­sico y deja de poder iniciar sesiÃ³n.
         /// </summary>
         public async Task<ResultadoPersonal> DarDeBajaAsync(int idEmpleado)
         {
@@ -97,30 +97,30 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
 
         /// <summary>
         /// Reactiva una cuenta dada de baja. La cuenta vuelve a estado
-        /// pendiente de activación y se le reenvía el enlace de activación al
-        /// correo: el empleado debe definir de nuevo su contraseña.
+        /// pendiente de activaciÃ³n y se le reenvÃ­a el enlace de activaciÃ³n al
+        /// correo: el empleado debe definir de nuevo su contraseÃ±a.
         /// </summary>
         public async Task<ResultadoPersonal> ReactivarAsync(int idEmpleado)
         {
             ResultadoPersonal resultado = await CambiarEstadoAsync(
                 idEmpleado,
                 EstadoEmpleado.PendienteActivacion,
-                "La cuenta fue reactivada y quedó pendiente de activación.");
+                "La cuenta fue reactivada y quedÃ³ pendiente de activaciÃ³n.");
 
             if (!resultado.Exitoso)
             {
                 return resultado;
             }
 
-            // Se reenvía el enlace de activación con un token nuevo para que el
-            // empleado pueda definir su contraseña de nuevo.
+            // Se reenvÃ­a el enlace de activaciÃ³n con un token nuevo para que el
+            // empleado pueda definir su contraseÃ±a de nuevo.
             try
             {
                 await _servicioActivacion.ReenviarActivacionAsync(idEmpleado);
             }
             catch
             {
-                // La reactivación ya se aplicó; si el correo falla, el
+                // La reactivaciÃ³n ya se aplicÃ³; si el correo falla, el
                 // administrador puede reenviarlo desde la lista de pendientes.
             }
 
@@ -137,7 +137,7 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
                 return new ResultadoPersonal
                 {
                     Exitoso = false,
-                    Mensaje = "El empleado indicado no es válido."
+                    Mensaje = "El empleado indicado no es vÃ¡lido."
                 };
             }
 
@@ -177,3 +177,4 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
         }
     }
 }
+

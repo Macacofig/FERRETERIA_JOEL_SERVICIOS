@@ -1,14 +1,14 @@
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
 
-namespace FERRETERIA__Joel.ServicioUsuarios.Seguridad
+namespace FERRETERIA__Joel.Infraestructura.Servicios
 {
     /// <summary>
     /// Emite los JWT de la API. El token solo contiene datos de identidad
-    /// mínimos (id, nombre, correo, rol, nombre de usuario y jti). Nunca
-    /// incluye contraseñas, hashes ni tokens de activación.
+    /// mÃ­nimos (id, nombre, correo, rol, nombre de usuario y jti). Nunca
+    /// incluye contraseÃ±as, hashes ni tokens de activaciÃ³n.
     /// </summary>
     public class JwtEmisor
     {
@@ -78,16 +78,17 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Seguridad
 
         public string RequerirClave()
         {
-            string? clave = _configuration["Jwt:Clave"];
+            string? clave = _configuration["Jwt:Key"];
 
             if (string.IsNullOrWhiteSpace(clave) || clave.Length < 32)
             {
                 throw new InvalidOperationException(
-                    "Falta 'Jwt:Clave' o es demasiado corta (mínimo 32 caracteres). "
-                    + "Defina la variable de entorno Jwt__Clave (archivo .env).");
+                    "Falta 'Jwt:Key' o es demasiado corta (mÃ­nimo 32 caracteres). "
+                    + "Defina la variable de entorno Jwt__Key (archivo .env).");
             }
 
             return clave;
         }
     }
 }
+

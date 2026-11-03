@@ -5,8 +5,7 @@ using FERRETERIA__Joel.Aplicacion.Servicios;
 using FERRETERIA__Joel.Dominio.Constantes;
 using FERRETERIA__Joel.Dominio.Entidades;
 using FERRETERIA__Joel.Dominio.Puertos;
-using FERRETERIA__Joel.ServicioUsuarios.Contratos;
-using FERRETERIA__Joel.ServicioUsuarios.Seguridad;
+using FERRETERIA__Joel.Infraestructura.Servicios;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,7 +14,7 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
     /// <summary>
     /// AutenticaciÃ³n y sesiÃ³n. Emite JWT Bearer y expone la identidad actual.
     /// El front Razor es el Ãºnico cliente: guarda el token en su sesiÃ³n de
-    /// servidor (Redis) y nunca lo expone a JavaScript ni a localStorage.
+    /// servidor y nunca lo expone a JavaScript ni a localStorage.
     /// </summary>
     [ApiController]
     [Route("api/usuarios")]
@@ -207,4 +206,5 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
         }
     }
 }
+
 

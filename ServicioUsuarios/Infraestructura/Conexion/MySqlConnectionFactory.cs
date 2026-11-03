@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using MySql.Data.MySqlClient;
 
 namespace FERRETERIA__Joel.Infraestructura.Conexion
@@ -15,9 +15,9 @@ namespace FERRETERIA__Joel.Infraestructura.Conexion
             if (string.IsNullOrWhiteSpace(cadena))
             {
                 throw new InvalidOperationException(
-                    "Falta la cadena de conexión 'ConnectionStrings:MySqlConnection'. "
+                    "Falta la cadena de conexiÃ³n 'ConnectionStrings:MySqlConnection'. "
                     + "Defina la variable de entorno ConnectionStrings__MySqlConnection "
-                    + "(archivo .env de la raíz o docker-compose.yml).");
+                    + "(archivo .env de la raÃ­z o docker-compose.yml).");
             }
 
             _connectionString = cadena;

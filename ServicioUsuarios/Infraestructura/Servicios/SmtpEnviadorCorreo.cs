@@ -1,19 +1,19 @@
-using FERRETERIA__Joel.Dominio.Puertos;
+﻿using FERRETERIA__Joel.Dominio.Puertos;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using MimeKit;
 
-namespace FERRETERIA__Joel.Infraestructura.Correo
+namespace FERRETERIA__Joel.Infraestructura.Servicios
 {
     /// <summary>
-    /// Enviador de correo por SMTP (MailKit). La configuración se toma de la
-    /// sección <c>Smtp</c> del archivo <c>.env</c>/appsettings:
+    /// Enviador de correo por SMTP (MailKit). La configuraciÃ³n se toma de la
+    /// secciÃ³n <c>Smtp</c> del archivo <c>.env</c>/appsettings:
     /// <c>Smtp:Host</c>, <c>Smtp:Puerto</c>, <c>Smtp:Usuario</c>,
     /// <c>Smtp:Clave</c>, <c>Smtp:Remitente</c> y <c>Smtp:UsarSsl</c>.
     ///
-    /// Cuando no hay SMTP configurado (host vacío), el enlace de activación se
+    /// Cuando no hay SMTP configurado (host vacÃ­o), el enlace de activaciÃ³n se
     /// escribe en el log para poder probar el flujo en desarrollo sin servidor
     /// de correo.
     /// </summary>
@@ -44,7 +44,7 @@ namespace FERRETERIA__Joel.Infraestructura.Correo
             if (!EstaConfigurado)
             {
                 _logger.LogWarning(
-                    "SMTP no configurado. Enlace de activación para {Correo}: {Enlace}",
+                    "SMTP no configurado. Enlace de activaciÃ³n para {Correo}: {Enlace}",
                     destinatario,
                     enlaceActivacion);
 
@@ -82,7 +82,7 @@ namespace FERRETERIA__Joel.Infraestructura.Correo
             await cliente.DisconnectAsync(true);
 
             _logger.LogInformation(
-                "Correo de activación enviado a {Correo}.",
+                "Correo de activaciÃ³n enviado a {Correo}.",
                 destinatario);
         }
 
@@ -98,12 +98,12 @@ namespace FERRETERIA__Joel.Infraestructura.Correo
 
             string remitenteNombre =
                 _configuration["Smtp:RemitenteNombre"]?.Trim()
-                ?? "Ferretería Joel";
+                ?? "FerreterÃ­a Joel";
 
             MimeMessage mensaje = new();
             mensaje.From.Add(new MailboxAddress(remitenteNombre, remitente));
             mensaje.To.Add(MailboxAddress.Parse(destinatario));
-            mensaje.Subject = "Activa tu cuenta · Ferretería Joel";
+            mensaje.Subject = "Activa tu cuenta Â· FerreterÃ­a Joel";
 
             string saludo = string.IsNullOrWhiteSpace(nombreEmpleado)
                 ? "Hola"
@@ -112,15 +112,15 @@ namespace FERRETERIA__Joel.Infraestructura.Correo
             mensaje.Body = new BodyBuilder
             {
                 HtmlBody = $@"<p>{saludo},</p>
-<p>Se creó una cuenta para ti en el sistema de Ferretería Joel.</p>
-<p>Para definir tu contraseña, abre el siguiente enlace (válido por 10 minutos):</p>
+<p>Se creÃ³ una cuenta para ti en el sistema de FerreterÃ­a Joel.</p>
+<p>Para definir tu contraseÃ±a, abre el siguiente enlace (vÃ¡lido por 10 minutos):</p>
 <p><a href=""{enlaceActivacion}"">Activar mi cuenta</a></p>
 <p>Si no reconoces este registro, ignora este correo.</p>",
                 TextBody = $@"{saludo},
 
-Se creó una cuenta para ti en el sistema de Ferretería Joel.
+Se creÃ³ una cuenta para ti en el sistema de FerreterÃ­a Joel.
 
-Abre este enlace para definir tu contraseña (válido por 10 minutos):
+Abre este enlace para definir tu contraseÃ±a (vÃ¡lido por 10 minutos):
 {enlaceActivacion}
 
 Si no reconoces este registro, ignora este correo."
@@ -144,3 +144,4 @@ Si no reconoces este registro, ignora este correo."
         }
     }
 }
+

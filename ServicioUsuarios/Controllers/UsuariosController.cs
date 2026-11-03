@@ -4,8 +4,7 @@ using FERRETERIA__Joel.Aplicacion.Servicios;
 using FERRETERIA__Joel.Dominio.Constantes;
 using FERRETERIA__Joel.Dominio.Entidades;
 using FERRETERIA__Joel.Dominio.Puertos;
-using FERRETERIA__Joel.ServicioUsuarios.Contratos;
-using FERRETERIA__Joel.ServicioUsuarios.Seguridad;
+using FERRETERIA__Joel.Infraestructura.Servicios;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -419,5 +418,6 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
         }
     }
 }
+
 
 

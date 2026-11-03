@@ -1,14 +1,14 @@
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 
-namespace FERRETERIA__Joel.Dominio.Validaciones
+namespace FERRETERIA__Joel.Dominio.Utilidades
 {
     /// <summary>
-    /// Reglas comunes de texto para todos los módulos.
-    /// Los campos de nombre solo admiten letras (con acentos y Ñ),
-    /// espacios y la puntuación habitual de nombres
-    /// (., ' - &amp; ( )). No se permiten números
+    /// Reglas comunes de texto para todos los mÃ³dulos.
+    /// Los campos de nombre solo admiten letras (con acentos y Ã‘),
+    /// espacios y la puntuaciÃ³n habitual de nombres
+    /// (., ' - &amp; ( )). No se permiten nÃºmeros
     /// ni caracteres especiales como * @ # % etc.
-    /// La descripción queda fuera de esta regla.
+    /// La descripciÃ³n queda fuera de esta regla.
     /// </summary>
     public static class ValidacionesTexto
     {
@@ -37,3 +37,4 @@ namespace FERRETERIA__Joel.Dominio.Validaciones
         }
     }
 }
+

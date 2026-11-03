@@ -1,8 +1,8 @@
-namespace FERRETERIA__Joel.Infraestructura.Seguridad
+﻿namespace FERRETERIA__Joel.Infraestructura.Servicios
 {
     /// <summary>
-    /// Parámetros de Argon2id (variante híbrida) usados por el hasheador.
-    /// Valores alineados a la recomendación mínima de OWASP para Argon2id.
+    /// ParÃ¡metros de Argon2id (variante hÃ­brida) usados por el hasheador.
+    /// Valores alineados a la recomendaciÃ³n mÃ­nima de OWASP para Argon2id.
     /// </summary>
     public static class ConfiguracionArgon2
     {
@@ -14,3 +14,4 @@ namespace FERRETERIA__Joel.Infraestructura.Seguridad
         public const int SaltLength = 16;
     }
 }
+

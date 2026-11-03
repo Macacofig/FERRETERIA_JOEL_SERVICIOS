@@ -1,10 +1,10 @@
-using FERRETERIA__Joel.Dominio.Constantes;
+﻿using FERRETERIA__Joel.Dominio.Constantes;
 
 namespace FERRETERIA__Joel.Aplicacion.Modelos
 {
     /// <summary>
-    /// Datos editables de una cuenta. La contraseña no forma parte de esta
-    /// edición: se cambia únicamente desde el flujo de cambio de contraseña.
+    /// Datos editables de una cuenta. La contraseÃ±a no forma parte de esta
+    /// ediciÃ³n: se cambia Ãºnicamente desde el flujo de cambio de contraseÃ±a.
     /// </summary>
     public class EdicionEmpleadoSolicitud : IRegistroCredenciales
     {
@@ -19,3 +19,4 @@ namespace FERRETERIA__Joel.Aplicacion.Modelos
         public string Rol { get; set; } = RolesSistema.EmpleadoVenta;
     }
 }
+

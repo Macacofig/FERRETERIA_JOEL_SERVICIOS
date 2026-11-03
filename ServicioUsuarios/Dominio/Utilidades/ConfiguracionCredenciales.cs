@@ -1,4 +1,4 @@
-namespace FERRETERIA__Joel.Dominio.ConfiguracionValidacion
+﻿namespace FERRETERIA__Joel.Dominio.Utilidades
 {
     public static class ConfiguracionCredenciales
     {
@@ -16,3 +16,4 @@ namespace FERRETERIA__Joel.Dominio.ConfiguracionValidacion
             "!@#$%^&*()-_=+[]{};:,.?/";
     }
 }
+
