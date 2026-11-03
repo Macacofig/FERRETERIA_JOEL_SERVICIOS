@@ -7,6 +7,7 @@ using FERRETERIA__Joel.Infraestructura.Repositorios;
 using FERRETERIA__Joel.Infraestructura.Servicios;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,6 +22,8 @@ builder.Configuration.AddInMemoryCollection(
 
 builder.Services.AddControllers();
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(ConfiguracionSwaggerBearer);
 
 // ---------------------------------------------------------------------------
 // Persistencia: se reutiliza exactamente el mismo esquema MySQL del monolito.
@@ -165,6 +168,11 @@ if (sirveHttps)
 }
 
 app.UseRouting();
+app.UseSwagger();
+app.UseSwaggerUI(opciones =>
+{
+    opciones.SwaggerEndpoint("/swagger/v1/swagger.json", "ServicioUsuarios v1");
+});
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
@@ -240,5 +248,40 @@ static string? BuscarArchivoEnv(string directorio)
     }
 
     return null;
+}
+
+static void ConfiguracionSwaggerBearer(Swashbuckle.AspNetCore.SwaggerGen.SwaggerGenOptions opciones)
+{
+    opciones.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "ServicioUsuarios",
+        Version = "v1",
+        Description = "API de autenticación, empleados, bitácora y activación de cuentas."
+    });
+
+    opciones.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = "Ingrese el JWT emitido por api/usuarios/login.",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT"
+    });
+
+    opciones.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
 }
 
