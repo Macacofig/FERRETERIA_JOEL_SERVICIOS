@@ -1,13 +1,14 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
-namespace FERRETERIA_Web.Pages
+namespace FERRETERIA__Joel.Pages
 {
     public class IndexModel : PageModel
     {
-        public void OnGet()
+        public async Task<IActionResult> OnGetAsync()
         {
-
+            ViewData["ActiveMenu"] = "Home";
+            return Page();
         }
     }
 }

@@ -1,74 +1,349 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Ferretería Joel</title>
-    <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/FERRETERIA_Web.styles.css" asp-append-version="true" />
+    <link rel="icon" type="image/png" href="~/favicon.png" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container">
-                <a class="navbar-brand" asp-area="" asp-page="/Index">Ferretería Joel</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-page="/Index">Inicio</a>
-                        </li>
-                        @if (User.Identity?.IsAuthenticated == true)
+    @{
+        string activo = (string?)ViewData["ActiveMenu"] ?? "";
+    }
+    <header class="fj-header">
+        <div class="fj-header-inner">
+
+            <a class="fj-brand" asp-page="/Index" aria-label="Ir al inicio">
+                <span class="fj-brand-mark" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" /></svg>
+                </span>
+                <span class="fj-brand-name">FERRETERÍA <strong>JOEL</strong></span>
+                <span class="fj-header-atendido">Ferretería Joel</span>
+            </a>
+
+            <nav class="fj-nav" id="fjNav" aria-label="Navegación principal">
+                <ul class="fj-menu">
+
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        @if (activo == "Home")
                         {
-                            @if (User.IsInRole("Administrador"))
-                            {
-                                <li class="nav-item">
-                                    <a class="nav-link text-dark" asp-page="/Personal">Personal</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link text-dark" asp-page="/NuevoUsuario">Nuevo usuario</a>
-                                </li>
-                            }
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-page="/CambiarPassword">Cambiar contraseña</a>
-                            </li>
-                            <li class="nav-item">
-                                <form method="post" asp-page="/Logout" class="d-inline">
-                                    <button type="submit" class="nav-link text-dark btn btn-link">Cerrar sesión</button>
-                                </form>
+                            <li class="fj-menu-item is-active">
+                                <a class="fj-menu-link" asp-page="/Index" aria-current="page">Home</a>
                             </li>
                         }
                         else
                         {
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-page="/Login">Iniciar sesión</a>
+                            <li class="fj-menu-item">
+                                <a class="fj-menu-link" asp-page="/Index">Home</a>
                             </li>
                         }
-                    </ul>
-                </div>
-            </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - FERRETERIA_Web - <a asp-area="" asp-page="/Privacy">Privacy</a>
+                        @if (User.IsInRole(RolesSistema.Administrador))
+                        {
+                            <!-- Gestión de Productos -->
+                            <li class="fj-menu-item fj-dropdown">
+                            <button class="fj-menu-link fj-dropdown-toggle" type="button"
+                                    aria-expanded="false">
+                                <span>Gestión de Productos</span>
+                                <svg class="fj-dropdown-chevron" viewBox="0 0 24 24"
+                                     fill="none" stroke="currentColor" stroke-width="1.8"
+                                     stroke-linecap="round" stroke-linejoin="round"
+                                     aria-hidden="true">
+                                    <polyline points="6 9 12 15 18 9" />
+                                </svg>
+                            </button>
+
+                            <div class="fj-dropdown-menu">
+                                <a asp-page="/Productos">Productos</a>
+                                <a asp-page="/Categorias">Categorías</a>
+                                <a asp-page="/Marcas">Marcas</a>
+                                <span class="disabled">Unidades de venta</span>
+                                <span class="disabled">Precios y ofertas</span>
+                            </div>
+                        </li>
+
+                        <!-- Gestión de Inventarios -->
+                        <li class="fj-menu-item fj-dropdown">
+                            <button class="fj-menu-link fj-dropdown-toggle" type="button"
+                                    aria-expanded="false">
+                                <span>Gestión de Inventarios</span>
+                                <svg class="fj-dropdown-chevron" viewBox="0 0 24 24"
+                                     fill="none" stroke="currentColor" stroke-width="1.8"
+                                     stroke-linecap="round" stroke-linejoin="round"
+                                     aria-hidden="true">
+                                    <polyline points="6 9 12 15 18 9" />
+                                </svg>
+                            </button>
+
+                            <div class="fj-dropdown-menu">
+                                <a asp-page="/Proveedores">Proveedores</a>
+                                <span class="disabled">Inventario</span>
+                                <span class="disabled">Compras</span>
+                                <span class="disabled">Historial de compras</span>
+                            </div>
+                        </li>
+
+                        <!-- Ventas y Caja (Administrador: solo consulta) -->
+                        <li class="fj-menu-item fj-dropdown">
+                            <button class="fj-menu-link fj-dropdown-toggle" type="button"
+                                    aria-expanded="false">
+                                <span>Ventas y Caja</span>
+                                <svg class="fj-dropdown-chevron" viewBox="0 0 24 24"
+                                     fill="none" stroke="currentColor" stroke-width="1.8"
+                                     stroke-linecap="round" stroke-linejoin="round"
+                                     aria-hidden="true">
+                                    <polyline points="6 9 12 15 18 9" />
+                                </svg>
+                            </button>
+
+                            <div class="fj-dropdown-menu">
+                                <a asp-page="/Ventas">Historial de ventas</a>
+                                <span class="disabled">Recibos</span>
+                            </div>
+                        </li>
+
+                        <!-- Administración -->
+                        <li class="fj-menu-item fj-dropdown">
+                            <button class="fj-menu-link fj-dropdown-toggle" type="button"
+                                    aria-expanded="false">
+                                <span>Administración</span>
+                                <svg class="fj-dropdown-chevron" viewBox="0 0 24 24"
+                                     fill="none" stroke="currentColor" stroke-width="1.8"
+                                     stroke-linecap="round" stroke-linejoin="round"
+                                     aria-hidden="true">
+                                    <polyline points="6 9 12 15 18 9" />
+                                </svg>
+                            </button>
+
+                            <div class="fj-dropdown-menu">
+                                <span class="disabled">Reportes y estadísticas</span>
+                                <span class="disabled">Clientes</span>
+                                <a asp-page="/Personal">Personal y bajas</a>
+                                <a asp-page="/Bitacora">Bitácora de auditoría</a>
+                                <span class="disabled">Configuración</span>
+                            </div>
+                        </li>
+                        }
+                        else if (User.IsInRole(RolesSistema.EmpleadoVenta))
+                        {
+                            <!-- Ventas y Caja (EmpleadoVenta: registra y anula) -->
+                            <li class="fj-menu-item fj-dropdown">
+                                <button class="fj-menu-link fj-dropdown-toggle" type="button"
+                                        aria-expanded="false">
+                                    <span>Ventas y Caja</span>
+                                    <svg class="fj-dropdown-chevron" viewBox="0 0 24 24"
+                                         fill="none" stroke="currentColor" stroke-width="1.8"
+                                         stroke-linecap="round" stroke-linejoin="round"
+                                         aria-hidden="true">
+                                        <polyline points="6 9 12 15 18 9" />
+                                    </svg>
+                                </button>
+
+                                <div class="fj-dropdown-menu">
+                                    <a asp-page="/CatalogoProductos">Catálogo de productos</a>
+                                    <a asp-page="/Venta">Registrar venta</a>
+                                    <a asp-page="/Ventas">Historial de ventas</a>
+                                    <span class="disabled">Recibos</span>
+                                </div>
+                            </li>
+                        }
+
+                        <!-- Cuenta: disponible para cualquier usuario autenticado -->
+                        <li class="fj-menu-item fj-dropdown">
+                            <button class="fj-menu-link fj-dropdown-toggle" type="button"
+                                    aria-expanded="false">
+                                <span>Mi cuenta</span>
+                                <svg class="fj-dropdown-chevron" viewBox="0 0 24 24"
+                                     fill="none" stroke="currentColor" stroke-width="1.8"
+                                     stroke-linecap="round" stroke-linejoin="round"
+                                     aria-hidden="true">
+                                    <polyline points="6 9 12 15 18 9" />
+                                </svg>
+                            </button>
+
+                            <div class="fj-dropdown-menu">
+                                <a asp-page="/CambiarContrasena">Cambiar contraseña</a>
+                                @if (User.IsInRole(RolesSistema.Administrador))
+                                {
+                                    <a asp-page="/Bitacora">Bitácora de auditoría</a>
+                                }
+                            </div>
+                        </li>
+                    }
+                    else
+                    {
+                        <partial name="_NavegacionVisitante" />
+                    }
+                </ul>
+
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <div class="fj-nav-side">
+                        <a class="fj-userchip" href="#" aria-label="Perfil de usuario">
+                            <span class="fj-userchip-avatar" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+                            </span>
+                            <span class="fj-userchip-name">@(User.Identity?.Name ?? "Usuario")</span>
+                        </a>
+                        <form method="post" asp-page="/Logout" class="fj-logout-form">
+                            <button class="fj-icon-btn" type="submit" aria-label="Cerrar sesión" title="Cerrar sesión">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>
+                            </button>
+                        </form>
+                    </div>
+                }
+            </nav>
+
+            <button class="fj-burger" type="button" data-fj-burger aria-label="Abrir menú" aria-expanded="false" aria-controls="fjNav">
+                <span class="fj-burger-line"></span>
+                <span class="fj-burger-line"></span>
+                <span class="fj-burger-line"></span>
+            </button>
+        </div>
+    </header>
+
+    <main class="fj-main">
+        @RenderBody()
+    </main>
+
+    <footer class="fj-footer">
+        <div class="fj-footer-shell">
+            <div class="fj-footer-col fj-footer-brandblk">
+                <div class="fj-footer-brand">
+                    <span class="fj-brand-mark" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" /></svg>
+                    </span>
+                    <span class="fj-brand-name">FERRETERÍA <strong>JOEL</strong></span>
+                </div>
+                <p class="fj-footer-tag">Herramientas y materiales de construcción para cada proyecto.</p>
+            </div>
+
+            <div class="fj-footer-col">
+                <p class="fj-footer-title">Navegación</p>
+                <ul class="fj-footer-list">
+                    <li><a asp-page="/Index">Inicio</a></li>
+                    <li><a asp-page="/Productos">Productos</a></li>
+                    <li><a asp-page="/Categorias">Categorías</a></li>
+                    <li><a asp-page="/Marcas">Marcas</a></li>
+                    <li><a asp-page="/Proveedores">Proveedores</a></li>
+                    <li><span>Inventario</span></li>
+                </ul>
+            </div>
+
+            <div class="fj-footer-col">
+                <p class="fj-footer-title">Contacto</p>
+                <ul class="fj-footer-list fj-footer-list-contact">
+                    <li>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>
+                        Av. Central N.º 123, El Alto · La Paz
+                    </li>
+                    <li>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" /></svg>
+                        +591 2 123 4567
+                    </li>
+                    <li>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" /><polyline points="22,6 12,13 2,6" /></svg>
+                        contacto@ferreteriajoel.com
+                    </li>
+                    <li>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+                        Lun – Sáb · 8:00 – 19:00
+                    </li>
+                </ul>
+            </div>
+
+            <div class="fj-footer-col">
+                <p class="fj-footer-title">La empresa</p>
+                <ul class="fj-footer-list">
+                    <li><span>Sobre nosotros</span></li>
+                    <li><span>Política de devoluciones</span></li>
+                    <li><span>Trabaja con nosotros</span></li>
+                </ul>
+            </div>
+        </div>
+        <div class="fj-footer-bottom">
+            <span>© 2026 Ferretería Joel. Todos los derechos reservados.</span>
         </div>
     </footer>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <script>
+            document.addEventListener('DOMContentLoaded', function () {
+
+                const dropdowns = document.querySelectorAll('.fj-dropdown');
+
+                dropdowns.forEach(function (dropdown) {
+
+                    const button = dropdown.querySelector('.fj-dropdown-toggle');
+
+                    button.addEventListener('click', function (e) {
+
+                        e.stopPropagation();
+
+                        const estabaAbierto = dropdown.classList.contains('is-open');
+
+                        // Cerrar todos los menús
+                        dropdowns.forEach(function (item) {
+                            item.classList.remove('is-open');
+
+                            const btn = item.querySelector('.fj-dropdown-toggle');
+
+                            if (btn) {
+                                btn.setAttribute('aria-expanded', 'false');
+                            }
+                        });
+
+                        // Abrir el seleccionado
+                        if (!estabaAbierto) {
+                            dropdown.classList.add('is-open');
+                            button.setAttribute('aria-expanded', 'true');
+                        }
+                    });
+                });
+
+                // Cerrar cuando se hace clic fuera del menú
+                document.addEventListener('click', function () {
+
+                    dropdowns.forEach(function (dropdown) {
+
+                        dropdown.classList.remove('is-open');
+
+                        const button = dropdown.querySelector('.fj-dropdown-toggle');
+
+                        if (button) {
+                            button.setAttribute('aria-expanded', 'false');
+                        }
+                    });
+
+                });
+
+                // Cerrar con ESC
+                document.addEventListener('keydown', function (e) {
+
+                    if (e.key === 'Escape') {
+
+                        dropdowns.forEach(function (dropdown) {
+
+                            dropdown.classList.remove('is-open');
+
+                            const button = dropdown.querySelector('.fj-dropdown-toggle');
+
+                            if (button) {
+                                button.setAttribute('aria-expanded', 'false');
+                            }
+                        });
+                    }
+                });
+
+            });
+    </script>
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>

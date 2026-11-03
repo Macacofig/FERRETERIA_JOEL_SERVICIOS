@@ -1,44 +1,152 @@
-using FERRETERIA_Web.Models;
-using FERRETERIA_Web.Services;
+using FERRETERIA__Joel.Aplicacion.Modelos;
+using FERRETERIA__Joel.Helpers;
+using FERRETERIA__Joel.Servicios;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
-namespace FERRETERIA_Web.Pages;
-
-[AllowAnonymous]
-public sealed class ActivarCuentaModel(IServicioUsuariosClient servicioUsuarios) : PageModel
+namespace FERRETERIA__Joel.Pages
 {
-    public string? Mensaje { get; private set; }
-    public bool Activada { get; private set; }
-
-    [BindProperty]
-    public ActivarCuentaRequest Solicitud { get; set; } = new(string.Empty, string.Empty);
-
-    public void OnGet()
+    /// <summary>
+    /// Pantalla pública de activación. El front descifra el token del enlace y
+    /// delega la validación y el consumo en ServicioUsuarios; no guarda ni
+    /// verifica contraseñas.
+    /// </summary>
+    [AllowAnonymous]
+    public class ActivarCuentaModel : PageModel
     {
-    }
+        private readonly UsuariosApiCliente _api;
+        private readonly ILogger<ActivarCuentaModel> _logger;
 
-    public async Task<IActionResult> OnPostAsync([FromQuery] string token, CancellationToken cancellationToken)
-    {
-        if (string.IsNullOrWhiteSpace(token))
+        [BindProperty]
+        public ActivacionSolicitud Solicitud { get; set; } = new();
+
+        public string? Mensaje { get; set; }
+
+        public string? NombreEmpleado { get; set; }
+
+        public bool TokenValido { get; set; }
+
+        public bool Activada { get; set; }
+
+        public Dictionary<string, string> ErroresCampo { get; set; } = new();
+
+        public ActivarCuentaModel(
+            UsuariosApiCliente api,
+            ILogger<ActivarCuentaModel> logger)
         {
-            Mensaje = "El enlace de activación no es válido.";
+            _api = api;
+            _logger = logger;
+        }
+
+        public async Task<IActionResult> OnGetAsync(string? token)
+        {
+            ViewData["ActiveMenu"] = "";
+
+            string? tokenDescifrado = Descifrar(token);
+
+            if (string.IsNullOrWhiteSpace(tokenDescifrado))
+            {
+                Mensaje = "El enlace de activación no es válido.";
+                TokenValido = false;
+                return Page();
+            }
+
+            try
+            {
+                RespuestaApi<ActivacionApiResultado> respuesta =
+                    await _api.ValidarActivacionAsync(tokenDescifrado);
+
+                ActivacionApiResultado? resultado = respuesta.Datos;
+
+                if (resultado is null || !resultado.Exitoso)
+                {
+                    Mensaje = resultado?.Mensaje ?? respuesta.Mensaje;
+                    TokenValido = false;
+                    return Page();
+                }
+
+                TokenValido = true;
+                NombreEmpleado = resultado.NombreEmpleado;
+                Solicitud.Token = tokenDescifrado;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "No se pudo validar el enlace de activación.");
+                Mensaje =
+                    "No se pudo conectar con el servicio de usuarios. Inténtelo nuevamente.";
+                TokenValido = false;
+            }
+
             return Page();
         }
 
-        var resultado = await servicioUsuarios.ActivarAsync(
-            token,
-            Solicitud,
-            cancellationToken);
-        if (!resultado.Exitoso)
+        public async Task<IActionResult> OnPostAsync()
         {
-            Mensaje = resultado.Error;
+            ViewData["ActiveMenu"] = "";
+
+            string? tokenDescifrado = Descifrar(Solicitud.Token);
+
+            if (string.IsNullOrWhiteSpace(tokenDescifrado))
+            {
+                Mensaje = "El enlace de activación no es válido.";
+                TokenValido = false;
+                return Page();
+            }
+
+            try
+            {
+                RespuestaApi<ActivacionApiResultado> respuesta =
+                    await _api.ActivarAsync(
+                        tokenDescifrado,
+                        Solicitud.Contrasena,
+                        Solicitud.ConfirmarContrasena);
+
+                ActivacionApiResultado? resultado = respuesta.Datos;
+
+                if (resultado is null || !resultado.Exitoso)
+                {
+                    Mensaje = resultado?.Mensaje ?? respuesta.Mensaje;
+                    TokenValido = false;
+                    return Page();
+                }
+
+                if (resultado.ErroresCampo.Any())
+                {
+                    TokenValido = true;
+                    NombreEmpleado = resultado.NombreEmpleado;
+                    ErroresCampo = resultado.ErroresCampo;
+                    Solicitud.Token = tokenDescifrado;
+                    Solicitud.Contrasena = string.Empty;
+                    Solicitud.ConfirmarContrasena = string.Empty;
+                    return Page();
+                }
+
+                TokenValido = false;
+                Activada = true;
+                NombreEmpleado = resultado.NombreEmpleado;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "No se pudo activar la cuenta.");
+                Mensaje =
+                    "No se pudo conectar con el servicio de usuarios. Inténtelo nuevamente.";
+                TokenValido = false;
+            }
+
             return Page();
         }
 
-        Activada = true;
-        Mensaje = "Cuenta activada correctamente. Ya puede iniciar sesión.";
-        return Page();
+        private static string? Descifrar(string? token)
+        {
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                return null;
+            }
+
+            return UrlProtector.Descifrar(token) ?? token;
+        }
     }
 }

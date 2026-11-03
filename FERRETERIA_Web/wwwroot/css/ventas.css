@@ -1,0 +1,242 @@
+/* FERRETERÍA JOEL — Historial de ventas. */
+
+.fj-table-ventas th:nth-child(1),
+.fj-table-ventas td:nth-child(1) {
+    width: 13rem;
+}
+
+.fj-table-ventas th:nth-child(1) {
+    white-space: nowrap;
+}
+
+.fj-table-ventas th:nth-child(3),
+.fj-table-ventas td:nth-child(3) {
+    width: 10.5rem;
+}
+
+.fj-table-ventas th:nth-child(4),
+.fj-table-ventas td:nth-child(4) {
+    width: 6.5rem;
+}
+
+.fj-table-ventas th:nth-child(5),
+.fj-table-ventas td:nth-child(5) {
+    width: 8rem;
+}
+
+.fj-table-ventas th:nth-child(6),
+.fj-table-ventas td:nth-child(6) {
+    width: 7.5rem;
+}
+
+.fj-table-ventas th:nth-child(7),
+.fj-table-ventas td:nth-child(7) {
+    width: 10rem;
+}
+
+/* ---------- Modal de detalle ---------- */
+
+/* El diálogo global (.fj-modal-dialog) tiene max-width: 26rem, lo que
+   dejaba este modal demasiado estrecho: la tabla repartía sus 4 columnas
+   en partes iguales y "PRODUCTO"/"TOTAL" se partían en dos líneas.
+   Aquí ampliamos el ancho útil y damos aire al contenido. */
+.fj-ventas-modal-dlg {
+    width: min(46rem, 100%);
+    max-width: min(46rem, 100%);
+    padding: 1.75rem 2rem;
+    text-align: left;
+}
+
+.fj-ventas-modal-dlg > .fj-modal-title {
+    text-align: center;
+    margin-bottom: 0.375rem;
+}
+
+.fj-ventas-modal-dlg > .fj-modal-message {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.ventas-detalle-cabecera {
+    margin-bottom: 1.5rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem 1.5rem;
+}
+
+.ventas-detalle-tabla {
+    max-height: 20rem;
+    overflow-y: auto;
+    border: 0.0625rem solid var(--borde-suave);
+    border-radius: var(--radius-sm);
+}
+
+/* Encabezados de una sola línea y columnas con ancho definido:
+   Producto se lleva el espacio restante; Cant./Precio/Total compactas. */
+.ventas-detalle-tabla .fj-table thead th {
+    white-space: nowrap;
+}
+
+.ventas-detalle-tabla th:nth-child(2),
+.ventas-detalle-tabla td:nth-child(2) {
+    width: 4.5rem;
+}
+
+.ventas-detalle-tabla th:nth-child(3),
+.ventas-detalle-tabla td:nth-child(3) {
+    width: 6.5rem;
+}
+
+.ventas-detalle-tabla th:nth-child(4),
+.ventas-detalle-tabla td:nth-child(4) {
+    width: 7.5rem;
+}
+
+.ventas-detalle-tabla .fj-td-cantidad {
+    text-align: right;
+}
+
+.ventas-detalle-totales {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 0.0625rem solid var(--borde-suave);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.ventas-detalle-totales > div {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    color: var(--texto-sec);
+    font-size: 0.9rem;
+}
+
+.ventas-detalle-totales .ventas-detalle-total {
+    margin-top: 0.5rem;
+    padding-top: 0.75rem;
+    border-top: 0.0625rem dashed var(--borde);
+    color: var(--texto);
+    font-size: 1.15rem;
+    font-weight: 700;
+}
+
+/* Separación clara entre el resumen y el botón de cierre */
+.fj-ventas-modal-dlg .fj-modal-actions {
+    margin-top: 1.75rem;
+    justify-content: center;
+}
+
+.ventas-detalle-motivo {
+    margin: 1rem 0 0;
+    padding: 0.6rem 0.75rem;
+    border-radius: var(--radius-sm);
+    background: #fdecea;
+    color: var(--danger);
+    font-size: 0.85rem;
+}
+
+@media (max-width: 640px) {
+    .fj-ventas-modal-dlg {
+        padding: 1.5rem 1.25rem;
+    }
+
+    .ventas-detalle-cabecera {
+        grid-template-columns: 1fr;
+    }
+
+    .ventas-detalle-tabla th:nth-child(3),
+    .ventas-detalle-tabla td:nth-child(3) {
+        width: 5.5rem;
+    }
+
+    .ventas-detalle-tabla th:nth-child(4),
+    .ventas-detalle-tabla td:nth-child(4) {
+        width: 6rem;
+    }
+}
+
+#ventasDetalleCodigo {
+    color: var(--texto-sec);
+    font-family: var(--ff-mono);
+    font-size: 0.9rem;
+}
+
+#ventasAnularForm textarea {
+    width: 100%;
+    padding: 0.7rem 0.9rem;
+    border: 0.0625rem solid var(--borde);
+    border-radius: var(--radius-sm);
+    background: var(--fondo-elevado);
+    color: var(--texto);
+    font: inherit;
+}
+
+#ventasAnularForm textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 0.1875rem var(--amarillo-bg);
+}
+
+/* ---------- Responsive del listado ---------- */
+
+@media (max-width: 768px) {
+    /* En pantallas estrechas se ocultan Fecha y Pago para conservar
+       Comprobante, Cliente, Total, Estado y Acciones. */
+    .fj-page-ventas .fj-table-wrap {
+        overflow-x: auto;
+    }
+
+    .fj-table-ventas th:nth-child(3),
+    .fj-table-ventas td:nth-child(3),
+    .fj-table-ventas th:nth-child(4),
+    .fj-table-ventas td:nth-child(4) {
+        display: none;
+    }
+
+    .fj-table-ventas th:nth-child(1),
+    .fj-table-ventas td:nth-child(1) {
+        width: 7rem;
+    }
+
+    .fj-table-ventas th:nth-child(5),
+    .fj-table-ventas td:nth-child(5) {
+        width: 6rem;
+    }
+
+    .fj-table-ventas th:nth-child(6),
+    .fj-table-ventas td:nth-child(6) {
+        width: 6.5rem;
+    }
+
+    .fj-table-ventas th:nth-child(7),
+    .fj-table-ventas td:nth-child(7) {
+        width: 8.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .fj-table-ventas th:nth-child(6),
+    .fj-table-ventas td:nth-child(6) {
+        display: none;
+    }
+
+    .fj-table-ventas th:nth-child(1),
+    .fj-table-ventas td:nth-child(1) {
+        width: 5.5rem;
+    }
+
+    .fj-table-ventas th:nth-child(5),
+    .fj-table-ventas td:nth-child(5) {
+        width: 5rem;
+    }
+
+    .fj-table-ventas th:nth-child(7),
+    .fj-table-ventas td:nth-child(7) {
+        width: 7.5rem;
+    }
+
+    .fj-acciones {
+        gap: 4px;
+    }
+}

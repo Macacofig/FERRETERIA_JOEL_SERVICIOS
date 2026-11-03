@@ -1,72 +1,185 @@
 @page
-@model FERRETERIA_Web.Pages.PersonalModel
+@model FERRETERIA__Joel.Pages.PersonalModel
+@using FERRETERIA__Joel.Dominio.Constantes
 @{
     ViewData["Title"] = "Personal";
+    ViewData["ActiveMenu"] = "Registro";
 }
 
-<div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <div>
-            <p class="text-muted mb-1">Módulo · Personal</p>
-            <h1>Personal</h1>
+@section Styles {
+    <link rel="stylesheet" href="~/css/productos.css" asp-append-version="true" />
+}
+
+<div class="fj-container fj-page-products">
+
+    <section class="fj-page-head">
+        <p class="fj-eyebrow">Módulo · Personal</p>
+        <h1>Personal</h1>
+        <p class="fj-page-sub">Administración de las cuentas de los empleados.</p>
+    </section>
+
+    @if (TempData["Mensaje"] != null)
+    {
+        <div class="fj-alert fj-alert-success" role="status">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>
+            <span>@TempData["Mensaje"]</span>
         </div>
-        <a asp-page="/NuevoUsuario" class="btn btn-primary">Nuevo usuario</a>
-    </div>
-
-    @if (!string.IsNullOrWhiteSpace(Model.Mensaje))
-    {
-        <div class="alert alert-success" role="status">@Model.Mensaje</div>
-    }
-    @if (!string.IsNullOrWhiteSpace(Model.Error))
-    {
-        <div class="alert alert-danger" role="alert">@Model.Error</div>
     }
 
-    <div class="card">
-        <div class="table-responsive">
-            <table class="table table-striped align-middle mb-0">
+    @if (TempData["MensajeError"] != null)
+    {
+        <div class="fj-alert" role="alert">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
+            <span>@TempData["MensajeError"]</span>
+        </div>
+    }
+
+    <section class="fj-toolbar fj-toolbar-simple">
+        <p class="fj-toolbar-count">
+            <strong>@Model.Personal.Count</strong>
+            @(Model.Personal.Count == 1 ? "empleado registrado" : "empleados registrados")
+        </p>
+
+        <div class="fj-toolbar-actions">
+            <a class="fj-btn fj-btn-primary" asp-page="Registro">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+                Registrar empleado
+            </a>
+        </div>
+    </section>
+
+    <section class="fj-card fj-table-card" aria-label="Listado de personal">
+        <div class="fj-table-wrap fj-table-wrap-scroll">
+            <table class="fj-table fj-table-personal">
                 <thead>
                     <tr>
-                        <th>Nombre completo</th>
-                        <th>Usuario</th>
-                        <th>Correo</th>
-                        <th>Rol</th>
-                        <th>Estado</th>
-                        <th>Acciones</th>
+                        <th scope="col">Empleado</th>
+                        <th scope="col">Rol</th>
+                        <th scope="col">Correo</th>
+                        <th scope="col">Alta</th>
+                        <th scope="col" class="fj-td-estado">Estado</th>
+                        <th scope="col" class="fj-td-acciones">Acciones</th>
                     </tr>
                 </thead>
+
                 <tbody>
                     @if (Model.Personal.Count == 0)
                     {
-                        <tr><td colspan="6" class="text-center text-muted py-4">No hay personal registrado.</td></tr>
+                        <tr>
+                            <td colspan="6" class="fj-table-vacio">
+                                <div class="fj-empty">
+                                    <span class="fj-empty-ico" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+                                    </span>
+                                    <p>Sin personal registrado</p>
+                                    <span>Cuando existan empleados en el sistema, aparecerán aquí.</span>
+                                </div>
+                            </td>
+                        </tr>
                     }
-                    else
+
+                    @foreach (var empleado in Model.Personal)
                     {
-                        @foreach (var usuario in Model.Personal)
-                        {
-                            <tr>
-                                <td>@usuario.NombreCompleto</td>
-                                <td>@usuario.NombreUsuario</td>
-                                <td>@usuario.Correo</td>
-                                <td>@usuario.Rol</td>
-                                <td>@(usuario.Activo ? "Activo" : "Inactivo")</td>
-                                <td>
-                                    @if (usuario.Activo)
+                        <tr>
+                            <td>
+                                <span class="fj-nombre">@empleado.Nombre @empleado.Apellido</span>
+                                <span class="fj-nombre-sub">
+                                    @if (!string.IsNullOrWhiteSpace(empleado.NombreUsuario))
                                     {
-                                        <form method="post" asp-page-handler="DarDeBaja" class="d-inline">
-                                            <input type="hidden" name="id" value="@usuario.Id" />
-                                            <button type="submit" class="btn btn-sm btn-outline-danger"
-                                                    onclick="return confirm('¿Desea dar de baja a este usuario?');">
-                                                Dar de baja
+                                        <text>@empleado.NombreUsuario · </text>
+                                    }
+                                    @empleado.Telefono
+                                </span>
+                            </td>
+
+                            <td class="fj-td-secundario">
+                                @empleado.Rol
+                            </td>
+
+                            <td class="fj-td-secundario">
+                                @if (!string.IsNullOrEmpty(empleado.CorreoElectronico))
+                                {
+                                    <span title="@empleado.CorreoElectronico">
+                                        @empleado.CorreoElectronico
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span>—</span>
+                                }
+                            </td>
+                            <td class="fj-td-secundario">
+                                @empleado.FechaRegistro.ToString("dd/MM/yyyy")
+                            </td>
+
+                            <td class="fj-td-estado">
+                                @switch (empleado.Estado)
+                                {
+                                    case EstadoEmpleado.Activo:
+                                        <span class="fj-pill" style="--pill: var(--success);">Activo</span>
+                                        break;
+                                    case EstadoEmpleado.Inactivo:
+                                        <span class="fj-pill" style="--pill: var(--texto-ter);">Inactivo</span>
+                                        break;
+                                    default:
+                                        <span class="fj-pill" style="--pill: var(--warning);">Pendiente</span>
+                                        break;
+                                }
+                            </td>
+
+                            <td class="fj-td-acciones">
+                                <div class="fj-acciones">
+                                    <a class="fj-btn fj-btn-ghost fj-btn-sm"
+                                       asp-page="/PersonalEditar"
+                                       asp-route-id="@empleado.IdEmpleado"
+                                       title="Editar datos del empleado">
+                                        Editar
+                                    </a>
+                                    @if (empleado.Estado == EstadoEmpleado.Inactivo)
+                                    {
+                                        <form method="post"
+                                              asp-page-handler="Reactivar"
+                                              class="fj-inline-form"
+                                              data-fj-confirm="¿Está seguro de reactivar la cuenta de '@empleado.Nombre @empleado.Apellido'? Se reenviará el enlace de activación a su correo.">
+                                            <input type="hidden" name="idEmpleado" value="@empleado.IdEmpleado" />
+                                            <button type="submit" class="fj-btn fj-btn-primary fj-btn-sm" title="Reactivar cuenta">
+                                                Reactivar
                                             </button>
                                         </form>
                                     }
-                                </td>
-                            </tr>
-                        }
+                                    else if (empleado.Estado == EstadoEmpleado.PendienteActivacion)
+                                    {
+                                        <form method="post"
+                                              asp-page-handler="Reenviar"
+                                              class="fj-inline-form"
+                                              data-fj-confirm="¿Está seguro de reenviar el enlace de activación a '@empleado.Nombre @empleado.Apellido'? Se enviará un enlace nuevo a su correo y el anterior dejará de funcionar.">
+                                            <input type="hidden" name="idEmpleado" value="@empleado.IdEmpleado" />
+                                            <button type="submit" class="fj-btn fj-btn-primary fj-btn-sm" title="Reenviar enlace de activación">
+                                                Reenviar
+                                            </button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <form method="post"
+                                              asp-page-handler="Baja"
+                                              class="fj-inline-form"
+                                              data-fj-confirm="¿Desea dar de baja la cuenta de '@empleado.Nombre @empleado.Apellido'?">
+                                            <input type="hidden" name="idEmpleado" value="@empleado.IdEmpleado" />
+                                            <button type="submit" class="fj-btn fj-btn-danger fj-btn-icon" title="Dar de baja" aria-label="Dar de baja">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
+                                            </button>
+                                        </form>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
                     }
                 </tbody>
             </table>
         </div>
-    </div>
+    </section>
+
 </div>
+
+<partial name="_ConfirmModal" />
