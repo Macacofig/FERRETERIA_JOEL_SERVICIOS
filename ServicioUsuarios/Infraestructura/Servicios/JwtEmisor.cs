@@ -25,10 +25,10 @@ namespace FERRETERIA__Joel.Infraestructura.Servicios
         }
 
         public string Issuer =>
-            _configuration["Jwt:Issuer"] ?? "FERRETERIA.Joel.ServicioUsuarios";
+            _configuration["Jwt:Issuer"] ?? "FerreteriaJoel";
 
         public string Audience =>
-            _configuration["Jwt:Audience"] ?? "FERRETERIA.Joel.Web";
+            _configuration["Jwt:Audience"] ?? "FerreteriaJoel";
 
         public int DuracionMinutos =>
             int.TryParse(_configuration["Jwt:DuracionMinutos"], out int minutos)
@@ -79,7 +79,8 @@ namespace FERRETERIA__Joel.Infraestructura.Servicios
 
         public string RequerirClave()
         {
-            string? clave = _configuration["Jwt:Key"];
+            string? clave = _configuration["Jwt:Key"]
+                ?? _configuration["Jwt:Clave"];
 
             if (string.IsNullOrWhiteSpace(clave) || clave.Length < 32)
             {
