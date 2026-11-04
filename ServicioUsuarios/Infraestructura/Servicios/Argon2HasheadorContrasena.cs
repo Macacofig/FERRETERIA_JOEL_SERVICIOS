@@ -6,7 +6,7 @@ using Isopoh.Cryptography.SecureArray;
 
 namespace FERRETERIA__Joel.Infraestructura.Servicios
 {
-    // Hasheador de contraseÃ±as con Argon2id (Isopoh): salt aleatorio por usuario y hash PHC autocontenido. (extra: Verificar en tiempo constante)
+    // Hasheador de contraseñas con Argon2id (Isopoh): salt aleatorio por usuario y hash PHC autocontenido. (extra: Verificar en tiempo constante)
     public class Argon2HasheadorContrasena : IHasheadorContrasena
     {
         public string Hashear(string contrasena)
@@ -14,7 +14,7 @@ namespace FERRETERIA__Joel.Infraestructura.Servicios
             if (string.IsNullOrEmpty(contrasena))
             {
                 throw new ArgumentException(
-                    "La contraseÃ±a no puede estar vacÃ­a.",
+                    "La contraseña no puede estar vacía.",
                     nameof(contrasena));
             }
 
@@ -55,8 +55,8 @@ namespace FERRETERIA__Joel.Infraestructura.Servicios
             }
             catch
             {
-                // Hash almacenado con formato invÃ¡lido o no generado con
-                // Argon2: se trata como credencial no vÃ¡lida.
+                // Hash almacenado con formato inválido o no generado con
+                // Argon2: se trata como credencial no válida.
                 return false;
             }
         }

@@ -1,46 +1,43 @@
 ﻿using System.Security.Claims;
 using FERRETERIA__Joel.Aplicacion.Modelos;
+using FERRETERIA__Joel.ServicioUsuarios.Contratos;
 using FERRETERIA__Joel.Aplicacion.Servicios;
 using FERRETERIA__Joel.Dominio.Constantes;
 using FERRETERIA__Joel.Dominio.Entidades;
 using FERRETERIA__Joel.Dominio.Puertos;
-using FERRETERIA__Joel.Infraestructura.Servicios;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
 {
     /// <summary>
-    /// CRUD de usuarios, activaciÃ³n por correo, cambio de contraseÃ±a y
-    /// bitÃ¡cora. Todo el acceso a datos pasa por los servicios de aplicaciÃ³n
-    /// existentes; el controlador solo traduce HTTP â†” casos de uso y audita.
+    /// CRUD de usuarios, activación por correo, cambio de contraseña y
+    /// bitácora. Todo el acceso a datos pasa por los servicios de aplicación
+    /// existentes; el controlador solo traduce HTTP ↔ casos de uso y audita.
     /// </summary>
     [ApiController]
     [Route("api/usuarios")]
     public class UsuariosController : ControllerBase
     {
-        private readonly IRepositoryEmpleado _repositorio;
         private readonly ServicioRegistroEmpleado _registro;
         private readonly ServicioEdicionEmpleado _edicion;
         private readonly ServicioPersonal _personal;
         private readonly ServicioActivacionCuenta _activacion;
         private readonly ServicioCambioContrasena _cambioContrasena;
         private readonly ServicioBitacora _bitacora;
-        private readonly RevocacionTokens _revocacion;
+        private readonly IRevocacionTokens _revocacion;
         private readonly ILogger<UsuariosController> _logger;
 
         public UsuariosController(
-            IRepositoryEmpleado repositorio,
             ServicioRegistroEmpleado registro,
             ServicioEdicionEmpleado edicion,
             ServicioPersonal personal,
             ServicioActivacionCuenta activacion,
             ServicioCambioContrasena cambioContrasena,
             ServicioBitacora bitacora,
-            RevocacionTokens revocacion,
+            IRevocacionTokens revocacion,
             ILogger<UsuariosController> logger)
         {
-            _repositorio = repositorio;
             _registro = registro;
             _edicion = edicion;
             _personal = personal;
@@ -53,25 +50,25 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
 
         // ===================== Consultas =====================
 
-        /// <summary>Listado de personal (proyecciÃ³n sin credenciales).</summary>
+        /// <summary>Listado de personal (proyección sin credenciales).</summary>
         [HttpGet]
         [Authorize(Roles = RolesSistema.Administrador)]
         public async Task<IActionResult> Listar()
         {
             List<Empleado> empleados =
-                await _repositorio.ObtenerTodosSinCredencialesAsync();
+                await _personal.ListarAsync();
 
             return Ok(RespuestaApi<List<UsuarioDto>>.Ok(
                 empleados.Select(MapeosDto.AUsuario).ToList()));
         }
 
-        /// <summary>Cuentas pendientes de activaciÃ³n.</summary>
+        /// <summary>Cuentas pendientes de activación.</summary>
         [HttpGet("pendientes")]
         [Authorize(Roles = RolesSistema.Administrador)]
         public async Task<IActionResult> Pendientes()
         {
             List<Empleado> empleados =
-                await _repositorio.ObtenerPendientesActivacionAsync();
+                await _personal.ListarPendientesAsync();
 
             return Ok(RespuestaApi<List<UsuarioDto>>.Ok(
                 empleados.Select(MapeosDto.AUsuario).ToList()));
@@ -83,7 +80,7 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
         public async Task<IActionResult> Obtener(int id)
         {
             Empleado? empleado =
-                await _repositorio.ObtenerPorIdSinCredencialesAsync(id);
+                await _personal.ObtenerPorIdAsync(id);
 
             if (empleado is null)
             {
@@ -98,8 +95,8 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
         // ===================== CRUD =====================
 
         /// <summary>
-        /// Alta de empleado. Genera el nombre de usuario Ãºnico, deja la cuenta
-        /// pendiente de activaciÃ³n y envÃ­a el enlace de un solo uso por correo.
+        /// Alta de empleado. Genera el nombre de usuario único, deja la cuenta
+        /// pendiente de activación y envía el enlace de un solo uso por correo.
         /// </summary>
         [HttpPost]
         [Authorize(Roles = RolesSistema.Administrador)]
@@ -134,7 +131,7 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
             }
 
             Empleado? empleado =
-                await _repositorio.ObtenerPorIdSinCredencialesAsync(resultado.Id);
+                await _personal.ObtenerPorIdAsync(resultado.Id);
 
             return CreatedAtAction(
                 nameof(Obtener),
@@ -145,12 +142,12 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
                     resultado.NombreUsuario,
                     resultado.EnlaceActivacion,
                     Usuario = empleado is null ? null : MapeosDto.AUsuario(empleado)
-                }, "Empleado registrado. Se enviÃ³ el enlace de activaciÃ³n a su correo."));
+                }, "Empleado registrado. Se envió el enlace de activación a su correo."));
         }
 
         /// <summary>
-        /// EdiciÃ³n de datos personales. No toca contraseÃ±a, estado ni token de
-        /// activaciÃ³n; conserva el comportamiento de autenticaciÃ³n.
+        /// Edición de datos personales. No toca contraseña, estado ni token de
+        /// activación; conserva el comportamiento de autenticación.
         /// </summary>
         [HttpPut("{id:int}")]
         [Authorize(Roles = RolesSistema.Administrador)]
@@ -189,7 +186,7 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
             }
 
             Empleado? empleado =
-                await _repositorio.ObtenerPorIdSinCredencialesAsync(id);
+                await _personal.ObtenerPorIdAsync(id);
 
             return Ok(RespuestaApi<UsuarioDto>.Ok(
                 MapeosDto.AUsuario(empleado!),
@@ -197,7 +194,7 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
         }
 
         /// <summary>
-        /// Baja lÃ³gica: la cuenta pasa a inactiva, se registra el responsable y
+        /// Baja lógica: la cuenta pasa a inactiva, se registra el responsable y
         /// se invalidan los tokens emitidos. No se borra la fila.
         /// </summary>
         [HttpDelete("{id:int}")]
@@ -225,8 +222,8 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
         }
 
         /// <summary>
-        /// ReactivaciÃ³n: la cuenta vuelve a pendiente de activaciÃ³n y se le
-        /// envÃ­a un enlace nuevo.
+        /// Reactivación: la cuenta vuelve a pendiente de activación y se le
+        /// envía un enlace nuevo.
         /// </summary>
         [HttpPost("{id:int}/reactivar")]
         [Authorize(Roles = RolesSistema.Administrador)]
@@ -252,7 +249,7 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
                 resultado.Mensaje));
         }
 
-        /// <summary>ReenvÃ­a el enlace de activaciÃ³n de una cuenta pendiente.</summary>
+        /// <summary>Reenvía el enlace de activación de una cuenta pendiente.</summary>
         [HttpPost("{id:int}/reenviar-activacion")]
         [Authorize(Roles = RolesSistema.Administrador)]
         public async Task<IActionResult> ReenviarActivacion(int id)
@@ -276,9 +273,9 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
                 resultado.Mensaje));
         }
 
-        // ===================== ActivaciÃ³n =====================
+        // ===================== Activación =====================
 
-        /// <summary>Valida un token de activaciÃ³n sin consumirlo.</summary>
+        /// <summary>Valida un token de activación sin consumirlo.</summary>
         [HttpPost("activar/validar")]
         [AllowAnonymous]
         public async Task<IActionResult> ValidarActivacion(
@@ -293,7 +290,7 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
         }
 
         /// <summary>
-        /// Consume el token, define la contraseÃ±a con hash Argon2id y activa la
+        /// Consume el token, define la contraseña con hash Argon2id y activa la
         /// cuenta. El token es de un solo uso y vence a los 10 minutos.
         /// </summary>
         [HttpPost("activar")]
@@ -303,7 +300,7 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
             if (solicitud is null)
             {
                 return BadRequest(RespuestaApi<ResultadoActivacion>.Error(
-                    "Los datos de activaciÃ³n son obligatorios."));
+                    "Los datos de activación son obligatorios."));
             }
 
             ResultadoActivacion resultado = await _activacion.ActivarAsync(
@@ -319,11 +316,11 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
                 resultado.Mensaje));
         }
 
-        // ===================== ContraseÃ±a =====================
+        // ===================== Contraseña =====================
 
         /// <summary>
-        /// Cambio de contraseÃ±a del usuario autenticado. Verifica la actual,
-        /// aplica la polÃ­tica y revoca los tokens previos.
+        /// Cambio de contraseña del usuario autenticado. Verifica la actual,
+        /// aplica la política y revoca los tokens previos.
         /// </summary>
         [HttpPost("cambiar-contrasena")]
         [Authorize]
@@ -335,7 +332,7 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
             if (id <= 0)
             {
                 return Unauthorized(RespuestaApi<object>.Error(
-                    "La sesiÃ³n no es vÃ¡lida."));
+                    "La sesión no es válida."));
             }
 
             ResultadoCambioContrasena resultado =
@@ -365,7 +362,7 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
                 });
             }
 
-            // La contraseÃ±a anterior deja de ser vÃ¡lida y las sesiones abiertas
+            // La contraseña anterior deja de ser válida y las sesiones abiertas
             // con ella se invalidan.
             _revocacion.RevocarUsuario(id);
 
@@ -404,7 +401,7 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
             {
                 _logger.LogError(
                     ex,
-                    "No se pudo registrar {Operacion} sobre {Entidad} en la bitÃ¡cora.",
+                    "No se pudo registrar {Operacion} sobre {Entidad} en la bitácora.",
                     operacion,
                     entidad);
             }
@@ -418,6 +415,4 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
         }
     }
 }
-
-
 

@@ -1,14 +1,14 @@
 ﻿using FERRETERIA__Joel.Dominio.Constantes;
 using FERRETERIA__Joel.Dominio.Entidades;
-using FERRETERIA__Joel.Infraestructura.Repositorios;
+using FERRETERIA__Joel.Dominio.Puertos;
 
 namespace FERRETERIA__Joel.Aplicacion.Servicios
 {
     /// <summary>
-    /// BitÃ¡cora de sesiones y de operaciones CRUD. Registra el empleado
-    /// autenticado (identificador, nombre y rol), la operaciÃ³n, la entidad, el
+    /// Bitácora de sesiones y de operaciones CRUD. Registra el empleado
+    /// autenticado (identificador, nombre y rol), la operación, la entidad, el
     /// registro afectado, la fecha/hora y el resultado. Nunca recibe ni guarda
-    /// contraseÃ±as, hashes, JWT o tokens de activaciÃ³n.
+    /// contraseñas, hashes, JWT o tokens de activación.
     /// </summary>
     public class ServicioBitacora
     {
@@ -18,9 +18,9 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
         public const string OperacionUpdate = "UPDATE";
         public const string OperacionDelete = "DELETE";
 
-        private readonly MySqlBitacoraRepository _repositorio;
+        private readonly IRepositoryBitacora _repositorio;
 
-        public ServicioBitacora(MySqlBitacoraRepository repositorio)
+        public ServicioBitacora(IRepositoryBitacora repositorio)
         {
             _repositorio = repositorio;
         }
@@ -50,7 +50,7 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
         }
 
         /// <summary>
-        /// Registra una operaciÃ³n CRUD real. <paramref name="exitoso"/> se
+        /// Registra una operación CRUD real. <paramref name="exitoso"/> se
         /// traduce a EXITOSO/FALLIDO. El identificador del responsable debe
         /// provenir siempre del JWT validado, nunca de un valor enviado por el
         /// cliente.

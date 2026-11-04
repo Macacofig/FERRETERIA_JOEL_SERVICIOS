@@ -3,12 +3,12 @@
 namespace FERRETERIA__Joel.Dominio.Utilidades
 {
     /// <summary>
-    /// Reglas comunes de texto para todos los mÃ³dulos.
-    /// Los campos de nombre solo admiten letras (con acentos y Ã‘),
-    /// espacios y la puntuaciÃ³n habitual de nombres
-    /// (., ' - &amp; ( )). No se permiten nÃºmeros
+    /// Reglas comunes de texto para todos los módulos.
+    /// Los campos de nombre solo admiten letras (con acentos y Ñ),
+    /// espacios y la puntuación habitual de nombres
+    /// (., ' - &amp; ( )). No se permiten números
     /// ni caracteres especiales como * @ # % etc.
-    /// La descripciÃ³n queda fuera de esta regla.
+    /// La descripción queda fuera de esta regla.
     /// </summary>
     public static class ValidacionesTexto
     {

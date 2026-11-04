@@ -1,20 +1,21 @@
 ﻿using FERRETERIA__Joel.Dominio.Entidades;
+using FERRETERIA__Joel.Dominio.Puertos;
 using FERRETERIA__Joel.Infraestructura.Conexion;
 using MySql.Data.MySqlClient;
 
 namespace FERRETERIA__Joel.Infraestructura.Repositorios
 {
     /// <summary>
-    /// Repositorio MySQL de la bitÃ¡cora. Registra dos familias de eventos en la
+    /// Repositorio MySQL de la bitácora. Registra dos familias de eventos en la
     /// misma tabla <c>bitacora_sesion</c>:
     /// <list type="bullet">
-    /// <item>sesiÃ³n: login y logout;</item>
-    /// <item>operaciones: INSERT, UPDATE y DELETE de los mÃ³dulos, con la
+    /// <item>sesión: login y logout;</item>
+    /// <item>operaciones: INSERT, UPDATE y DELETE de los módulos, con la
     /// entidad, el registro afectado y el resultado.</item>
     /// </list>
-    /// Nunca se guardan contraseÃ±as, hashes, JWT ni tokens de activaciÃ³n.
+    /// Nunca se guardan contraseñas, hashes, JWT ni tokens de activación.
     /// </summary>
-    public class MySqlBitacoraRepository
+    public class MySqlBitacoraRepository : IRepositoryBitacora
     {
         private readonly IDbConnectionFactory _connectionFactory;
 
@@ -24,7 +25,7 @@ namespace FERRETERIA__Joel.Infraestructura.Repositorios
         }
 
         /// <summary>
-        /// InserciÃ³n usada por los eventos de sesiÃ³n. Mantiene la firma
+        /// Inserción usada por los eventos de sesión. Mantiene la firma
         /// original para no romper el flujo existente.
         /// </summary>
         public virtual async Task<int> RegistrarAsync(
@@ -44,8 +45,8 @@ namespace FERRETERIA__Joel.Infraestructura.Repositorios
         }
 
         /// <summary>
-        /// Inserta una operaciÃ³n CRUD (o un evento de sesiÃ³n) asociada al
-        /// empleado autenticado que la ejecutÃ³.
+        /// Inserta una operación CRUD (o un evento de sesión) asociada al
+        /// empleado autenticado que la ejecutó.
         /// </summary>
         public virtual async Task<int> RegistrarOperacionAsync(
             string accion,
@@ -116,8 +117,8 @@ namespace FERRETERIA__Joel.Infraestructura.Repositorios
         }
 
         /// <summary>
-        /// Devuelve los Ãºltimos registros de la bitÃ¡cora, del mÃ¡s reciente al
-        /// mÃ¡s antiguo. La consulta no proyecta credenciales porque la tabla no
+        /// Devuelve los últimos registros de la bitácora, del más reciente al
+        /// más antiguo. La consulta no proyecta credenciales porque la tabla no
         /// las almacena.
         /// </summary>
         public virtual async Task<List<RegistroBitacora>> ListarAsync(int limite)

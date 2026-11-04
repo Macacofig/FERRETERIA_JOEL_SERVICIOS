@@ -2,6 +2,7 @@
 using FERRETERIA__Joel.Aplicacion.Servicios;
 using FERRETERIA__Joel.Dominio.Constantes;
 using FERRETERIA__Joel.Dominio.Entidades;
+using FERRETERIA__Joel.ServicioUsuarios.Contratos;
 using FERRETERIA__Joel.Aplicacion.Modelos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -29,7 +30,7 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
                 || string.IsNullOrWhiteSpace(solicitud.Entidad))
             {
                 return BadRequest(RespuestaApi<object>.Error(
-                    "La operaciÃ³n debe ser INSERT, UPDATE o DELETE e indicar la entidad."));
+                    "La operación debe ser INSERT, UPDATE o DELETE e indicar la entidad."));
             }
 
             int id = ObtenerIdEmpleado();
@@ -45,7 +46,7 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
 
             return Ok(RespuestaApi<object>.Ok(
                 new { },
-                "OperaciÃ³n registrada en la bitÃ¡cora."));
+                "Operación registrada en la bitácora."));
         }
 
         [HttpGet]

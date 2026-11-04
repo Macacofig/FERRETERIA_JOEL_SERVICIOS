@@ -11,7 +11,7 @@ using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// El .env de la raÃ­z aporta MySQL, JWT, protecciÃ³n de enlaces y SMTP.
+// El .env de la raíz aporta MySQL, JWT, protección de enlaces y SMTP.
 // Nunca se versiona.
 Dictionary<string, string?> configuracionLocal =
     CargarVariablesEntorno(builder.Environment.ContentRootPath);
@@ -27,16 +27,18 @@ builder.Services.AddSwaggerGen(ConfiguracionSwaggerBearer);
 
 // ---------------------------------------------------------------------------
 // Persistencia: se reutiliza exactamente el mismo esquema MySQL del monolito.
-// La API no tiene tablas propias ni un almacÃ©n de usuarios paralelo.
+// La API no tiene tablas propias ni un almacén de usuarios paralelo.
 // ---------------------------------------------------------------------------
 builder.Services.AddSingleton<IDbConnectionFactory, MySqlConnectionFactory>();
 builder.Services.AddScoped<MySqlEmpleadoRepository>();
 builder.Services.AddScoped<IRepositoryEmpleado>(sp =>
     sp.GetRequiredService<MySqlEmpleadoRepository>());
 builder.Services.AddScoped<MySqlBitacoraRepository>();
+builder.Services.AddScoped<IRepositoryBitacora>(sp =>
+    sp.GetRequiredService<MySqlBitacoraRepository>());
 
 // ---------------------------------------------------------------------------
-// Servicios de aplicaciÃ³n existentes (reutilizados, no duplicados).
+// Servicios de aplicación existentes (reutilizados, no duplicados).
 // ---------------------------------------------------------------------------
 builder.Services.AddSingleton<IHasheadorContrasena, Argon2HasheadorContrasena>();
 builder.Services.AddScoped<IEnviadorCorreo, SmtpEnviadorCorreo>();
@@ -53,12 +55,12 @@ builder.Services.AddScoped<ServicioBitacora>();
 // La identidad dentro de la API se resuelve desde el JWT validado.
 builder.Services.AddScoped<IContextoUsuario, ContextoUsuarioJwt>();
 
-builder.Services.AddSingleton<JwtEmisor>();
-builder.Services.AddSingleton<RevocacionTokens>();
+builder.Services.AddSingleton<IEmisorToken, JwtEmisor>();
+builder.Services.AddSingleton<IRevocacionTokens, RevocacionTokens>();
 
 // ---------------------------------------------------------------------------
-// JWT Bearer: Ãºnica tecnologÃ­a de autenticaciÃ³n de la API. Issuer, audience,
-// expiraciÃ³n y firma se validan en cada peticiÃ³n.
+// JWT Bearer: única tecnología de autenticación de la API. Issuer, audience,
+// expiración y firma se validan en cada petición.
 // ---------------------------------------------------------------------------
 string claveJwt = configuracionLocal.GetValueOrDefault("Jwt:Key")
     ?? builder.Configuration["Jwt:Key"]
@@ -68,11 +70,11 @@ if (claveJwt.Length < 32)
 {
     throw new InvalidOperationException(
         "Falta 'Jwt:Key' o tiene menos de 32 caracteres. Defina la variable "
-        + "de entorno Jwt__Key (archivo .env de la raÃ­z).");
+        + "de entorno Jwt__Key (archivo .env de la raíz).");
 }
 
-// El token de activaciÃ³n se cifra con una clave independiente cuando se
-// configura. Para el despliegue mÃ­nimo se deriva de Jwt:Key, de modo que el
+// El token de activación se cifra con una clave independiente cuando se
+// configura. Para el despliegue mínimo se deriva de Jwt:Key, de modo que el
 // .env solo necesita las variables JWT compartidas por los servicios.
 string? claveUrlConfigurada = builder.Configuration["UrlProteccion:Clave"];
 string claveUrl = string.IsNullOrWhiteSpace(claveUrlConfigurada)
@@ -86,7 +88,7 @@ builder.Services
     .AddJwtBearer(options =>
     {
         // El emisor firma con ClaimTypes.* y el handler los serializa con los
-        // nombres cortos estÃ¡ndar (nameid, role, unique_name...). El mapeo
+        // nombres cortos estándar (nameid, role, unique_name...). El mapeo
         // entrante restaura esos tipos para que [Authorize(Roles = ...)] y
         // ClaimTypes.NameIdentifier funcionen. No afecta a 'jti', que conserva
         // su nombre corto.
@@ -111,8 +113,8 @@ builder.Services
         {
             OnTokenValidated = contexto =>
             {
-                RevocacionTokens revocacion = contexto.HttpContext
-                    .RequestServices.GetRequiredService<RevocacionTokens>();
+                IRevocacionTokens revocacion = contexto.HttpContext
+                    .RequestServices.GetRequiredService<IRevocacionTokens>();
 
                 string? jti = contexto.Principal?
                     .FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Jti)
@@ -120,7 +122,7 @@ builder.Services
 
                 if (revocacion.EstaRevocado(jti))
                 {
-                    contexto.Fail("El token fue revocado (sesiÃ³n cerrada).");
+                    contexto.Fail("El token fue revocado (sesión cerrada).");
                 }
 
                 int idEmpleado = int.TryParse(
@@ -135,7 +137,7 @@ builder.Services
                         idEmpleado,
                         generacionToken))
                 {
-                    contexto.Fail("La sesiÃ³n fue invalidada por un cambio de estado o de contraseÃ±a.");
+                    contexto.Fail("La sesión fue invalidada por un cambio de estado o de contraseña.");
                 }
 
                 return Task.CompletedTask;
@@ -153,9 +155,9 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-// Solo se redirige a HTTPS si el servicio estÃ¡ configurado con un endpoint
+// Solo se redirige a HTTPS si el servicio está configurado con un endpoint
 // HTTPS. En desarrollo local la API escucha en http://localhost:5200 y una
-// redirecciÃ³n dejarÃ­a inaccesible el puerto.
+// redirección dejaría inaccesible el puerto.
 bool sirveHttps =
     app.Urls.Any(url => url.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
     || (builder.Configuration["Urls"] ?? string.Empty)

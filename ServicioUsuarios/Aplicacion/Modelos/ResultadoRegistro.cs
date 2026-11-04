@@ -10,11 +10,11 @@
 
         public int Id { get; init; }
 
-        /// <summary>Nombre de usuario generado automÃ¡ticamente en el alta.</summary>
+        /// <summary>Nombre de usuario generado automáticamente en el alta.</summary>
         public string? NombreUsuario { get; init; }
 
         /// <summary>
-        /// Enlace de activaciÃ³n generado (solo se rellena en desarrollo, para
+        /// Enlace de activación generado (solo se rellena en desarrollo, para
         /// poder probar el flujo cuando no hay SMTP configurado).
         /// </summary>
         public string? EnlaceActivacion { get; init; }

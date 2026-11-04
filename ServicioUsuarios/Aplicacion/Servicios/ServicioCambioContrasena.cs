@@ -6,31 +6,31 @@ using FERRETERIA__Joel.Dominio.Utilidades;
 namespace FERRETERIA__Joel.Aplicacion.Servicios
 {
     /// <summary>
-    /// Cambio de contraseÃ±a de un empleado autenticado. Verifica la contraseÃ±a
-    /// actual, aplica la polÃ­tica (mÃ­nimo 8, mayÃºscula, minÃºscula, nÃºmero y
-    /// sÃ­mbolo), exige que la nueva sea distinta de la actual y guarda
-    /// Ãºnicamente el hash Argon2id. La contraseÃ±a anterior deja de ser vÃ¡lida
-    /// para el siguiente inicio de sesiÃ³n.
+    /// Cambio de contraseña de un empleado autenticado. Verifica la contraseña
+    /// actual, aplica la política (mínimo 8, mayúscula, minúscula, número y
+    /// símbolo), exige que la nueva sea distinta de la actual y guarda
+    /// únicamente el hash Argon2id. La contraseña anterior deja de ser válida
+    /// para el siguiente inicio de sesión.
     /// </summary>
     public class ServicioCambioContrasena
     {
         private const string MensajeActualObligatoria =
-            "Debe ingresar su contraseÃ±a actual.";
+            "Debe ingresar su contraseña actual.";
 
         private const string MensajeActualIncorrecta =
-            "La contraseÃ±a actual no es correcta.";
+            "La contraseña actual no es correcta.";
 
         private const string MensajeNuevaObligatoria =
-            "Debe ingresar la nueva contraseÃ±a.";
+            "Debe ingresar la nueva contraseña.";
 
         private const string MensajeConfirmacion =
-            "La confirmaciÃ³n de la nueva contraseÃ±a no coincide.";
+            "La confirmación de la nueva contraseña no coincide.";
 
         private const string MensajeIgual =
-            "La nueva contraseÃ±a debe ser diferente de la actual.";
+            "La nueva contraseña debe ser diferente de la actual.";
 
         private static readonly string MensajePolitica =
-            "La nueva contraseÃ±a debe tener entre 8 y 64 caracteres e incluir al menos una mayÃºscula, una minÃºscula, un nÃºmero y un sÃ­mbolo.";
+            "La nueva contraseña debe tener entre 8 y 64 caracteres e incluir al menos una mayúscula, una minúscula, un número y un símbolo.";
 
         private readonly IRepositoryEmpleado _repositorio;
         private readonly IHasheadorContrasena _hasheador;
@@ -82,7 +82,7 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
                 return new ResultadoCambioContrasena
                 {
                     Exitoso = false,
-                    Mensaje = "Revise los campos seÃ±alados.",
+                    Mensaje = "Revise los campos señalados.",
                     ErroresCampo = errores
                 };
             }
@@ -129,7 +129,7 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
                 _hasheador.Hashear(nueva));
 
             return ResultadoCambioContrasena.Ok(
-                "ContraseÃ±a actualizada. Use la nueva contraseÃ±a en su prÃ³ximo inicio de sesiÃ³n.");
+                "Contraseña actualizada. Use la nueva contraseña en su próximo inicio de sesión.");
         }
 
         private bool Coincide(string contrasena, string? almacenada)
@@ -152,7 +152,7 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
                 }
             }
 
-            // Compatibilidad con las contraseÃ±as heredadas en texto plano.
+            // Compatibilidad con las contraseñas heredadas en texto plano.
             return string.Equals(almacenada, contrasena, StringComparison.Ordinal);
         }
     }

@@ -1,4 +1,4 @@
-﻿namespace FERRETERIA__Joel.Aplicacion.Modelos
+﻿namespace FERRETERIA__Joel.ServicioUsuarios.Contratos
 {
     public class RespuestaApi<T>
     {
@@ -29,7 +29,7 @@
         };
     }
 
-    /// <summary>ProyecciÃ³n pÃºblica sin contraseÃ±a, hash ni token.</summary>
+    /// <summary>Proyección pública sin contraseña, hash ni token.</summary>
     public class UsuarioDto
     {
         public int IdEmpleado { get; init; }
