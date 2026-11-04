@@ -1,7 +1,7 @@
-using ServicioVentas.Aplicacion.Modelos;
+﻿using ServicioVentas.Aplicacion.Modelos;
 using ServicioVentas.Dominio.Entidades;
 using ServicioVentas.Dominio.Puertos;
-using ServicioVentas.Infraestructura.Repositorios;
+using ServicioVentas.Infraestructura.Factories;
 using System.Text.RegularExpressions;
 
 namespace ServicioVentas.Aplicacion.Servicios
@@ -18,20 +18,24 @@ namespace ServicioVentas.Aplicacion.Servicios
             "Revise los datos señalados e inténtelo nuevamente.";
 
         private readonly ClienteValidador _validador = new();
-        private readonly MySqlClienteRepository _repositorio;
+        private readonly RepositoryCreator<IClienteRepository> _creadorRepositorio;
         private readonly IContextoUsuario _contextoUsuario;
+        private IClienteRepository? _repositorio;
 
         public ServicioCliente(
-            MySqlClienteRepository repositorio,
+            RepositoryCreator<IClienteRepository> creadorRepositorio,
             IContextoUsuario contextoUsuario)
         {
-            _repositorio = repositorio;
+            _creadorRepositorio = creadorRepositorio;
             _contextoUsuario = contextoUsuario;
         }
 
+        private IClienteRepository Repositorio =>
+            _repositorio ??= _creadorRepositorio.CreateRepository();
+
         public async Task<List<Cliente>> ListarAsync()
         {
-            return await _repositorio.ObtenerTodosAsync();
+            return await Repositorio.ObtenerTodosAsync();
         }
 
         public async Task<List<Cliente>> BuscarAsync(string termino)
@@ -40,12 +44,12 @@ namespace ServicioVentas.Aplicacion.Servicios
 
             return buscado.Length == 0
                 ? new List<Cliente>()
-                : await _repositorio.BuscarAsync(buscado);
+                : await Repositorio.BuscarAsync(buscado);
         }
 
         public async Task<Cliente?> ObtenerPorIdAsync(int idCliente)
         {
-            return await _repositorio.ObtenerPorIdAsync(idCliente);
+            return await Repositorio.ObtenerPorIdAsync(idCliente);
         }
 
         public async Task<ResultadoCliente> CrearAsync(
@@ -70,7 +74,7 @@ namespace ServicioVentas.Aplicacion.Servicios
             Dictionary<string, string> errores =
                 _validador.Validar(ci, nombre, apellido);
 
-            if (errores.Count == 0 && await _repositorio.ExisteCiAsync(ci))
+            if (errores.Count == 0 && await Repositorio.ExisteCiAsync(ci))
             {
                 errores[ClienteValidador.CampoCi] =
                     "Ya existe un cliente registrado con ese CI.";
@@ -96,7 +100,7 @@ namespace ServicioVentas.Aplicacion.Servicios
                 IdEmpleadoResponsable = idEmpleado
             };
 
-            int idCliente = await _repositorio.InsertarAsync(cliente);
+            int idCliente = await Repositorio.InsertarAsync(cliente);
             cliente.IdCliente = idCliente;
 
             return new ResultadoCliente

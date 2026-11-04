@@ -2,7 +2,7 @@ using ServicioVentas.Aplicacion.Modelos;
 using ServicioVentas.Dominio.Constantes;
 using ServicioVentas.Dominio.Entidades;
 using ServicioVentas.Dominio.Puertos;
-using ServicioVentas.Infraestructura.Repositorios;
+using ServicioVentas.Infraestructura.Factories;
 
 namespace ServicioVentas.Aplicacion.Servicios
 {
@@ -20,34 +20,58 @@ namespace ServicioVentas.Aplicacion.Servicios
     /// </summary>
     public class FachadaVenta
     {
-        private readonly MySqlVentaRepository _ventas;
-        private readonly MySqlDetalleVentaRepository _detalles;
-        private readonly MySqlEmpleadoRepository _empleados;
+        private readonly RepositoryCreator<IVentaRepository> _creadorVentas;
+        private readonly RepositoryCreator<IDetalleVentaRepository> _creadorDetalles;
+        private readonly RepositoryCreator<IEmpleadoRepository> _creadorEmpleados;
+        private readonly RepositoryCreator<ICategoriaRepository> _creadorCategorias;
+        private readonly RepositoryCreator<IProductoRepository> _creadorProductos;
         private readonly IUnidadDeTrabajo _unidadDeTrabajo;
         private readonly IContextoUsuario _contextoUsuario;
         private readonly FachadaActualizacionStock _stock;
         private readonly ServicioCliente _servicioCliente;
-        private readonly MySqlCategoriaRepository _categorias;
+
+        private IVentaRepository? _ventas;
+        private IDetalleVentaRepository? _detalles;
+        private IEmpleadoRepository? _empleados;
+        private ICategoriaRepository? _categorias;
+        private IProductoRepository? _productos;
 
         public FachadaVenta(
-            MySqlVentaRepository ventas,
-            MySqlDetalleVentaRepository detalles,
-            MySqlEmpleadoRepository empleados,
+            RepositoryCreator<IVentaRepository> creadorVentas,
+            RepositoryCreator<IDetalleVentaRepository> creadorDetalles,
+            RepositoryCreator<IEmpleadoRepository> creadorEmpleados,
+            RepositoryCreator<ICategoriaRepository> creadorCategorias,
+            RepositoryCreator<IProductoRepository> creadorProductos,
             IUnidadDeTrabajo unidadDeTrabajo,
             IContextoUsuario contextoUsuario,
             FachadaActualizacionStock stock,
-            ServicioCliente servicioCliente,
-            MySqlCategoriaRepository categorias)
+            ServicioCliente servicioCliente)
         {
-            _ventas = ventas;
-            _detalles = detalles;
-            _empleados = empleados;
+            _creadorVentas = creadorVentas;
+            _creadorDetalles = creadorDetalles;
+            _creadorEmpleados = creadorEmpleados;
+            _creadorCategorias = creadorCategorias;
+            _creadorProductos = creadorProductos;
             _unidadDeTrabajo = unidadDeTrabajo;
             _contextoUsuario = contextoUsuario;
             _stock = stock;
             _servicioCliente = servicioCliente;
-            _categorias = categorias;
         }
+
+        private IVentaRepository Ventas =>
+            _ventas ??= _creadorVentas.CreateRepository();
+
+        private IDetalleVentaRepository Detalles =>
+            _detalles ??= _creadorDetalles.CreateRepository();
+
+        private IEmpleadoRepository Empleados =>
+            _empleados ??= _creadorEmpleados.CreateRepository();
+
+        private ICategoriaRepository Categorias =>
+            _categorias ??= _creadorCategorias.CreateRepository();
+
+        private IProductoRepository Productos =>
+            _productos ??= _creadorProductos.CreateRepository();
 
         // ---------- Búsquedas previas a la inserción ----------
 
@@ -78,6 +102,15 @@ namespace ServicioVentas.Aplicacion.Servicios
                     p.Codigo.Contains(patron, StringComparison.OrdinalIgnoreCase))
                 .Take(20)
                 .ToList();
+        }
+
+        /// <summary>
+        /// Catálogo completo para la pantalla de consulta de productos. A
+        /// diferencia de la búsqueda de venta, incluye también los inactivos.
+        /// </summary>
+        public Task<List<Producto>> ListarProductosAsync()
+        {
+            return Productos.ObtenerTodosAsync();
         }
 
         public Task<Producto?> ObtenerProductoAsync(int idProducto)
@@ -295,20 +328,20 @@ namespace ServicioVentas.Aplicacion.Servicios
                     IdEmpleadoResponsable = idEmpleado
                 };
 
-                int idVenta = await _ventas.InsertarAsync(venta);
-                await _ventas.AsignarCodigoAsync(idVenta);
+                int idVenta = await Ventas.InsertarAsync(venta);
+                await Ventas.AsignarCodigoAsync(idVenta);
 
                 foreach (DetalleVenta detalle in detalles)
                 {
                     detalle.IdVenta = idVenta;
-                    await _detalles.InsertarAsync(detalle);
+                    await Detalles.InsertarAsync(detalle);
                 }
 
                 await _unidadDeTrabajo.ConfirmarAsync();
 
                 try
                 {
-                    await _categorias.IncrementarPorcentajeGananciaAsync();
+                    await Categorias.IncrementarPorcentajeGananciaAsync();
                 }
                 catch
                 {
@@ -316,7 +349,7 @@ namespace ServicioVentas.Aplicacion.Servicios
                 }
 
                 Venta guardada =
-                    await _ventas.ObtenerPorIdAsync(idVenta) ?? venta;
+                    await Ventas.ObtenerPorIdAsync(idVenta) ?? venta;
 
                 return ResultadoVenta.Correcto(guardada, lineasCalculadas);
             }
@@ -333,7 +366,7 @@ namespace ServicioVentas.Aplicacion.Servicios
 
         public async Task<ComprobanteVenta?> ObtenerComprobanteAsync(int idVenta)
         {
-            Venta? venta = await _ventas.ObtenerPorIdAsync(idVenta);
+            Venta? venta = await Ventas.ObtenerPorIdAsync(idVenta);
 
             if (venta is null)
             {
@@ -347,7 +380,7 @@ namespace ServicioVentas.Aplicacion.Servicios
                 ? "Cliente eliminado"
                 : $"{cliente.Nombre} {cliente.Apellido}".Trim();
 
-            List<Empleado> todos = await _empleados.ObtenerTodosAsync();
+            List<Empleado> todos = await Empleados.ObtenerTodosAsync();
 
             return new ComprobanteVenta
             {
@@ -359,7 +392,7 @@ namespace ServicioVentas.Aplicacion.Servicios
                     ? NombreDe(todos, venta.IdEmpleadoAnulacion.Value)
                     : null,
                 Lineas = await _stock.MapearLineasAsync(
-                    await _detalles.ObtenerPorVentaAsync(idVenta))
+                    await Detalles.ObtenerPorVentaAsync(idVenta))
             };
         }
 

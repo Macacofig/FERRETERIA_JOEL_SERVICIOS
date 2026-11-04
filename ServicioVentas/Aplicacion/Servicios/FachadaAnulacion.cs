@@ -2,7 +2,7 @@ using ServicioVentas.Aplicacion.Modelos;
 using ServicioVentas.Dominio.Constantes;
 using ServicioVentas.Dominio.Entidades;
 using ServicioVentas.Dominio.Puertos;
-using ServicioVentas.Infraestructura.Repositorios;
+using ServicioVentas.Infraestructura.Factories;
 
 namespace ServicioVentas.Aplicacion.Servicios
 {
@@ -19,37 +19,50 @@ namespace ServicioVentas.Aplicacion.Servicios
     /// </summary>
     public class FachadaAnulacion
     {
-        private readonly MySqlVentaRepository _ventas;
-        private readonly MySqlDetalleVentaRepository _detalles;
+        private readonly RepositoryCreator<IVentaRepository> _creadorVentas;
+        private readonly RepositoryCreator<IDetalleVentaRepository> _creadorDetalles;
+        private readonly RepositoryCreator<ICategoriaRepository> _creadorCategorias;
         private readonly ServicioCliente _servicioCliente;
         private readonly IUnidadDeTrabajo _unidadDeTrabajo;
         private readonly IContextoUsuario _contextoUsuario;
         private readonly FachadaActualizacionStock _stock;
-        private readonly MySqlCategoriaRepository _categorias;
+
+        private IVentaRepository? _ventas;
+        private IDetalleVentaRepository? _detalles;
+        private ICategoriaRepository? _categorias;
 
         public FachadaAnulacion(
-            MySqlVentaRepository ventas,
-            MySqlDetalleVentaRepository detalles,
+            RepositoryCreator<IVentaRepository> creadorVentas,
+            RepositoryCreator<IDetalleVentaRepository> creadorDetalles,
+            RepositoryCreator<ICategoriaRepository> creadorCategorias,
             ServicioCliente servicioCliente,
             IUnidadDeTrabajo unidadDeTrabajo,
             IContextoUsuario contextoUsuario,
-            FachadaActualizacionStock stock,
-            MySqlCategoriaRepository categorias)
+            FachadaActualizacionStock stock)
         {
-            _ventas = ventas;
-            _detalles = detalles;
+            _creadorVentas = creadorVentas;
+            _creadorDetalles = creadorDetalles;
+            _creadorCategorias = creadorCategorias;
             _servicioCliente = servicioCliente;
             _unidadDeTrabajo = unidadDeTrabajo;
             _contextoUsuario = contextoUsuario;
             _stock = stock;
-            _categorias = categorias;
         }
+
+        private IVentaRepository Ventas =>
+            _ventas ??= _creadorVentas.CreateRepository();
+
+        private IDetalleVentaRepository Detalles =>
+            _detalles ??= _creadorDetalles.CreateRepository();
+
+        private ICategoriaRepository Categorias =>
+            _categorias ??= _creadorCategorias.CreateRepository();
 
         // ---------- Consulta (Select / historial) ----------
 
         public async Task<List<VentaListado>> ListarVentasListadoAsync()
         {
-            List<Venta> ventas = await _ventas.ObtenerTodosAsync();
+            List<Venta> ventas = await Ventas.ObtenerTodosAsync();
 
             Dictionary<int, string> nombresCliente = new();
 
@@ -80,7 +93,7 @@ namespace ServicioVentas.Aplicacion.Servicios
 
         public async Task<ResultadoVenta?> ObtenerVentaAsync(int idVenta)
         {
-            Venta? venta = await _ventas.ObtenerPorIdAsync(idVenta);
+            Venta? venta = await Ventas.ObtenerPorIdAsync(idVenta);
 
             if (venta is null)
             {
@@ -90,7 +103,7 @@ namespace ServicioVentas.Aplicacion.Servicios
             return ResultadoVenta.Correcto(
                 venta,
                 await _stock.MapearLineasAsync(
-                    await _detalles.ObtenerPorVentaAsync(idVenta)));
+                    await Detalles.ObtenerPorVentaAsync(idVenta)));
         }
 
         // ---------- Anulación (borrado lógico + reposición de stock + reversión de categorías) ----------
@@ -113,7 +126,7 @@ namespace ServicioVentas.Aplicacion.Servicios
                 return ResultadoVenta.Fallido("Debe iniciar sesión para anular la venta.");
             }
 
-            Venta? venta = await _ventas.ObtenerPorIdAsync(idVenta);
+            Venta? venta = await Ventas.ObtenerPorIdAsync(idVenta);
             if (venta is null)
             {
                 return ResultadoVenta.Fallido("La venta no existe.");
@@ -124,14 +137,14 @@ namespace ServicioVentas.Aplicacion.Servicios
                 return ResultadoVenta.Fallido("La venta ya ha sido anulada anteriormente.");
             }
 
-            List<DetalleVenta> detalles = await _detalles.ObtenerPorVentaAsync(idVenta);
+            List<DetalleVenta> detalles = await Detalles.ObtenerPorVentaAsync(idVenta);
 
             await _unidadDeTrabajo.IniciarAsync();
 
             try
             {
                 // 1. Marcar la venta como anulada en la BD
-                if (!await _ventas.MarcarAnuladaAsync(idVenta, idEmpleado, motivo.Trim()))
+                if (!await Ventas.MarcarAnuladaAsync(idVenta, idEmpleado, motivo.Trim()))
                 {
                     await _unidadDeTrabajo.RevertirAsync();
                     return ResultadoVenta.Fallido(
@@ -157,14 +170,14 @@ namespace ServicioVentas.Aplicacion.Servicios
             // Al estar fuera de la transacción, ya no genera ningún deadlock en MySQL
             try
             {
-                await _categorias.IncrementarPorcentajeGananciaAsync();
+                await Categorias.IncrementarPorcentajeGananciaAsync();
             }
             catch
             {
                 // El recálculo auxiliar no debe impedir que la anulación se considere exitosa
             }
 
-            Venta actualizada = await _ventas.ObtenerPorIdAsync(idVenta) ?? venta;
+            Venta actualizada = await Ventas.ObtenerPorIdAsync(idVenta) ?? venta;
             List<LineaVentaDetalle> lineas = await _stock.MapearLineasAsync(detalles);
 
             return ResultadoVenta.Correcto(actualizada, lineas);
