@@ -2,7 +2,7 @@ using ServicioVentas.Aplicacion.Servicios;
 using ServicioVentas.Dominio.Puertos;
 using ServicioVentas.Infraestructura;
 using ServicioVentas.Infraestructura.Conexion;
-using ServicioVentas.Infraestructura.Repositorios;
+using ServicioVentas.Infraestructura.Factories;
 using ServicioVentas.Servicios;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -11,6 +11,12 @@ using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// El .env de la raíz del repositorio aporta la clave de firma del JWT y la
+// cadena de MySQL. Nunca se versiona; en Docker las variables llegan por el
+// entorno del contenedor.
+CargarVariablesEntorno(builder.Environment.ContentRootPath);
+builder.Configuration.AddEnvironmentVariables();
+
 // Add services to the container.
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
@@ -18,8 +24,13 @@ builder.Services.AddOpenApi();
 
 // JWT Authentication - La UI envía un token Bearer en cada request.
 // Este servicio solo valida el token; no gestiona login ni sesiones.
-string? jwtKey = builder.Configuration["Jwt:Key"]
-    ?? Environment.GetEnvironmentVariable("Jwt__Key");
+// Se toma el primer valor realmente informado: appsettings deja "Jwt:Key"
+// como cadena vacía y un '??' taparía la alternativa Jwt__Clave.
+string? jwtKey = PrimeraNoVacia(
+    builder.Configuration["Jwt:Key"],
+    builder.Configuration["Jwt:Clave"],
+    Environment.GetEnvironmentVariable("Jwt__Key"),
+    Environment.GetEnvironmentVariable("Jwt__Clave"));
 
 if (string.IsNullOrWhiteSpace(jwtKey))
 {
@@ -59,14 +70,16 @@ builder.Services.AddSingleton<IDbConnectionFactory, MySqlConnectionFactory>();
 builder.Services.AddScoped<IConexionTransaccional, MySqlConexionTransaccional>();
 builder.Services.AddScoped<IUnidadDeTrabajo, MySqlUnidadDeTrabajo>();
 
-// Repositorios
-builder.Services.AddScoped<MySqlVentaRepository>();
-builder.Services.AddScoped<MySqlDetalleVentaRepository>();
-builder.Services.AddScoped<MySqlClienteRepository>();
-builder.Services.AddScoped<MySqlProductoRepository>();
-builder.Services.AddScoped<MySqlInventarioRepository>();
-builder.Services.AddScoped<MySqlCategoriaRepository>();
-builder.Services.AddScoped<MySqlEmpleadoRepository>();
+// Repositorios: patrón Factory Method. Las fachadas reciben creadores y
+// piden el repositorio concreto a través del contrato del dominio; nunca
+// conocen las clases MySql*.
+builder.Services.AddScoped<RepositoryCreator<IVentaRepository>, VentaRepositoryCreator>();
+builder.Services.AddScoped<RepositoryCreator<IDetalleVentaRepository>, DetalleVentaRepositoryCreator>();
+builder.Services.AddScoped<RepositoryCreator<IClienteRepository>, ClienteRepositoryCreator>();
+builder.Services.AddScoped<RepositoryCreator<IProductoRepository>, ProductoRepositoryCreator>();
+builder.Services.AddScoped<RepositoryCreator<IInventarioRepository>, InventarioRepositoryCreator>();
+builder.Services.AddScoped<RepositoryCreator<ICategoriaRepository>, CategoriaRepositoryCreator>();
+builder.Services.AddScoped<RepositoryCreator<IEmpleadoRepository>, EmpleadoRepositoryCreator>();
 
 // Servicios de aplicación (fachadas de ventas)
 builder.Services.AddScoped<ServicioCliente>();
@@ -117,3 +130,68 @@ app.MapGet("/health", () => Results.Ok(new
 }));
 
 app.Run();
+
+// Lee clave=valor del .env y define cada variable si aún no existe.
+static void CargarVariablesEntorno(string directorio)
+{
+    string? ruta = BuscarArchivoEnv(directorio);
+
+    if (ruta is null)
+    {
+        return;
+    }
+
+    foreach (string linea in File.ReadAllLines(ruta))
+    {
+        string texto = linea.Trim();
+
+        if (texto.Length == 0 || texto.StartsWith('#'))
+        {
+            continue;
+        }
+
+        int separador = texto.IndexOf('=');
+
+        if (separador <= 0)
+        {
+            continue;
+        }
+
+        string clave = texto[..separador].Trim();
+        string valor = texto[(separador + 1)..].Trim().Trim('"');
+
+        if (Environment.GetEnvironmentVariable(clave) is null)
+        {
+            Environment.SetEnvironmentVariable(clave, valor);
+        }
+    }
+}
+
+static string? BuscarArchivoEnv(string directorio)
+{
+    string? actual = Path.GetFullPath(directorio);
+
+    for (int nivel = 0; nivel < 5 && actual is not null; nivel++)
+    {
+        string ruta = Path.Combine(actual, ".env");
+
+        if (File.Exists(ruta))
+        {
+            return ruta;
+        }
+
+        DirectoryInfo? padre = Directory.GetParent(actual);
+        actual = padre?.FullName;
+    }
+
+    return null;
+}
+
+// Devuelve el primer valor no nulo ni vacío (las claves vacías de
+// appsettings no deben tapar las variables de entorno).
+static string PrimeraNoVacia(params string?[] valores)
+{
+    return valores.FirstOrDefault(
+            valor => !string.IsNullOrWhiteSpace(valor))
+        ?? string.Empty;
+}
