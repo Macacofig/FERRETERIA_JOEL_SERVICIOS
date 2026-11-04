@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// El .env de la raíz aporta la clave del JWT (y del protector de URLs) en
+// desarrollo local. En Docker las variables llegan por el entorno.
 Dictionary<string, string?> configuracionLocal =
     CargarVariablesEntorno(builder.Environment.ContentRootPath);
 
@@ -27,6 +29,8 @@ if (string.IsNullOrWhiteSpace(claveUrl))
         "Falta 'Jwt:Key' o 'UrlProteccion:Clave' en el .env.");
 }
 
+// Misma clave en Web y ServicioUsuarios: los enlaces de comprobante cifrados
+// por la web se descifran en el servicio con AES-GCM.
 UrlProtector.Inicializar(claveUrl);
 
 builder.Services.AddRazorPages();
@@ -48,6 +52,16 @@ string apiUrl = builder.Configuration["Servicios:UsuariosApiUrl"]
 builder.Services.AddHttpClient<UsuariosApiCliente>(client =>
 {
     client.BaseAddress = new Uri(apiUrl.TrimEnd('/') + "/");
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
+
+string ventasApiUrl = builder.Configuration["Servicios:VentasApiUrl"]
+    ?? builder.Configuration["Servicios__VentasApiUrl"]
+    ?? "http://localhost:5071";
+
+builder.Services.AddHttpClient<VentasApiCliente>(client =>
+{
+    client.BaseAddress = new Uri(ventasApiUrl.TrimEnd('/') + "/");
     client.Timeout = TimeSpan.FromSeconds(30);
 });
 
@@ -98,7 +112,20 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+// Solo se redirige a HTTPS si la aplicación está configurada con un endpoint
+// HTTPS. En Docker la web escucha en http://+:8080 y una redirección dejaría
+// inaccesible el puerto (y rompería el healthcheck del contenedor).
+bool sirveHttps =
+    app.Urls.Any(url => url.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+    || (builder.Configuration["Urls"] ?? string.Empty)
+        .Split(';', StringSplitOptions.RemoveEmptyEntries)
+        .Any(url => url.Trim().StartsWith("https://", StringComparison.OrdinalIgnoreCase));
+
+if (sirveHttps)
+{
+    app.UseHttpsRedirection();
+}
+
 app.UseStaticFiles();
 app.UseRouting();
 app.UseSession();
