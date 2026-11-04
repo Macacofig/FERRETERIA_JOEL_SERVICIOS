@@ -11,7 +11,7 @@ namespace ServicioVentas.Infraestructura.Repositorios
     /// que necesita el flujo de venta. No incluye actualización ni cambio
     /// de estado (eso pertenece al módulo de productos).
     /// </summary>
-    public class MySqlProductoRepository : IGestionarRepository<Producto>
+    public class MySqlProductoRepository : IProductoRepository
     {
         private const string Columnas = @"
             p.IdProducto,
@@ -27,7 +27,8 @@ namespace ServicioVentas.Infraestructura.Repositorios
             p.Estado,
             p.FechaRegistro,
             p.FechaActualizacion,
-            p.IdEmpleadoResponsable";
+            p.IdEmpleadoResponsable,
+            c.Nombre AS NombreCategoria";
 
         private readonly IConexionTransaccional _conexion;
 
@@ -56,6 +57,7 @@ namespace ServicioVentas.Infraestructura.Repositorios
                 SELECT {Columnas}
                 FROM producto p
                 LEFT JOIN marca m ON m.IdMarca = p.Marca
+                LEFT JOIN categoria c ON c.IdCategoria = p.IdCategoria
                 ORDER BY p.Nombre ASC";
 
             using MySqlCommand command = await CrearComandoAsync(query);
@@ -193,6 +195,7 @@ namespace ServicioVentas.Infraestructura.Repositorios
                 SELECT {Columnas}
                 FROM producto p
                 LEFT JOIN marca m ON m.IdMarca = p.Marca
+                LEFT JOIN categoria c ON c.IdCategoria = p.IdCategoria
                 WHERE p.Estado = 1
                 ORDER BY p.Nombre ASC";
 
@@ -214,6 +217,7 @@ namespace ServicioVentas.Infraestructura.Repositorios
                 SELECT {Columnas}
                 FROM producto p
                 LEFT JOIN marca m ON m.IdMarca = p.Marca
+                LEFT JOIN categoria c ON c.IdCategoria = p.IdCategoria
                 WHERE p.IdProducto = @idProducto";
 
             using MySqlCommand command = await CrearComandoAsync(query);
@@ -248,7 +252,10 @@ namespace ServicioVentas.Infraestructura.Repositorios
                 FechaActualizacion = reader["FechaActualizacion"] == DBNull.Value
                     ? null
                     : reader.GetDateTime("FechaActualizacion"),
-                IdEmpleadoResponsable = reader.GetInt32("IdEmpleadoResponsable")
+                IdEmpleadoResponsable = reader.GetInt32("IdEmpleadoResponsable"),
+                NombreCategoria = reader["NombreCategoria"] == DBNull.Value
+                    ? null
+                    : reader["NombreCategoria"].ToString()
             };
         }
     }
