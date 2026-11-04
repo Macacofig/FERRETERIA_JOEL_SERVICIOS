@@ -24,10 +24,10 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Seguridad
         }
 
         public string Issuer =>
-            _configuration["Jwt:Issuer"] ?? "FERRETERIA.Joel.ServicioUsuarios";
+            _configuration["Jwt:Issuer"] ?? "FerreteriaJoel";
 
         public string Audience =>
-            _configuration["Jwt:Audience"] ?? "FERRETERIA.Joel.Web";
+            _configuration["Jwt:Audience"] ?? "FerreteriaJoel";
 
         public int DuracionMinutos =>
             int.TryParse(_configuration["Jwt:DuracionMinutos"], out int minutos)
@@ -78,13 +78,14 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Seguridad
 
         public string RequerirClave()
         {
-            string? clave = _configuration["Jwt:Clave"];
+            string? clave = _configuration["Jwt:Key"]
+                ?? _configuration["Jwt:Clave"];
 
             if (string.IsNullOrWhiteSpace(clave) || clave.Length < 32)
             {
                 throw new InvalidOperationException(
-                    "Falta 'Jwt:Clave' o es demasiado corta (mínimo 32 caracteres). "
-                    + "Defina la variable de entorno Jwt__Clave (archivo .env).");
+                    "Falta 'Jwt:Key' o es demasiado corta (mínimo 32 caracteres). "
+                    + "Defina la variable de entorno Jwt__Key (archivo .env).");
             }
 
             return clave;

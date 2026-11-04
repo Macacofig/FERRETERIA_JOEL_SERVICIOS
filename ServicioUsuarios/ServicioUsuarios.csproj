@@ -13,7 +13,6 @@
     <PackageReference Include="Isopoh.Cryptography.Argon2" Version="2.0.0" />
     <PackageReference Include="MailKit" Version="4.18.1" />
     <PackageReference Include="MySql.Data" Version="26.7.0" />
-    <PackageReference Include="StackExchange.Redis" Version="2.8.22" />
     <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.13" />
   </ItemGroup>
 

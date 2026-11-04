@@ -56,22 +56,38 @@ builder.Services.AddSingleton<RevocacionTokens>();
 // JWT Bearer: única tecnología de autenticación de la API. Issuer, audience,
 // expiración y firma se validan en cada petición.
 // ---------------------------------------------------------------------------
-string claveJwt = builder.Configuration["Jwt:Clave"] ?? string.Empty;
+// appsettings deja estas claves como cadena vacía; un '??' no saltaría al
+// siguiente candidato y la aplicación arrancaría con clave vacía. Se toma el
+// primer valor realmente informado (entorno/.env incluido).
+string claveJwt = PrimeraNoVacia(
+    builder.Configuration["Jwt:Key"],
+    builder.Configuration["Jwt:Clave"],
+    Environment.GetEnvironmentVariable("Jwt__Key"),
+    Environment.GetEnvironmentVariable("Jwt__Clave"));
 
 if (claveJwt.Length < 32)
 {
     throw new InvalidOperationException(
-        "Falta 'Jwt:Clave' o tiene menos de 32 caracteres. Defina la variable "
-        + "de entorno Jwt__Clave (archivo .env de la raíz).");
+        "Falta 'Jwt:Key' o tiene menos de 32 caracteres. Defina la variable "
+        + "de entorno Jwt__Key (archivo .env de la raíz).");
 }
 
 // El token de activación se cifra con la misma clave/algoritmo que el front.
-string claveUrl = builder.Configuration["UrlProteccion:Clave"] ?? string.Empty;
+// Si no se define una clave propia, se reutiliza la del JWT para que ambos
+// procesos descifren el mismo enlace.
+string claveUrl = PrimeraNoVacia(
+    builder.Configuration["UrlProteccion:Clave"],
+    builder.Configuration["Jwt:Key"],
+    builder.Configuration["Jwt:Clave"],
+    Environment.GetEnvironmentVariable("UrlProteccion__Clave"),
+    Environment.GetEnvironmentVariable("Jwt__Key"),
+    Environment.GetEnvironmentVariable("Jwt__Clave"));
 
 if (string.IsNullOrWhiteSpace(claveUrl))
 {
     throw new InvalidOperationException(
-        "Falta 'UrlProteccion:Clave'. Defina UrlProteccion__Clave en el .env.");
+        "Falta 'UrlProteccion:Clave' o 'Jwt:Key'. Defina UrlProteccion__Clave "
+        + "o Jwt__Key en el .env.");
 }
 
 UrlProtectorApi.Inicializar(claveUrl);
@@ -231,4 +247,13 @@ static string? BuscarArchivoEnv(string directorio)
     }
 
     return null;
+}
+
+// Devuelve el primer valor no nulo ni vacío. Evita que una clave vacía en
+// appsettings.json tape el valor real que llega por variables de entorno.
+static string PrimeraNoVacia(params string?[] valores)
+{
+    return valores.FirstOrDefault(
+            valor => !string.IsNullOrWhiteSpace(valor))
+        ?? string.Empty;
 }
