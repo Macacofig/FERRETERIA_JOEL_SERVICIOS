@@ -113,7 +113,11 @@ namespace FERRETERIA__Joel.Infraestructura.Repositorios
                     TokenExpira,
                     TokenUsado,
                     Estado,
-                    IdEmpleadoResponsable
+                    IdEmpleadoResponsable,
+                    UsuarioCreacion,
+                    FechaCreacion,
+                    UsuarioModificacion,
+                    FechaModificacion
                 )
                 VALUES
                 (
@@ -128,7 +132,11 @@ namespace FERRETERIA__Joel.Infraestructura.Repositorios
                     @tokenExpira,
                     @tokenUsado,
                     @estado,
-                    @idEmpleadoResponsable
+                    @idEmpleadoResponsable,
+                    @usuarioCreacion,
+                    @fechaCreacion,
+                    @usuarioModificacion,
+                    @fechaModificacion
                 )";
 
             using MySqlConnection connection =
@@ -160,6 +168,20 @@ namespace FERRETERIA__Joel.Infraestructura.Repositorios
             command.Parameters.AddWithValue(
                 "@idEmpleadoResponsable",
                 (object?)empleado.IdEmpleadoResponsable ?? DBNull.Value);
+            command.Parameters.AddWithValue(
+                "@usuarioCreacion",
+                empleado.UsuarioCreacion.HasValue
+                    ? empleado.UsuarioCreacion.Value
+                    : empleado.IdEmpleadoResponsable.HasValue
+                        ? empleado.IdEmpleadoResponsable.Value
+                        : DBNull.Value);
+            command.Parameters.AddWithValue("@fechaCreacion", DateTime.Now);
+            command.Parameters.AddWithValue(
+                "@usuarioModificacion",
+                (object?)empleado.UsuarioModificacion ?? DBNull.Value);
+            command.Parameters.AddWithValue(
+                "@fechaModificacion",
+                (object?)empleado.FechaModificacion ?? DBNull.Value);
 
             await connection.OpenAsync();
 
@@ -422,13 +444,16 @@ namespace FERRETERIA__Joel.Infraestructura.Repositorios
 
         public virtual async Task ActualizarContrasenaAsync(
             int id,
-            string contrasena)
+            string contrasena,
+            int? usuarioModificacion = null)
         {
             const string query = @"
                 UPDATE empleado
                 SET
                     Contrasena = @contrasena,
-                    FechaActualizacion = CURRENT_TIMESTAMP
+                    FechaActualizacion = CURRENT_TIMESTAMP,
+                    UsuarioModificacion = @usuarioModificacion,
+                    FechaModificacion = CURRENT_TIMESTAMP
                 WHERE IdEmpleado = @id";
 
             using MySqlConnection connection =
@@ -438,6 +463,9 @@ namespace FERRETERIA__Joel.Infraestructura.Repositorios
 
             command.Parameters.AddWithValue("@id", id);
             command.Parameters.AddWithValue("@contrasena", contrasena);
+            command.Parameters.AddWithValue(
+                "@usuarioModificacion",
+                (object?)usuarioModificacion ?? DBNull.Value);
 
             await connection.OpenAsync();
 
@@ -465,7 +493,9 @@ namespace FERRETERIA__Joel.Infraestructura.Repositorios
                     Telefono = @telefono,
                     CorreoElectronico = @correoElectronico,
                     FechaActualizacion = CURRENT_TIMESTAMP,
-                    IdEmpleadoResponsable = @idEmpleadoResponsable
+                    IdEmpleadoResponsable = @idEmpleadoResponsable,
+                    UsuarioModificacion = @idEmpleadoResponsable,
+                    FechaModificacion = CURRENT_TIMESTAMP
                 WHERE IdEmpleado = @id";
 
             using MySqlConnection connection =
@@ -510,7 +540,11 @@ namespace FERRETERIA__Joel.Infraestructura.Repositorios
                 SET
                     Estado = @estado,
                     FechaActualizacion = CURRENT_TIMESTAMP,
-                    IdEmpleadoResponsable = @idEmpleadoResponsable
+                    IdEmpleadoResponsable = @idEmpleadoResponsable,
+                    UsuarioModificacion = @idEmpleadoResponsable,
+                    FechaModificacion = CURRENT_TIMESTAMP,
+                    UsuarioBaja = CASE WHEN @estado = 0 THEN @idEmpleadoResponsable ELSE NULL END,
+                    FechaBaja = CASE WHEN @estado = 0 THEN CURRENT_TIMESTAMP ELSE NULL END
                 WHERE IdEmpleado = @id
                   AND Estado <> @estado";
 
@@ -639,7 +673,8 @@ namespace FERRETERIA__Joel.Infraestructura.Repositorios
         public virtual async Task ActivarCuentaAsync(
             int id,
             string contrasena,
-            sbyte estadoActivo)
+            sbyte estadoActivo,
+            int? usuarioModificacion = null)
         {
             const string query = @"
                 UPDATE empleado
@@ -647,7 +682,9 @@ namespace FERRETERIA__Joel.Infraestructura.Repositorios
                     Contrasena = @contrasena,
                     TokenUsado = 1,
                     Estado = @estado,
-                    FechaActualizacion = CURRENT_TIMESTAMP
+                    FechaActualizacion = CURRENT_TIMESTAMP,
+                    UsuarioModificacion = @usuarioModificacion,
+                    FechaModificacion = CURRENT_TIMESTAMP
                 WHERE IdEmpleado = @id";
 
             using MySqlConnection connection =
@@ -658,6 +695,9 @@ namespace FERRETERIA__Joel.Infraestructura.Repositorios
             command.Parameters.AddWithValue("@id", id);
             command.Parameters.AddWithValue("@contrasena", contrasena);
             command.Parameters.AddWithValue("@estado", estadoActivo);
+            command.Parameters.AddWithValue(
+                "@usuarioModificacion",
+                (object?)usuarioModificacion ?? id);
 
             await connection.OpenAsync();
 
@@ -772,4 +812,3 @@ namespace FERRETERIA__Joel.Infraestructura.Repositorios
         }
     }
 }
-

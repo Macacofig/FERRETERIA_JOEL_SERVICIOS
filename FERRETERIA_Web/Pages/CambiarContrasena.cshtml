@@ -50,6 +50,7 @@
                     </button>
                 </div>
                 <span class="fj-form-hint">Mínimo 8 caracteres, con mayúscula, minúscula, número y símbolo. Debe ser distinta de la actual.</span>
+                <span class="fj-form-hint">La nueva contraseña aplicará desde el próximo inicio de sesión.</span>
                 @if (Model.ErroresCampo.TryGetValue("ContrasenaNueva", out var errorNueva))
                 {
                     <p class="fj-form-error" role="alert">@errorNueva</p>

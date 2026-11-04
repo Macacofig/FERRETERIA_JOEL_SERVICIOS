@@ -87,7 +87,11 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
                 FechaRegistro = DateTime.Now,
                 IdEmpleadoResponsable = _contextoUsuario.IdEmpleado > 0
                     ? _contextoUsuario.IdEmpleado
-                    : null
+                    : null,
+                UsuarioCreacion = _contextoUsuario.IdEmpleado > 0
+                    ? _contextoUsuario.IdEmpleado
+                    : null,
+                FechaCreacion = DateTime.Now
             };
 
             int id = await _repositorio.InsertarAsync(empleado);
@@ -281,4 +285,3 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
         }
     }
 }
-

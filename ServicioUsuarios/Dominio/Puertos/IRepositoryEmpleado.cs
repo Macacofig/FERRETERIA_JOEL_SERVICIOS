@@ -123,12 +123,15 @@ namespace FERRETERIA__Joel.Dominio.Puertos
         Task ActivarCuentaAsync(
             int id,
             string contrasena,
-            sbyte estadoActivo);
+            sbyte estadoActivo,
+            int? usuarioModificacion = null);
 
         /// <summary>
         /// Sustituye el hash de la contraseña (rehash o cambio).
         /// </summary>
-        Task ActualizarContrasenaAsync(int id, string contrasena);
+        Task ActualizarContrasenaAsync(
+            int id,
+            string contrasena,
+            int? usuarioModificacion = null);
     }
 }
-

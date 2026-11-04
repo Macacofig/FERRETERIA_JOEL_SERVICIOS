@@ -22,15 +22,18 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
         private readonly IRepositoryEmpleado _repositorio;
         private readonly IContextoUsuario _contextoUsuario;
         private readonly ServicioRegistroEmpleado _servicioActivacion;
+        private readonly ILogger<ServicioPersonal> _logger;
 
         public ServicioPersonal(
             IRepositoryEmpleado repositorio,
             IContextoUsuario contextoUsuario,
-            ServicioRegistroEmpleado servicioActivacion)
+            ServicioRegistroEmpleado servicioActivacion,
+            ILogger<ServicioPersonal> logger)
         {
             _repositorio = repositorio;
             _contextoUsuario = contextoUsuario;
             _servicioActivacion = servicioActivacion;
+            _logger = logger;
         }
 
         /// <summary>
@@ -134,10 +137,11 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
             {
                 await _servicioActivacion.ReenviarActivacionAsync(idEmpleado);
             }
-            catch
+            catch (Exception ex)
             {
                 // La reactivación ya se aplicó; si el correo falla, el
                 // administrador puede reenviarlo desde la lista de pendientes.
+                _logger.LogWarning(ex, "No se pudo enviar el correo de activación al reactivar la cuenta {IdEmpleado}.", idEmpleado);
             }
 
             return resultado;
@@ -193,4 +197,3 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
         }
     }
 }
-

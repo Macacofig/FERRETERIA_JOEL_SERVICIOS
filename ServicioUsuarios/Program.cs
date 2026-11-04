@@ -2,6 +2,7 @@
 using System.Text;
 using FERRETERIA__Joel.Aplicacion.Servicios;
 using FERRETERIA__Joel.Dominio.Puertos;
+using FERRETERIA__Joel.Dominio.Utilidades;
 using FERRETERIA__Joel.Infraestructura.Conexion;
 using FERRETERIA__Joel.Infraestructura.Repositorios;
 using FERRETERIA__Joel.Infraestructura.Servicios;
@@ -41,6 +42,7 @@ builder.Services.AddScoped<IRepositoryBitacora>(sp =>
 // Servicios de aplicación existentes (reutilizados, no duplicados).
 // ---------------------------------------------------------------------------
 builder.Services.AddSingleton<IHasheadorContrasena, Argon2HasheadorContrasena>();
+builder.Services.AddSingleton<ICredencialesValidaciones, CredencialesValidaciones>();
 builder.Services.AddScoped<IEnviadorCorreo, SmtpEnviadorCorreo>();
 builder.Services.AddScoped<IConstructorEnlaceActivacion, ConstructorEnlaceActivacionApi>();
 builder.Services.AddScoped<RegistroCredencialesValidador>();

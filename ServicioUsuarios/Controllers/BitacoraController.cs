@@ -4,6 +4,7 @@ using FERRETERIA__Joel.Dominio.Constantes;
 using FERRETERIA__Joel.Dominio.Entidades;
 using FERRETERIA__Joel.ServicioUsuarios.Contratos;
 using FERRETERIA__Joel.Aplicacion.Modelos;
+using FERRETERIA__Joel.Dominio.Puertos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,14 +15,16 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
     public class BitacoraController : ControllerBase
     {
         private readonly ServicioBitacora _bitacora;
+        private readonly IContextoUsuario _contextoUsuario;
 
-        public BitacoraController(ServicioBitacora bitacora)
+        public BitacoraController(ServicioBitacora bitacora, IContextoUsuario contextoUsuario)
         {
             _bitacora = bitacora;
+            _contextoUsuario = contextoUsuario;
         }
 
         [HttpPost]
-        [Authorize]
+        [Authorize(Roles = RolesSistema.Administrador)]
         public async Task<IActionResult> Registrar(
             [FromBody] BitacoraRequest solicitud)
         {
@@ -33,7 +36,7 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
                     "La operación debe ser INSERT, UPDATE o DELETE e indicar la entidad."));
             }
 
-            int id = ObtenerIdEmpleado();
+            int id = _contextoUsuario.IdEmpleado;
             await _bitacora.RegistrarOperacionAsync(
                 solicitud.Operacion.Trim().ToUpperInvariant(),
                 solicitud.Entidad.Trim(),
@@ -59,13 +62,6 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
             return Ok(RespuestaApi<List<RegistroBitacora>>.Ok(registros));
         }
 
-        private int ObtenerIdEmpleado()
-        {
-            return int.TryParse(
-                User.FindFirstValue(ClaimTypes.NameIdentifier),
-                out int id) ? id : 0;
-        }
-
         private static bool OperacionValida(string? operacion)
         {
             return string.Equals(operacion, ServicioBitacora.OperacionInsert,
@@ -77,4 +73,3 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
         }
     }
 }
-

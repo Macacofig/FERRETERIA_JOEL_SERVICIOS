@@ -8,7 +8,7 @@ namespace FERRETERIA__Joel.Dominio.Utilidades
     /// empleados y de clientes: nombres, teléfono, correo, contraseña y su
     /// confirmación. No conoce ni consulta la base de datos.
     /// </summary>
-    public class CredencialesValidaciones
+    public class CredencialesValidaciones : ICredencialesValidaciones
     {
         // 8 dígitos: celulares en Bolivia inician exclusivamente con 6 o 7
         private static readonly Regex FormatoTelefono =

@@ -17,6 +17,8 @@ builder.Configuration.AddEnvironmentVariables();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddScoped<ServicioReportes.Dominio.Puertos.IReporteVentasRepository, ServicioReportes.Infraestructura.MySqlReporteVentasRepository>();
+builder.Services.AddScoped<ServicioReportes.Aplicacion.ReporteService>();
 
 // JWT Authentication - La UI envía un token Bearer en cada request.
 // Este servicio solo valida el token; no gestiona login ni sesiones.

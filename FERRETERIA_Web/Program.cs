@@ -65,6 +65,15 @@ builder.Services.AddHttpClient<VentasApiCliente>(client =>
     client.Timeout = TimeSpan.FromSeconds(30);
 });
 
+string reportesApiUrl = builder.Configuration["Servicios:ReportesApiUrl"]
+    ?? builder.Configuration["Servicios__ReportesApiUrl"]
+    ?? "http://localhost:5080";
+builder.Services.AddHttpClient("ReportesApi", client =>
+{
+    client.BaseAddress = new Uri(reportesApiUrl.TrimEnd('/') + "/");
+    client.Timeout = TimeSpan.FromSeconds(60);
+});
+
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
