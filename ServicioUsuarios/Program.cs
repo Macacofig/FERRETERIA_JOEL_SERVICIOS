@@ -55,8 +55,8 @@ builder.Services.AddScoped<ServicioBitacora>();
 // La identidad dentro de la API se resuelve desde el JWT validado.
 builder.Services.AddScoped<IContextoUsuario, ContextoUsuarioJwt>();
 
-builder.Services.AddSingleton<JwtEmisor>();
-builder.Services.AddSingleton<RevocacionTokens>();
+builder.Services.AddSingleton<IEmisorToken, JwtEmisor>();
+builder.Services.AddSingleton<IRevocacionTokens, RevocacionTokens>();
 
 // ---------------------------------------------------------------------------
 // JWT Bearer: única tecnología de autenticación de la API. Issuer, audience,
@@ -113,8 +113,8 @@ builder.Services
         {
             OnTokenValidated = contexto =>
             {
-                RevocacionTokens revocacion = contexto.HttpContext
-                    .RequestServices.GetRequiredService<RevocacionTokens>();
+                IRevocacionTokens revocacion = contexto.HttpContext
+                    .RequestServices.GetRequiredService<IRevocacionTokens>();
 
                 string? jti = contexto.Principal?
                     .FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Jti)
