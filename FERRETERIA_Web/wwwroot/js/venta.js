@@ -536,8 +536,6 @@
         // usuario, para que el bloqueador de ventanas emergentes del
         // navegador no la impida; su contenido se fija cuando el servidor
         // responde con la URL del comprobante.
-        var pestanaComprobante = window.open('', '_blank');
-
         marcandoEnvio(true);
 
         fetch(urlRegistrarAjax, {
@@ -545,7 +543,6 @@
             body: new FormData(form),
             credentials: 'same-origin',
             headers: { 'Accept': 'application/json' }
-<<<<<<< HEAD
         }).then(leerJson).then(function (datos) {
             // El comprobante en PDF se abre en la pestaña que ya se reservó
             // al confirmar (evita que el bloqueador de ventanas emergentes la
@@ -562,22 +559,6 @@
             if (pestanaPdf && !pestanaPdf.closed) {
                 pestanaPdf.close();
             }
-=======
-        }).then(leerJson).then(function (respuesta) {
-            if (pestanaComprobante) {
-                if (respuesta && respuesta.urlPdf) {
-                    pestanaComprobante.location.href = respuesta.urlPdf;
-                } else {
-                    pestanaComprobante.close();
-                }
-            }
-
-            // La venta queda registrada: se va al historial para revisarla
-            // en lugar de quedarse en el formulario.
-            window.location.href = urlVentas || '/Ventas';
-        }).catch(function (error) {
-            if (pestanaComprobante) pestanaComprobante.close();
->>>>>>> 41da516e6c89f1a4ba2096fd203daae6c1646200
             alerta(error.message || 'No se pudo registrar la venta.', 'No se pudo registrar');
         }).finally(function () {
             marcandoEnvio(false);

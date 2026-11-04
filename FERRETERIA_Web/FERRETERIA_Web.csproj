@@ -7,12 +7,4 @@
     <RootNamespace>FERRETERIA__Joel</RootNamespace>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="MySql.Data" Version="26.7.0" />
-    <PackageReference Include="QuestPDF" Version="2026.9.1" />
-    <PackageReference Include="Microsoft.AspNetCore.DataProtection.StackExchangeRedis" Version="10.0.12" />
-    <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="10.0.12" />
-    <PackageReference Include="StackExchange.Redis" Version="2.8.22" />
-  </ItemGroup>
-
 </Project>
