@@ -5,7 +5,6 @@ using FERRETERIA__Joel.Aplicacion.Servicios;
 using FERRETERIA__Joel.Dominio.Constantes;
 using FERRETERIA__Joel.Dominio.Entidades;
 using FERRETERIA__Joel.Dominio.Puertos;
-using FERRETERIA__Joel.Infraestructura.Servicios;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -22,22 +21,22 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
     {
         private readonly ServicioInicioSesion _inicioSesion;
         private readonly ServicioBitacora _bitacora;
-        private readonly IRepositoryEmpleado _repositorio;
-        private readonly JwtEmisor _jwt;
-        private readonly RevocacionTokens _revocacion;
+        private readonly ServicioPersonal _personal;
+        private readonly IEmisorToken _jwt;
+        private readonly IRevocacionTokens _revocacion;
         private readonly ILogger<AuthController> _logger;
 
         public AuthController(
             ServicioInicioSesion inicioSesion,
             ServicioBitacora bitacora,
-            IRepositoryEmpleado repositorio,
-            JwtEmisor jwt,
-            RevocacionTokens revocacion,
+            ServicioPersonal personal,
+            IEmisorToken jwt,
+            IRevocacionTokens revocacion,
             ILogger<AuthController> logger)
         {
             _inicioSesion = inicioSesion;
             _bitacora = bitacora;
-            _repositorio = repositorio;
+            _personal = personal;
             _jwt = jwt;
             _revocacion = revocacion;
             _logger = logger;
@@ -95,8 +94,8 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
                 _logger.LogError(ex, "No se pudo registrar el login en la bitácora.");
             }
 
-            Empleado? empleado = await _repositorio
-                .ObtenerPorIdSinCredencialesAsync(usuario.Id);
+            Empleado? empleado = await _personal
+                .ObtenerPorIdAsync(usuario.Id);
 
             LoginResponse respuesta = new()
             {
@@ -186,7 +185,7 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
             }
 
             Empleado? empleado =
-                await _repositorio.ObtenerPorIdSinCredencialesAsync(id);
+                await _personal.ObtenerPorIdAsync(id);
 
             if (empleado is null || empleado.Estado != EstadoEmpleado.Activo)
             {

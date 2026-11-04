@@ -4,7 +4,6 @@ using FERRETERIA__Joel.Aplicacion.Servicios;
 using FERRETERIA__Joel.Dominio.Constantes;
 using FERRETERIA__Joel.Dominio.Entidades;
 using FERRETERIA__Joel.Dominio.Puertos;
-using FERRETERIA__Joel.Infraestructura.Servicios;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -19,28 +18,25 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
     [Route("api/usuarios")]
     public class UsuariosController : ControllerBase
     {
-        private readonly IRepositoryEmpleado _repositorio;
         private readonly ServicioRegistroEmpleado _registro;
         private readonly ServicioEdicionEmpleado _edicion;
         private readonly ServicioPersonal _personal;
         private readonly ServicioActivacionCuenta _activacion;
         private readonly ServicioCambioContrasena _cambioContrasena;
         private readonly ServicioBitacora _bitacora;
-        private readonly RevocacionTokens _revocacion;
+        private readonly IRevocacionTokens _revocacion;
         private readonly ILogger<UsuariosController> _logger;
 
         public UsuariosController(
-            IRepositoryEmpleado repositorio,
             ServicioRegistroEmpleado registro,
             ServicioEdicionEmpleado edicion,
             ServicioPersonal personal,
             ServicioActivacionCuenta activacion,
             ServicioCambioContrasena cambioContrasena,
             ServicioBitacora bitacora,
-            RevocacionTokens revocacion,
+            IRevocacionTokens revocacion,
             ILogger<UsuariosController> logger)
         {
-            _repositorio = repositorio;
             _registro = registro;
             _edicion = edicion;
             _personal = personal;
@@ -59,7 +55,7 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
         public async Task<IActionResult> Listar()
         {
             List<Empleado> empleados =
-                await _repositorio.ObtenerTodosSinCredencialesAsync();
+                await _personal.ListarAsync();
 
             return Ok(RespuestaApi<List<UsuarioDto>>.Ok(
                 empleados.Select(MapeosDto.AUsuario).ToList()));
@@ -71,7 +67,7 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
         public async Task<IActionResult> Pendientes()
         {
             List<Empleado> empleados =
-                await _repositorio.ObtenerPendientesActivacionAsync();
+                await _personal.ListarPendientesAsync();
 
             return Ok(RespuestaApi<List<UsuarioDto>>.Ok(
                 empleados.Select(MapeosDto.AUsuario).ToList()));
@@ -83,7 +79,7 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
         public async Task<IActionResult> Obtener(int id)
         {
             Empleado? empleado =
-                await _repositorio.ObtenerPorIdSinCredencialesAsync(id);
+                await _personal.ObtenerPorIdAsync(id);
 
             if (empleado is null)
             {
@@ -134,7 +130,7 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
             }
 
             Empleado? empleado =
-                await _repositorio.ObtenerPorIdSinCredencialesAsync(resultado.Id);
+                await _personal.ObtenerPorIdAsync(resultado.Id);
 
             return CreatedAtAction(
                 nameof(Obtener),
@@ -189,7 +185,7 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
             }
 
             Empleado? empleado =
-                await _repositorio.ObtenerPorIdSinCredencialesAsync(id);
+                await _personal.ObtenerPorIdAsync(id);
 
             return Ok(RespuestaApi<UsuarioDto>.Ok(
                 MapeosDto.AUsuario(empleado!),
@@ -418,6 +414,4 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
         }
     }
 }
-
-
 

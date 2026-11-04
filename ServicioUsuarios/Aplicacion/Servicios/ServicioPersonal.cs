@@ -43,6 +43,22 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
         }
 
         /// <summary>
+        /// Lista las cuentas pendientes de activación (sin credenciales).
+        /// </summary>
+        public async Task<List<Empleado>> ListarPendientesAsync()
+        {
+            return await _repositorio.ObtenerPendientesActivacionAsync();
+        }
+
+        /// <summary>
+        /// Obtiene un empleado por id con la proyección sin credenciales.
+        /// </summary>
+        public async Task<Empleado?> ObtenerPorIdAsync(int idEmpleado)
+        {
+            return await _repositorio.ObtenerPorIdSinCredencialesAsync(idEmpleado);
+        }
+
+        /// <summary>
         /// Reenvía el enlace de activación a una cuenta pendiente (Estado -1):
         /// genera un token nuevo y vuelve a enviar el correo. Se usa cuando el
         /// enlace anterior venció o se perdió.
