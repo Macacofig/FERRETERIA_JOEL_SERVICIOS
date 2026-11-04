@@ -2,6 +2,10 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
+# En algunas redes Docker api.nuget.org resuelve a IPv6 sin ruta y el restore
+# falla con "unexpected EOF". gai.conf fuerza la preferencia por IPv4.
+RUN echo 'precedence ::ffff:0:0/96  100' >> /etc/gai.conf
+
 COPY ServicioVentas.csproj ./
 RUN dotnet restore ServicioVentas.csproj
 
