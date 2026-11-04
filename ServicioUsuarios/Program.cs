@@ -55,8 +55,12 @@ builder.Services.AddScoped<ServicioBitacora>();
 // La identidad dentro de la API se resuelve desde el JWT validado.
 builder.Services.AddScoped<IContextoUsuario, ContextoUsuarioJwt>();
 
+builder.Services.AddSingleton<RevocacionTokens>();
+
+builder.Services.AddSingleton<IRevocacionTokens>(sp =>
+    sp.GetRequiredService<RevocacionTokens>());
+
 builder.Services.AddSingleton<IEmisorToken, JwtEmisor>();
-builder.Services.AddSingleton<IRevocacionTokens, RevocacionTokens>();
 
 // ---------------------------------------------------------------------------
 // JWT Bearer: única tecnología de autenticación de la API. Issuer, audience,

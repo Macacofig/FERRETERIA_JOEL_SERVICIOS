@@ -15,7 +15,8 @@ builder.Configuration.AddEnvironmentVariables();
 // Add services to the container.
 
 builder.Services.AddControllers();
-builder.Services.AddOpenApi();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 // JWT Authentication - La UI envía un token Bearer en cada request.
 // Este servicio solo valida el token; no gestiona login ni sesiones.
@@ -62,12 +63,17 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
-app.UseSwagger();
-app.UseSwaggerUI(options =>
 if (app.Environment.IsDevelopment())
 {
-    options.SwaggerEndpoint("/swagger/v1/swagger.json", "ServicioReportes v1");
-});
+    app.UseSwagger();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint(
+            "/swagger/v1/swagger.json",
+            "ServicioReportes v1"
+        );
+    });
+}
 
 // Solo se redirige a HTTPS si el servicio está configurado con un endpoint
 // HTTPS. En Docker la API escucha en http://+:8080 y una redirección dejaría
