@@ -8,18 +8,18 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
     /// <summary>
     /// Activa la cuenta de un empleado a partir del token recibido por correo.
     /// El token es de un solo uso y vence a los 10 minutos; al validarse, el
-    /// empleado define su contraseÃ±a y la cuenta pasa al estado activo.
+    /// empleado define su contraseña y la cuenta pasa al estado activo.
     /// </summary>
     public class ServicioActivacionCuenta
     {
         private const string MensajeTokenInvalido =
-            "El enlace de activaciÃ³n no es vÃ¡lido o ya fue utilizado.";
+            "El enlace de activación no es válido o ya fue utilizado.";
 
         private const string MensajeTokenVencido =
-            "El enlace de activaciÃ³n venciÃ³. Solicite uno nuevo al administrador.";
+            "El enlace de activación venció. Solicite uno nuevo al administrador.";
 
         private const string MensajeNoPendiente =
-            "Esta cuenta ya fue activada. Puede iniciar sesiÃ³n.";
+            "Esta cuenta ya fue activada. Puede iniciar sesión.";
 
         private readonly IRepositoryEmpleado _repositorio;
         private readonly IHasheadorContrasena _hasheador;
@@ -37,8 +37,8 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
 
         /// <summary>
         /// Comprueba el token y devuelve el nombre del empleado si el enlace
-        /// sigue siendo vÃ¡lido (para mostrar la pantalla de definir
-        /// contraseÃ±a).
+        /// sigue siendo válido (para mostrar la pantalla de definir
+        /// contraseña).
         /// </summary>
         public async Task<ResultadoActivacion> ValidarTokenAsync(string? token)
         {
@@ -55,7 +55,7 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
         }
 
         /// <summary>
-        /// Define la contraseÃ±a y activa la cuenta. Revalida el token antes de
+        /// Define la contraseña y activa la cuenta. Revalida el token antes de
         /// aplicar los cambios.
         /// </summary>
         public async Task<ResultadoActivacion> ActivarAsync(

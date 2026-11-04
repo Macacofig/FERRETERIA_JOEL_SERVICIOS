@@ -3,7 +3,7 @@
 namespace FERRETERIA__Joel.Infraestructura.Servicios
 {
     /// <summary>
-    /// Construye el enlace absoluto de activaciÃ³n apuntando al front Razor
+    /// Construye el enlace absoluto de activación apuntando al front Razor
     /// (<c>App:UrlWeb</c>). El token viaja cifrado con AES-GCM.
     /// </summary>
     public class ConstructorEnlaceActivacionApi : IConstructorEnlaceActivacion

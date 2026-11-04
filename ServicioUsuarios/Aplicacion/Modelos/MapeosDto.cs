@@ -3,9 +3,9 @@
 namespace FERRETERIA__Joel.Aplicacion.Modelos
 {
     /// <summary>
-    /// Traduce entidades del dominio a DTOs pÃºblicos. Es el Ãºnico punto que
-    /// construye la proyecciÃ³n que sale por HTTP: no copia contraseÃ±a, hash ni
-    /// token de activaciÃ³n.
+    /// Traduce entidades del dominio a DTOs públicos. Es el único punto que
+    /// construye la proyección que sale por HTTP: no copia contraseña, hash ni
+    /// token de activación.
     /// </summary>
     public static class MapeosDto
     {

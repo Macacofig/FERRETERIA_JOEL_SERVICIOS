@@ -1,17 +1,17 @@
 ﻿namespace FERRETERIA__Joel.Infraestructura.Servicios
 {
     /// <summary>
-    /// Registro de tokens invalidados antes de su expiraciÃ³n natural.
+    /// Registro de tokens invalidados antes de su expiración natural.
     /// <para>
-    /// Cubre dos casos: el cierre de sesiÃ³n (se revoca el <c>jti</c> del token
-    /// concreto) y la baja lÃ³gica o el cambio de contraseÃ±a (se incrementa la
-    /// generaciÃ³n del empleado, de modo que todos los tokens emitidos antes
-    /// quedan invÃ¡lidos). No se guarda ningÃºn dato sensible: solo
+    /// Cubre dos casos: el cierre de sesión (se revoca el <c>jti</c> del token
+    /// concreto) y la baja lógica o el cambio de contraseña (se incrementa la
+    /// generación del empleado, de modo que todos los tokens emitidos antes
+    /// quedan inválidos). No se guarda ningún dato sensible: solo
     /// identificadores y contadores en memoria.
     /// </para>
     /// <para>
     /// El registro vive en el proceso de la API. Tras reiniciarla, los tokens
-    /// vigentes vuelven a aceptarse hasta su expiraciÃ³n natural; la baja se
+    /// vigentes vuelven a aceptarse hasta su expiración natural; la baja se
     /// sigue bloqueando porque <c>GET /me</c> y el login releen el estado de la
     /// cuenta en MySQL.
     /// </para>
@@ -53,7 +53,7 @@
         }
 
         /// <summary>
-        /// GeneraciÃ³n actual de tokens del empleado. Los JWT incluyen este
+        /// Generación actual de tokens del empleado. Los JWT incluyen este
         /// valor en el claim <c>gen</c>; al revocar se incrementa y los tokens
         /// anteriores dejan de coincidir.
         /// </summary>
@@ -74,7 +74,7 @@
 
         /// <summary>
         /// Invalida todos los tokens emitidos hasta ahora para el empleado. Se
-        /// usa en la baja lÃ³gica y al cambiar la contraseÃ±a.
+        /// usa en la baja lógica y al cambiar la contraseña.
         /// </summary>
         public void RevocarUsuario(int idEmpleado)
         {
@@ -96,7 +96,7 @@
         }
 
         /// <summary>
-        /// Indica si un token sigue perteneciendo a la generaciÃ³n vigente del
+        /// Indica si un token sigue perteneciendo a la generación vigente del
         /// empleado.
         /// </summary>
         public bool EstaVigenteUsuario(int idEmpleado, int generacionToken)

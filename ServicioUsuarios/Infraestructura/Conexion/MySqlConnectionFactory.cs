@@ -25,7 +25,7 @@ namespace FERRETERIA__Joel.Infraestructura.Conexion
             if (string.IsNullOrWhiteSpace(cadena))
             {
                 throw new InvalidOperationException(
-                    "Falta la configuraciÃ³n de MySQL. Defina MYSQL_DATABASE y "
+                    "Falta la configuración de MySQL. Defina MYSQL_DATABASE y "
                     + "MYSQL_ROOT_PASSWORD en el archivo .env.");
             }
 

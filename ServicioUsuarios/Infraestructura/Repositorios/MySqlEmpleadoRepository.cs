@@ -7,23 +7,23 @@ using MySql.Data.MySqlClient;
 namespace FERRETERIA__Joel.Infraestructura.Repositorios
 {
     /// <summary>
-    /// Repositorio de empleados. Implementa el contrato genÃ©rico
+    /// Repositorio de empleados. Implementa el contrato genérico
     /// <see cref="IRepository{T}"/> y el contrato propio
-    /// <see cref="IRepositoryEmpleado"/> (baja lÃ³gica y proyecciones sin
+    /// <see cref="IRepositoryEmpleado"/> (baja lógica y proyecciones sin
     /// credenciales).
     ///
     /// <para>
-    /// Las consultas estÃ¡n divididas en tres proyecciones para que el hash de
-    /// la contraseÃ±a y el token de activaciÃ³n nunca travelen a las vistas ni a
-    /// los listados: solo se piden cuando el proceso de autenticaciÃ³n o de
-    /// activaciÃ³n los necesita de verdad.
+    /// Las consultas están divididas en tres proyecciones para que el hash de
+    /// la contraseña y el token de activación nunca travelen a las vistas ni a
+    /// los listados: solo se piden cuando el proceso de autenticación o de
+    /// activación los necesita de verdad.
     /// </para>
     /// </summary>
     public class MySqlEmpleadoRepository : IRepositoryEmpleado
     {
         /// <summary>
-        /// ProyecciÃ³n pÃºblica: datos de la cuenta que puede ver la interfaz.
-        /// No incluye la contraseÃ±a ni el token de activaciÃ³n.
+        /// Proyección pública: datos de la cuenta que puede ver la interfaz.
+        /// No incluye la contraseña ni el token de activación.
         /// </summary>
         private const string ColumnasPublicas = @"
             IdEmpleado,
@@ -39,8 +39,8 @@ namespace FERRETERIA__Joel.Infraestructura.Repositorios
             IdEmpleadoResponsable";
 
         /// <summary>
-        /// ProyecciÃ³n del flujo de activaciÃ³n: incluye el token y su vigencia,
-        /// pero no la contraseÃ±a.
+        /// Proyección del flujo de activación: incluye el token y su vigencia,
+        /// pero no la contraseña.
         /// </summary>
         private const string ColumnasActivacion = @"
             IdEmpleado,
@@ -59,8 +59,8 @@ namespace FERRETERIA__Joel.Infraestructura.Repositorios
             IdEmpleadoResponsable";
 
         /// <summary>
-        /// ProyecciÃ³n de credenciales: se usa Ãºnicamente en el proceso de
-        /// autenticaciÃ³n. El valor no debe salir de la capa de aplicaciÃ³n.
+        /// Proyección de credenciales: se usa únicamente en el proceso de
+        /// autenticación. El valor no debe salir de la capa de aplicación.
         /// </summary>
         private const string ColumnasCredenciales = @"
             IdEmpleado,
@@ -86,11 +86,11 @@ namespace FERRETERIA__Joel.Infraestructura.Repositorios
             _connectionFactory = connectionFactory;
         }
 
-        // ================== Contrato genÃ©rico ==================
+        // ================== Contrato genérico ==================
 
         /// <summary>
-        /// Lista el personal con la proyecciÃ³n pÃºblica: la contraseÃ±a y el token
-        /// de activaciÃ³n no se consultan ni se devuelven.
+        /// Lista el personal con la proyección pública: la contraseña y el token
+        /// de activación no se consultan ni se devuelven.
         /// </summary>
         public virtual async Task<List<Empleado>> ObtenerTodosAsync()
         {
@@ -171,8 +171,8 @@ namespace FERRETERIA__Joel.Infraestructura.Repositorios
         // ================== Proyecciones sin credenciales ==================
 
         /// <summary>
-        /// Devuelve el personal sin la contraseÃ±a ni el token de activaciÃ³n.
-        /// Es la proyecciÃ³n que se expone a la interfaz y a los listados.
+        /// Devuelve el personal sin la contraseña ni el token de activación.
+        /// Es la proyección que se expone a la interfaz y a los listados.
         /// </summary>
         public virtual async Task<List<Empleado>> ObtenerTodosSinCredencialesAsync()
         {
@@ -202,9 +202,9 @@ namespace FERRETERIA__Joel.Infraestructura.Repositorios
         }
 
         /// <summary>
-        /// Devuelve una cuenta por su identificador con la proyecciÃ³n pÃºblica,
-        /// sin la contraseÃ±a ni el token de activaciÃ³n. Se usa para revalidar
-        /// que la cuenta siga activa en cada peticiÃ³n autenticada.
+        /// Devuelve una cuenta por su identificador con la proyección pública,
+        /// sin la contraseña ni el token de activación. Se usa para revalidar
+        /// que la cuenta siga activa en cada petición autenticada.
         /// </summary>
         public virtual async Task<Empleado?> ObtenerPorIdSinCredencialesAsync(
             int idEmpleado)
@@ -232,11 +232,11 @@ namespace FERRETERIA__Joel.Infraestructura.Repositorios
                 : null;
         }
 
-        // ================== AutenticaciÃ³n ==================
+        // ================== Autenticación ==================
 
         /// <summary>
-        /// Busca la cuenta asociada a un correo con su hash de contraseÃ±a.
-        /// Se reserva para el proceso de autenticaciÃ³n.
+        /// Busca la cuenta asociada a un correo con su hash de contraseña.
+        /// Se reserva para el proceso de autenticación.
         /// </summary>
         public virtual async Task<Empleado?> ObtenerPorCorreoConCredencialesAsync(
             string correo)
@@ -266,8 +266,8 @@ namespace FERRETERIA__Joel.Infraestructura.Repositorios
 
         /// <summary>
         /// Busca la cuenta por correo o por nombre de usuario con su hash de
-        /// contraseÃ±a. Permite que el login siga aceptando el correo actual y,
-        /// ademÃ¡s, el nombre de usuario generado en el alta.
+        /// contraseña. Permite que el login siga aceptando el correo actual y,
+        /// además, el nombre de usuario generado en el alta.
         /// </summary>
         public virtual async Task<Empleado?> ObtenerPorIdentificadorConCredencialesAsync(
             string identificador)
@@ -297,9 +297,9 @@ namespace FERRETERIA__Joel.Infraestructura.Repositorios
         }
 
         /// <summary>
-        /// Devuelve una cuenta por identificador con su hash de contraseÃ±a.
-        /// Solo se usa para verificar la contraseÃ±a actual en el cambio de
-        /// contraseÃ±a: el hash nunca sale de la capa de aplicaciÃ³n.
+        /// Devuelve una cuenta por identificador con su hash de contraseña.
+        /// Solo se usa para verificar la contraseña actual en el cambio de
+        /// contraseña: el hash nunca sale de la capa de aplicación.
         /// </summary>
         public virtual async Task<Empleado?> ObtenerPorIdConCredencialesAsync(
             int idEmpleado)
@@ -355,8 +355,8 @@ namespace FERRETERIA__Joel.Infraestructura.Repositorios
         }
 
         /// <summary>
-        /// Busca la cuenta asociada a un correo con la proyecciÃ³n pÃºblica: sin
-        /// contraseÃ±a ni token de activaciÃ³n.
+        /// Busca la cuenta asociada a un correo con la proyección pública: sin
+        /// contraseña ni token de activación.
         /// </summary>
         public virtual async Task<Empleado?> ObtenerPorCorreoSinCredencialesAsync(
             string correo)
@@ -444,13 +444,13 @@ namespace FERRETERIA__Joel.Infraestructura.Repositorios
             await command.ExecuteNonQueryAsync();
         }
 
-        // ================== EdiciÃ³n de datos personales ==================
+        // ================== Edición de datos personales ==================
 
         /// <summary>
-        /// Actualiza nombre, apellido, telÃ©fono, correo y rol. No modifica la
-        /// contraseÃ±a, el token de activaciÃ³n ni el estado: el cambio de
-        /// contraseÃ±a tiene su propio flujo y la baja lÃ³gica su propia
-        /// operaciÃ³n.
+        /// Actualiza nombre, apellido, teléfono, correo y rol. No modifica la
+        /// contraseña, el token de activación ni el estado: el cambio de
+        /// contraseña tiene su propio flujo y la baja lógica su propia
+        /// operación.
         /// </summary>
         public virtual async Task<bool> ActualizarDatosAsync(
             Empleado empleado,
@@ -492,12 +492,12 @@ namespace FERRETERIA__Joel.Infraestructura.Repositorios
             return filas > 0;
         }
 
-        // ================== Baja lÃ³gica ==================
+        // ================== Baja lógica ==================
 
         /// <summary>
-        /// Fija el estado de la cuenta sin borrado fÃ­sico. Es la operaciÃ³n de
-        /// baja lÃ³gica (cuenta dada de baja por el administrador) y de
-        /// reactivaciÃ³n. Devuelve <c>false</c> si la cuenta no existe o si ya
+        /// Fija el estado de la cuenta sin borrado físico. Es la operación de
+        /// baja lógica (cuenta dada de baja por el administrador) y de
+        /// reactivación. Devuelve <c>false</c> si la cuenta no existe o si ya
         /// se encuentra en el estado solicitado.
         /// </summary>
         public virtual async Task<bool> ActualizarEstadoAsync(
@@ -532,11 +532,11 @@ namespace FERRETERIA__Joel.Infraestructura.Repositorios
             return filas > 0;
         }
 
-        // ================== ActivaciÃ³n por correo ==================
+        // ================== Activación por correo ==================
 
         /// <summary>
-        /// Busca al empleado dueÃ±o de un token de activaciÃ³n, sin importar si
-        /// ya venciÃ³ o se usÃ³: la capa de aplicaciÃ³n decide si es vÃ¡lido.
+        /// Busca al empleado dueño de un token de activación, sin importar si
+        /// ya venció o se usó: la capa de aplicación decide si es válido.
         /// </summary>
         public virtual async Task<Empleado?> ObtenerPorTokenActivacionAsync(
             string token)
@@ -565,8 +565,8 @@ namespace FERRETERIA__Joel.Infraestructura.Repositorios
         }
 
         /// <summary>
-        /// Empleados pendientes de activaciÃ³n (Estado -1). Se usan para
-        /// listarlos y permitir reenviarles el enlace cuando el token venciÃ³.
+        /// Empleados pendientes de activación (Estado -1). Se usan para
+        /// listarlos y permitir reenviarles el enlace cuando el token venció.
         /// </summary>
         public virtual async Task<List<Empleado>> ObtenerPendientesActivacionAsync()
         {
@@ -601,8 +601,8 @@ namespace FERRETERIA__Joel.Infraestructura.Repositorios
         }
 
         /// <summary>
-        /// Reemplaza el token de activaciÃ³n de un empleado pendiente y reinicia
-        /// su vigencia. Se usa al reenviar el enlace de activaciÃ³n.
+        /// Reemplaza el token de activación de un empleado pendiente y reinicia
+        /// su vigencia. Se usa al reenviar el enlace de activación.
         /// </summary>
         public virtual async Task ReasignarTokenActivacionAsync(
             int id,
@@ -633,7 +633,7 @@ namespace FERRETERIA__Joel.Infraestructura.Repositorios
         }
 
         /// <summary>
-        /// Activa la cuenta: guarda la contraseÃ±a definida por el empleado,
+        /// Activa la cuenta: guarda la contraseña definida por el empleado,
         /// marca el token como usado y pasa el Estado a activo (1).
         /// </summary>
         public virtual async Task ActivarCuentaAsync(
@@ -665,9 +665,9 @@ namespace FERRETERIA__Joel.Infraestructura.Repositorios
         }
 
         /// <summary>
-        /// Mapea la fila leÃ­da. Las columnas que no trae la proyecciÃ³n
-        /// (contraseÃ±a y token) quedan en <c>null</c> o en su valor por
-        /// defecto, segÃºn el caso.
+        /// Mapea la fila leída. Las columnas que no trae la proyección
+        /// (contraseña y token) quedan en <c>null</c> o en su valor por
+        /// defecto, según el caso.
         /// </summary>
         private static Empleado MapearEmpleado(MySqlDataReader reader)
         {
@@ -730,9 +730,9 @@ namespace FERRETERIA__Joel.Infraestructura.Repositorios
         }
 
         /// <summary>
-        /// Lee una fecha que puede no estar en la proyecciÃ³n consultada. Por
-        /// ejemplo, la proyecciÃ³n pÃºblica no trae la vigencia del token de
-        /// activaciÃ³n: en ese caso el valor queda en <c>null</c> en lugar de
+        /// Lee una fecha que puede no estar en la proyección consultada. Por
+        /// ejemplo, la proyección pública no trae la vigencia del token de
+        /// activación: en ese caso el valor queda en <c>null</c> en lugar de
         /// provocar un error al leer la columna.
         /// </summary>
         private static DateTime? ObtenerFecha(
@@ -752,8 +752,8 @@ namespace FERRETERIA__Joel.Infraestructura.Repositorios
         }
 
         /// <summary>
-        /// Indica si la proyecciÃ³n consultada incluye la columna. Permite que
-        /// el mismo mapeo sirva para la proyecciÃ³n pÃºblica (sin credenciales)
+        /// Indica si la proyección consultada incluye la columna. Permite que
+        /// el mismo mapeo sirva para la proyección pública (sin credenciales)
         /// y para la de credenciales.
         /// </summary>
         private static bool TieneColumna(

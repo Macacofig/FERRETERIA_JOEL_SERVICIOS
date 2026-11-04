@@ -7,8 +7,8 @@ namespace FERRETERIA__Joel.Infraestructura.Servicios
 {
     /// <summary>
     /// Emite los JWT de la API. El token solo contiene datos de identidad
-    /// mÃ­nimos (id, nombre, correo, rol, nombre de usuario y jti). Nunca
-    /// incluye contraseÃ±as, hashes ni tokens de activaciÃ³n.
+    /// mínimos (id, nombre, correo, rol, nombre de usuario y jti). Nunca
+    /// incluye contraseñas, hashes ni tokens de activación.
     /// </summary>
     public class JwtEmisor
     {
@@ -83,7 +83,7 @@ namespace FERRETERIA__Joel.Infraestructura.Servicios
             if (string.IsNullOrWhiteSpace(clave) || clave.Length < 32)
             {
                 throw new InvalidOperationException(
-                    "Falta 'Jwt:Key' o es demasiado corta (mÃ­nimo 32 caracteres). "
+                    "Falta 'Jwt:Key' o es demasiado corta (mínimo 32 caracteres). "
                     + "Defina la variable de entorno Jwt__Key (archivo .env).");
             }
 

@@ -12,8 +12,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
 {
     /// <summary>
-    /// AutenticaciÃ³n y sesiÃ³n. Emite JWT Bearer y expone la identidad actual.
-    /// El front Razor es el Ãºnico cliente: guarda el token en su sesiÃ³n de
+    /// Autenticación y sesión. Emite JWT Bearer y expone la identidad actual.
+    /// El front Razor es el único cliente: guarda el token en su sesión de
     /// servidor y nunca lo expone a JavaScript ni a localStorage.
     /// </summary>
     [ApiController]
@@ -44,8 +44,8 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
         }
 
         /// <summary>
-        /// Inicia sesiÃ³n con correo o nombre de usuario y contraseÃ±a.
-        /// Devuelve el JWT y la proyecciÃ³n pÃºblica del usuario autenticado.
+        /// Inicia sesión con correo o nombre de usuario y contraseña.
+        /// Devuelve el JWT y la proyección pública del usuario autenticado.
         /// </summary>
         [HttpPost("login")]
         [AllowAnonymous]
@@ -56,7 +56,7 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
                 || string.IsNullOrWhiteSpace(solicitud.Contrasena))
             {
                 return BadRequest(RespuestaApi<LoginResponse>.Error(
-                    "Ingrese su correo o usuario y su contraseÃ±a."));
+                    "Ingrese su correo o usuario y su contraseña."));
             }
 
             var resultado = await _inicioSesion.IniciarAsync(
@@ -90,9 +90,9 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
             }
             catch (Exception ex)
             {
-                // La bitÃ¡cora no debe impedir el inicio de sesiÃ³n, pero sÃ­
-                // quedar registrada en el log de la aplicaciÃ³n.
-                _logger.LogError(ex, "No se pudo registrar el login en la bitÃ¡cora.");
+                // La bitácora no debe impedir el inicio de sesión, pero sí
+                // quedar registrada en el log de la aplicación.
+                _logger.LogError(ex, "No se pudo registrar el login en la bitácora.");
             }
 
             Empleado? empleado = await _repositorio
@@ -118,7 +118,7 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
         }
 
         /// <summary>
-        /// Cierra la sesiÃ³n: revoca el token actual y registra el evento.
+        /// Cierra la sesión: revoca el token actual y registra el evento.
         /// </summary>
         [HttpPost("logout")]
         [Authorize]
@@ -146,7 +146,7 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
                     catch
                     {
                         // Si el token no se puede leer, se revoca hasta la
-                        // expiraciÃ³n mÃ¡xima configurada.
+                        // expiración máxima configurada.
                     }
                 }
             }
@@ -162,10 +162,10 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "No se pudo registrar el logout en la bitÃ¡cora.");
+                _logger.LogError(ex, "No se pudo registrar el logout en la bitácora.");
             }
 
-            return Ok(RespuestaApi<object>.Ok(new { }, "SesiÃ³n cerrada."));
+            return Ok(RespuestaApi<object>.Ok(new { }, "Sesión cerrada."));
         }
 
         /// <summary>
@@ -182,7 +182,7 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
             if (id <= 0)
             {
                 return Unauthorized(RespuestaApi<UsuarioDto>.Error(
-                    "La sesiÃ³n no es vÃ¡lida."));
+                    "La sesión no es válida."));
             }
 
             Empleado? empleado =
@@ -191,7 +191,7 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
             if (empleado is null || empleado.Estado != EstadoEmpleado.Activo)
             {
                 return Unauthorized(RespuestaApi<UsuarioDto>.Error(
-                    "La cuenta no estÃ¡ activa."));
+                    "La cuenta no está activa."));
             }
 
             return Ok(RespuestaApi<UsuarioDto>.Ok(

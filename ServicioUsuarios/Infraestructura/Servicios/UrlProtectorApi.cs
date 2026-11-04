@@ -4,9 +4,9 @@ using System.Text;
 namespace FERRETERIA__Joel.Infraestructura.Servicios
 {
     /// <summary>
-    /// ProtecciÃ³n del token de activaciÃ³n que viaja en el enlace. Usa el mismo
+    /// Protección del token de activación que viaja en el enlace. Usa el mismo
     /// algoritmo (AES-GCM) y la misma clave que el front Razor, de modo que el
-    /// enlace emitido por la API puede descifrarlo la pÃ¡gina /ActivarCuenta.
+    /// enlace emitido por la API puede descifrarlo la página /ActivarCuenta.
     /// </summary>
     public static class UrlProtectorApi
     {
