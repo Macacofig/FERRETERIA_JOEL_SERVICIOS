@@ -1,6 +1,7 @@
 using ServicioVentas.Aplicacion.Modelos;
 using ServicioVentas.Dominio.Entidades;
-using ServicioVentas.Infraestructura.Repositorios;
+using ServicioVentas.Dominio.Puertos;
+using ServicioVentas.Infraestructura.Factories;
 
 namespace ServicioVentas.Aplicacion.Servicios
 {
@@ -16,28 +17,32 @@ namespace ServicioVentas.Aplicacion.Servicios
     /// </summary>
     public class FachadaActualizacionStock
     {
-        private readonly MySqlInventarioRepository _inventario;
+        private readonly RepositoryCreator<IInventarioRepository> _creadorInventario;
+        private IInventarioRepository? _inventario;
 
         public FachadaActualizacionStock(
-            MySqlInventarioRepository inventario)
+            RepositoryCreator<IInventarioRepository> creadorInventario)
         {
-            _inventario = inventario;
+            _creadorInventario = creadorInventario;
         }
+
+        private IInventarioRepository Inventario =>
+            _inventario ??= _creadorInventario.CreateRepository();
 
         public Task<List<Producto>> ListarActivosAsync()
         {
-            return _inventario.ListarActivosAsync();
+            return Inventario.ListarActivosAsync();
         }
 
         public Task<Producto?> ObtenerParaVentaAsync(int idProducto)
         {
-            return _inventario.ObtenerParaVentaAsync(idProducto);
+            return Inventario.ObtenerParaVentaAsync(idProducto);
         }
 
         public Task<List<Producto>> ObtenerPorIdsAsync(
             IReadOnlyCollection<int> ids)
         {
-            return _inventario.ObtenerPorIdsAsync(ids);
+            return Inventario.ObtenerPorIdsAsync(ids);
         }
 
         /// <summary>
@@ -45,7 +50,7 @@ namespace ServicioVentas.Aplicacion.Servicios
         /// </summary>
         public Task<bool> DescontarAsync(int idProducto, int cantidad)
         {
-            return _inventario.DescontarAsync(idProducto, cantidad);
+            return Inventario.DescontarAsync(idProducto, cantidad);
         }
 
         /// <summary>
@@ -54,7 +59,7 @@ namespace ServicioVentas.Aplicacion.Servicios
         /// </summary>
         public Task ReponerAsync(int idProducto, int cantidad)
         {
-            return _inventario.ReponerAsync(idProducto, cantidad);
+            return Inventario.ReponerAsync(idProducto, cantidad);
         }
 
         /// <summary>
