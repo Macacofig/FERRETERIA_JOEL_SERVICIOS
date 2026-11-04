@@ -65,6 +65,17 @@ builder.Services.AddHttpClient<VentasApiCliente>(client =>
     client.Timeout = TimeSpan.FromSeconds(30);
 });
 
+string reportesApiUrl = builder.Configuration["Servicios:ReportesApiUrl"]
+    ?? builder.Configuration["Servicios__ReportesApiUrl"]
+    ?? "http://localhost:5073";
+
+// La generación de PDF/Excel puede tardar más que una consulta JSON.
+builder.Services.AddHttpClient<ReportesApiCliente>(client =>
+{
+    client.BaseAddress = new Uri(reportesApiUrl.TrimEnd('/') + "/");
+    client.Timeout = TimeSpan.FromSeconds(90);
+});
+
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {

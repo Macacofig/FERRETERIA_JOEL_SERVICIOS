@@ -1,0 +1,30 @@
+@page
+@model FERRETERIA__Joel.Pages.Reportes.VentasModel
+@{
+    ViewData["Title"] = "Productos de stock estable y precio razonable";
+    ViewData["ActiveMenu"] = "Reportes";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/ventas-componentes.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/reportes.css" asp-append-version="true" />
+}
+
+<div class="fj-container reportes-pagina">
+    <section class="fj-page-head"><p class="fj-eyebrow">Módulo · Reportes</p><h1>Productos de stock estable y precio razonable</h1><p class="fj-page-sub">Listado ordenado por código con relación entre producto, marca y categoría.</p></section>
+    @if (Model.MensajeError is not null) { <div class="fj-alert" role="alert">@Model.MensajeError</div> }
+    <section class="fj-card reportes-filtros">
+        <form method="get" class="reportes-filtros-form">
+            <div class="fj-form-field"><label class="fj-form-label" for="stock">Stock mayor a</label><input class="fj-input" id="stock" name="StockMinimo" type="number" min="0" value="@Model.StockMinimo" /></div>
+            <div class="fj-form-field"><label class="fj-form-label" for="precio">Precio menor a (Bs)</label><input class="fj-input" id="precio" name="PrecioMaximo" type="number" min="0.01" step="0.01" value="@Model.PrecioMaximo.ToString("0.00")" /></div>
+            <div class="reportes-filtros-acciones"><button class="fj-btn fj-btn-primary" type="submit">Generar reporte</button></div>
+        </form>
+        <div class="reportes-exportar"><span class="reportes-exportar-titulo">Exportar</span><a class="fj-btn fj-btn-ghost" asp-page-handler="Pdf" asp-route-stockMinimo="@Model.StockMinimo" asp-route-precioMaximo="@Model.PrecioMaximo">Descargar PDF</a><a class="fj-btn fj-btn-ghost" asp-page-handler="Excel" asp-route-stockMinimo="@Model.StockMinimo" asp-route-precioMaximo="@Model.PrecioMaximo">Descargar Excel</a></div>
+    </section>
+    @if (Model.Reporte is not null)
+    {
+        <section class="reportes-meta fj-card"><div><span class="reportes-meta-etiqueta">Filtros</span><strong>@Model.Reporte.Filtro.FiltroTexto</strong></div><div><span class="reportes-meta-etiqueta">Generado por</span><strong>@Model.Reporte.GeneradoPor</strong></div><div><span class="reportes-meta-etiqueta">Emisión</span><strong>@Model.Reporte.GeneradoEl.ToString("dd/MM/yyyy HH:mm")</strong></div></section>
+        <section class="reportes-resumen"><article class="fj-card reportes-stat"><span class="reportes-stat-etiqueta">Productos</span><strong class="reportes-stat-valor">@Model.Reporte.TotalRegistros</strong></article><article class="fj-card reportes-stat"><span class="reportes-stat-etiqueta">Stock total</span><strong class="reportes-stat-valor">@Model.Reporte.TotalStock</strong></article><article class="fj-card reportes-stat reportes-stat-destacada"><span class="reportes-stat-etiqueta">Precio promedio</span><strong class="reportes-stat-valor">Bs @Model.Reporte.PrecioPromedio.ToString("N2")</strong></article></section>
+        <section class="fj-card reportes-tabla-card"><div class="reportes-tabla-wrap"><table class="fj-table reportes-tabla"><thead><tr><th>Código</th><th>Producto</th><th>Precio</th><th>Descripción</th><th>Marca</th><th>Categoría</th><th>Stock</th></tr></thead><tbody>@foreach (var linea in Model.Reporte.Lineas) { <tr><td>@linea.Codigo</td><td>@linea.Producto</td><td>Bs @linea.Precio.ToString("N2")</td><td>@linea.Descripcion</td><td>@linea.Marca</td><td>@linea.Categoria</td><td>@linea.CantidadStock</td></tr> }</tbody></table></div></section>
+    }
+</div>

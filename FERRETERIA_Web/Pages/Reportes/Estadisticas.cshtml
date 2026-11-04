@@ -1,0 +1,232 @@
+@page
+@model FERRETERIA__Joel.Pages.Reportes.EstadisticasModel
+@{
+    ViewData["Title"] = "Ventas por producto";
+    ViewData["ActiveMenu"] = "Reportes";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/ventas-componentes.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/reportes.css" asp-append-version="true" />
+}
+
+<div class="fj-container reportes-pagina">
+    <section class="fj-page-head">
+        <p class="fj-eyebrow">MÓDULO · REPORTES</p>
+        <h1>Ventas por producto</h1>
+        <p class="fj-page-sub">Información sumariada con distribución porcentual de recaudación y exportación a PDF y Excel.</p>
+    </section>
+
+    @if (Model.MensajeError is not null)
+    {
+        <div class="fj-alert" role="alert">@Model.MensajeError</div>
+    }
+
+    <!-- FILTROS -->
+    <section class="fj-card reportes-filtros">
+        <form method="get" class="reportes-filtros-form">
+            <div class="fj-form-field">
+                <label class="fj-form-label" for="cantidad">Cantidad vendida mayor a</label>
+                <input class="fj-input" id="cantidad" name="CantidadMinima" type="number" min="0" value="@Model.CantidadMinima" />
+            </div>
+            <div class="fj-form-field">
+                <label class="fj-form-label" for="metodo">Método de pago</label>
+                <select class="fj-input fj-select" id="metodo" name="MetodoPago">
+                    <option value="Efectivo" selected="@(Model.MetodoPago == "Efectivo")">Efectivo</option>
+                    <option value="Tarjeta" selected="@(Model.MetodoPago == "Tarjeta")">Tarjeta</option>
+                    <option value="Transferencia" selected="@(Model.MetodoPago == "Transferencia")">Transferencia</option>
+                </select>
+            </div>
+            <div class="reportes-filtros-acciones">
+                <a asp-page="/Reportes/Estadisticas" class="fj-btn fj-btn-ghost">Limpiar</a>
+                <button class="fj-btn fj-btn-primary" type="submit">Generar informe</button>
+            </div>
+        </form>
+
+        <div class="reportes-exportar">
+            <span class="reportes-exportar-titulo">EXPORTAR</span>
+            <a class="fj-btn fj-btn-ghost" asp-page-handler="Pdf" asp-route-cantidadMinima="@Model.CantidadMinima" asp-route-metodoPago="@Model.MetodoPago">
+                Descargar PDF
+            </a>
+            <a class="fj-btn fj-btn-ghost" asp-page-handler="Excel" asp-route-cantidadMinima="@Model.CantidadMinima" asp-route-metodoPago="@Model.MetodoPago">
+                Descargar Excel
+            </a>
+        </div>
+    </section>
+
+    @if (Model.Reporte is not null)
+    {
+        <!-- METADATA EN CABECERA -->
+        <section class="reportes-meta fj-card">
+            <div><span class="reportes-meta-etiqueta">FILTROS</span><strong>@Model.Reporte.Filtro.FiltroTexto</strong></div>
+            <div><span class="reportes-meta-etiqueta">MÉTODO DE PAGO</span><strong>@Model.MetodoPago</strong></div>
+            <div><span class="reportes-meta-etiqueta">GENERADO POR</span><strong>@Model.Reporte.GeneradoPor</strong></div>
+            <div><span class="reportes-meta-etiqueta">EMISIÓN</span><strong>@DateTime.Now.ToString("dd/MM/yyyy HH:mm")</strong></div>
+        </section>
+
+        <!-- TARJETAS STATS -->
+        <section class="reportes-resumen">
+            <article class="fj-card reportes-stat">
+                <span class="reportes-stat-etiqueta">PRODUCTOS</span>
+                <strong class="reportes-stat-valor">@Model.Reporte.TotalProductos</strong>
+                <span class="reportes-stat-sub">Con ventas registradas</span>
+            </article>
+            <article class="fj-card reportes-stat">
+                <span class="reportes-stat-etiqueta">UNIDADES</span>
+                <strong class="reportes-stat-valor">@Model.Reporte.TotalUnidades</strong>
+                <span class="reportes-stat-sub">Ítems vendidos</span>
+            </article>
+            <article class="fj-card reportes-stat reportes-stat-destacada">
+                <span class="reportes-stat-etiqueta">IMPORTE TOTAL</span>
+                <strong class="reportes-stat-valor">Bs @Model.Reporte.TotalImporte.ToString("N2")</strong>
+                <span class="reportes-stat-sub">Recaudación del período</span>
+            </article>
+            <article class="fj-card reportes-stat">
+                <span class="reportes-stat-etiqueta">PRODUCTO LÍDER</span>
+                <strong class="reportes-stat-valor" style="font-size: 1.15rem; word-break: break-word;">
+                    @(Model.Reporte.Filas.FirstOrDefault()?.Producto ?? "N/D")
+                </strong>
+                <span class="reportes-stat-sub">
+                    @(Model.Reporte.Filas.FirstOrDefault() != null ? $"Bs {Model.Reporte.Filas.First().TotalRecaudado:N2} · {Model.Reporte.Filas.First().Participacion:N2}%" : "")
+                </span>
+            </article>
+        </section>
+
+        <!-- GRÁFICO ESTADÍSTICO DE TORTA -->
+        <section class="fj-card reportes-grafico-card">
+            <div class="reportes-grafico-head" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <div>
+                    <h3 style="margin: 0; font-size: 1.15rem; font-weight: 700;">Participación por producto</h3>
+                    <p style="margin: 0.25rem 0 0; color: #64748b; font-size: 0.875rem;">Distribución económica porcentual de los productos más vendidos.</p>
+                </div>
+                <span class="fj-badge" style="background: #fef3c7; color: #b45309; font-weight: 600; padding: 0.25rem 0.6rem; border-radius: 9999px; font-size: 0.75rem;">GRÁFICO DE TORTA</span>
+            </div>
+
+            <div style="display: flex; flex-wrap: wrap; gap: 2rem; align-items: center; justify-content: space-around;">
+                <div style="width: 320px; max-width: 100%; position: relative;">
+                    <canvas id="reportesGrafico"></canvas>
+                    <p id="reportesGraficoSinDatos" style="text-align: center; color: #64748b; margin-top: 1rem;" hidden>Sin datos para los filtros seleccionados.</p>
+                </div>
+                <div class="reportes-tabla-wrap" style="border: none; box-shadow: none; flex: 1; min-width: 280px;">
+                    <p style="font-weight: 600; color: #334155; margin-bottom: 0.5rem; font-size: 0.9rem;">Detalle de distribución</p>
+                    <table class="fj-table" style="font-size: 0.875rem;">
+                        <tbody>
+                            @foreach (var fila in Model.Reporte.Filas.Take(6))
+                            {
+                                <tr>
+                                    <td><strong>@fila.Producto</strong></td>
+                                    <td class="fj-td-precio">Bs @fila.TotalRecaudado.ToString("N2")</td>
+                                    <td style="width: 120px;">
+                                        <div style="background: #f1f5f9; border-radius: 4px; height: 8px; overflow: hidden; width: 100%;">
+                                            <div style="background: #eab308; height: 100%; width: @fila.Participacion.ToString("N2", System.Globalization.CultureInfo.InvariantCulture)%;"></div>
+                                        </div>
+                                    </td>
+                                    <td style="font-weight: 600; width: 60px; text-align: right;">@fila.Participacion.ToString("N2")%</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <script id="reportesDatosGrafico" type="application/json">@Html.Raw(Model.DatosGraficoJson)</script>
+        </section>
+
+        <!-- TABLA COMPLETA SUMARIADA -->
+        <section class="fj-card reportes-tabla-card">
+            <div style="margin-bottom: 1rem;">
+                <h3 style="margin: 0; font-size: 1.15rem; font-weight: 700;">Resumen por producto</h3>
+                <p style="margin: 0.25rem 0 0; color: #64748b; font-size: 0.875rem;">Agregados calculados con GROUP BY sobre detalle de venta.</p>
+            </div>
+            <div class="reportes-tabla-wrap">
+                <table class="fj-table reportes-tabla">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">N.°</th>
+                            <th>PRODUCTO</th>
+                            <th class="fj-td-numero">CANTIDAD VENDIDA</th>
+                            <th class="fj-td-precio">TOTAL RECAUDADO</th>
+                            <th class="fj-td-numero">PARTICIPACIÓN</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            int idx = 1;
+                        }
+                        @foreach (var fila in Model.Reporte.Filas)
+                        {
+                            <tr>
+                                <td style="color: #64748b;">@idx</td>
+                                <td><strong>@fila.Producto</strong></td>
+                                <td class="fj-td-numero">@fila.CantidadTotal</td>
+                                <td class="fj-td-precio"><strong>Bs @fila.TotalRecaudado.ToString("N2")</strong></td>
+                                <td class="fj-td-numero">@fila.Participacion.ToString("N2")%</td>
+                            </tr>
+                            idx++;
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    }
+</div>
+
+@section Scripts {
+    <script src="~/lib/chart.js/chart.umd.min.js" asp-append-version="true"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var canvas = document.getElementById('reportesGrafico');
+            var rawDataEl = document.getElementById('reportesDatosGrafico');
+            if (!canvas || !rawDataEl) return;
+
+            var datos = { etiquetas: [], valores: [] };
+            try {
+                datos = JSON.parse(rawDataEl.textContent || '{}');
+            } catch (e) {
+                console.error("Error al leer datos:", e);
+            }
+
+            if (!datos.etiquetas || datos.etiquetas.length === 0) {
+                var sinDatos = document.getElementById('reportesGraficoSinDatos');
+                if (sinDatos) sinDatos.hidden = false;
+                canvas.style.display = 'none';
+                return;
+            }
+
+            var paletaCorporativa = [
+                '#eab308', '#2563eb', '#16a34a', '#dc2626',
+                '#9333ea', '#0891b2', '#ea580c', '#475569'
+            ];
+
+            new Chart(canvas, {
+                type: 'doughnut',
+                data: {
+                    labels: datos.etiquetas,
+                    datasets: [{
+                        data: datos.valores,
+                        backgroundColor: paletaCorporativa.slice(0, datos.etiquetas.length),
+                        borderColor: '#ffffff',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    var val = context.parsed || 0;
+                                    return ' ' + context.label + ': Bs ' + val.toLocaleString('es-BO', { minimumFractionDigits: 2 });
+                                }
+                            }
+                        }
+                    },
+                    cutout: '55%'
+                }
+            });
+        });
+    </script>
+}

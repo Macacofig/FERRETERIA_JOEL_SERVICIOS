@@ -3,6 +3,12 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using QuestPDF.Infrastructure;
+using ServicioReportes.Aplicacion.Puertos;
+using ServicioReportes.Aplicacion.Servicios;
+using ServicioReportes.Infraestructura.Conexion;
+using ServicioReportes.Infraestructura.Documentos;
+using ServicioReportes.Infraestructura.Repositorios;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,7 +22,41 @@ builder.Configuration.AddEnvironmentVariables();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "ServicioReportes",
+        Version = "v1",
+        Description = "API de reportes detallados y estadísticos con exportación "
+            + "a PDF y Excel."
+    });
+
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = "Ingrese el JWT emitido por ServicioUsuarios.",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT"
+    });
+
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
 
 // JWT Authentication - La UI envía un token Bearer en cada request.
 // Este servicio solo valida el token; no gestiona login ni sesiones.
@@ -60,6 +100,15 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 builder.Services.AddAuthorization();
+
+// QuestPDF exige declarar la licencia una sola vez antes de generar documentos.
+QuestPDF.Settings.License = LicenseType.Community;
+
+builder.Services.AddSingleton<IDbConnectionFactory, MySqlConnectionFactory>();
+builder.Services.AddScoped<IReporteRepository, MySqlReporteRepository>();
+builder.Services.AddScoped<FachadaReportes>();
+builder.Services.AddSingleton<IGeneradorReportePdf, QuestPdfGeneradorReportes>();
+builder.Services.AddSingleton<IGeneradorReporteExcel, ClosedXmlGeneradorReportes>();
 
 var app = builder.Build();
 

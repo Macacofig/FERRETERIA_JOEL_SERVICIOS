@@ -14,8 +14,15 @@ RUN dotnet publish ServicioReportes.csproj -c Release -o /app/publish /p:UseAppH
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 
+# QuestPDF/SkiaSharp necesita fontconfig y al menos una familia tipográfica
+# disponible en Linux para rasterizar el gráfico y el logotipo del reporte.
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl \
+    && apt-get install -y --no-install-recommends \
+        curl \
+        fontconfig \
+        libfontconfig1 \
+        fonts-dejavu-core \
+        fonts-liberation \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
