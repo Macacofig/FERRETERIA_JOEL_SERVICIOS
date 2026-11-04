@@ -2,6 +2,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
+using FERRETERIA__Joel.Dominio.Puertos;
 
 namespace FERRETERIA__Joel.Infraestructura.Servicios
 {
@@ -10,7 +11,7 @@ namespace FERRETERIA__Joel.Infraestructura.Servicios
     /// mínimos (id, nombre, correo, rol, nombre de usuario y jti). Nunca
     /// incluye contraseñas, hashes ni tokens de activación.
     /// </summary>
-    public class JwtEmisor
+    public class JwtEmisor : IEmisorToken
     {
         private readonly IConfiguration _configuration;
         private readonly RevocacionTokens _revocacion;

@@ -1,4 +1,6 @@
-﻿namespace FERRETERIA__Joel.Infraestructura.Servicios
+﻿using FERRETERIA__Joel.Dominio.Puertos;
+
+namespace FERRETERIA__Joel.Infraestructura.Servicios
 {
     /// <summary>
     /// Registro de tokens invalidados antes de su expiración natural.
@@ -16,7 +18,7 @@
     /// cuenta en MySQL.
     /// </para>
     /// </summary>
-    public class RevocacionTokens
+    public class RevocacionTokens : IRevocacionTokens
     {
         private readonly Dictionary<string, DateTime> _revocados = new();
         private readonly Dictionary<int, int> _generaciones = new();

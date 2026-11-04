@@ -1,4 +1,4 @@
-﻿namespace FERRETERIA__Joel.Aplicacion.Servicios
+﻿namespace FERRETERIA__Joel.Dominio.Puertos
 {
     /// <summary>
     /// Construye el enlace de activación que viaja en el correo. La capa Web
