@@ -1,0 +1,163 @@
+﻿@page
+@model FERRETERIA__Joel.Pages.CatalogoProductosModel
+@{
+    ViewData["Title"] = "Catálogo de Productos";
+    ViewData["ActiveMenu"] = "Catalogo";
+    string accionFiltro = Model.SoloActivos ? "" : "true";
+    string etiquetaFiltro = Model.SoloActivos ? "Mostrar todos" : "Solo activos";
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/productos.css" asp-append-version="true" />
+}
+
+<div class="fj-container fj-page-products">
+
+    <section class="fj-page-head">
+        <p class="fj-eyebrow">Módulo · Consulta</p>
+        <h1>Catálogo de productos</h1>
+        <p class="fj-page-sub">Consulta de inventario, precios y detalles de productos.</p>
+    </section>
+
+    @if (TempData["MensajeError"] != null)
+    {
+        <div class="fj-alert" role="alert">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            <span>@TempData["MensajeError"]</span>
+        </div>
+    }
+
+    <section class="fj-toolbar fj-toolbar-simple">
+        <p class="fj-toolbar-count">
+            <strong>@Model.Productos.Count</strong>
+            @(Model.Productos.Count == 1 ? "producto" : "productos") en el catálogo
+        </p>
+
+        <div class="fj-toolbar-actions">
+            <a class="fj-btn fj-btn-edit"
+               asp-route-soloActivos="@accionFiltro">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" /></svg>
+                @etiquetaFiltro
+            </a>
+        </div>
+    </section>
+
+    <section class="fj-card fj-table-card" aria-label="Listado de productos">
+        <div class="fj-table-wrap">
+            <table class="fj-table">
+                <thead>
+                    <tr>
+                        <th scope="col">Código</th>
+                        <th scope="col">Nombre</th>
+                        <th scope="col">Categoría</th>
+                        <th scope="col" class="fj-th-detalle">Detalle</th>
+                        <th scope="col" class="fj-td-precio">Precio</th>
+                        <th scope="col">Stock</th>
+                        <th scope="col" class="fj-td-estado">Estado</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    @if (Model.Productos.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="7" class="fj-table-vacio">
+                                <div class="fj-empty">
+                                    <span class="fj-empty-ico" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                                            <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+                                            <line x1="12" y1="22.08" x2="12" y2="12" />
+                                        </svg>
+                                    </span>
+
+                                    <p>Sin productos registrados</p>
+                                    <span>Cuando existan productos en el catálogo, aparecerán aquí.</span>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+
+                    @foreach (var item in Model.Productos)
+                    {
+                        <tr>
+                            <td class="fj-td-codigo">
+                                <span class="fj-codigo">@item.Codigo</span>
+                            </td>
+
+                            <td>
+                                <span class="fj-nombre">@item.Nombre</span>
+                                <span class="fj-nombre-sub">@item.Marca</span>
+                            </td>
+
+                            <td class="fj-td-secundario">
+                                @(item.Categoria ?? "Sin categoría")
+                            </td>
+
+                            <td class="fj-td-detalle">
+                                <button type="button"
+                                        class="fj-btn fj-btn-edit fj-btn-detalle"
+                                        data-fj-detalle
+                                        data-titulo="Detalle del producto"
+                                        data-nombre="@item.Nombre"
+                                        data-descripcion="@(item.Descripcion ?? "")"
+                                        data-unidad="@item.Unidad"
+                                        title="Ver descripción y unidad"
+                                        aria-label="Ver descripción y unidad">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /></svg>
+                                    <span>Detalles</span>
+                                </button>
+                            </td>
+
+                            <td class="fj-td-precio">
+                                <span class="fj-precio">@item.Precio.ToString("N2")</span>
+                                <span class="fj-currency">Bs</span>
+                            </td>
+
+                            <td class="fj-td-secundario">@item.Stock</td>
+
+                            <td class="fj-td-estado">
+                                <span class="fj-pill" style="--pill: var(@(item.Estado == 1 ? "--success" : "--texto-ter"));">@(item.Estado == 1 ? "Activo" : "Inactivo")</span>
+                            </td>
+                        </tr>
+                    }
+
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+</div>
+
+@* Modal de detalle: descripción y unidad de medida del producto (solo lectura) *@
+<div class="fj-modal" id="fjDetalleModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="fjDetalleTitle">
+    <div class="fj-modal-backdrop" data-fj-modal-close aria-hidden="true"></div>
+    <div class="fj-modal-wrapper" role="document">
+        <div class="fj-modal-dialog">
+            <div class="fj-modal-icon fj-modal-icon-info" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /></svg>
+            </div>
+            <h2 class="fj-modal-title" id="fjDetalleTitle">Detalle del producto</h2>
+            <p class="fj-modal-producto" id="fjDetalleProducto"></p>
+
+            <dl class="fj-detalle">
+                <div>
+                    <dt>Descripción</dt>
+                    <dd id="fjDetalleDescripcion"></dd>
+                </div>
+                <div>
+                    <dt>Unidad de medida</dt>
+                    <dd id="fjDetalleUnidad"></dd>
+                </div>
+            </dl>
+
+            <div class="fj-modal-actions">
+                <button type="button" class="fj-btn fj-btn-primary" data-fj-modal-close>Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>

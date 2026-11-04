@@ -62,9 +62,14 @@ builder.Services.AddSingleton<IRevocacionTokens, RevocacionTokens>();
 // JWT Bearer: única tecnología de autenticación de la API. Issuer, audience,
 // expiración y firma se validan en cada petición.
 // ---------------------------------------------------------------------------
-string claveJwt = configuracionLocal.GetValueOrDefault("Jwt:Key")
-    ?? builder.Configuration["Jwt:Key"]
-    ?? string.Empty;
+// appsettings deja estas claves como cadena vacía; un '??' no saltaría al
+// siguiente candidato y la aplicación arrancaría con clave vacía. Se toma el
+// primer valor realmente informado (entorno/.env incluido).
+string claveJwt = PrimeraNoVacia(
+    builder.Configuration["Jwt:Key"],
+    builder.Configuration["Jwt:Clave"],
+    Environment.GetEnvironmentVariable("Jwt__Key"),
+    Environment.GetEnvironmentVariable("Jwt__Clave"));
 
 if (claveJwt.Length < 32)
 {
@@ -73,13 +78,23 @@ if (claveJwt.Length < 32)
         + "de entorno Jwt__Key (archivo .env de la raíz).");
 }
 
-// El token de activación se cifra con una clave independiente cuando se
-// configura. Para el despliegue mínimo se deriva de Jwt:Key, de modo que el
-// .env solo necesita las variables JWT compartidas por los servicios.
-string? claveUrlConfigurada = builder.Configuration["UrlProteccion:Clave"];
-string claveUrl = string.IsNullOrWhiteSpace(claveUrlConfigurada)
-    ? claveJwt
-    : claveUrlConfigurada;
+// El token de activación se cifra con la misma clave/algoritmo que el front.
+// Si no se define una clave propia, se reutiliza la del JWT para que ambos
+// procesos descifren el mismo enlace.
+string claveUrl = PrimeraNoVacia(
+    builder.Configuration["UrlProteccion:Clave"],
+    builder.Configuration["Jwt:Key"],
+    builder.Configuration["Jwt:Clave"],
+    Environment.GetEnvironmentVariable("UrlProteccion__Clave"),
+    Environment.GetEnvironmentVariable("Jwt__Key"),
+    Environment.GetEnvironmentVariable("Jwt__Clave"));
+
+if (string.IsNullOrWhiteSpace(claveUrl))
+{
+    throw new InvalidOperationException(
+        "Falta 'UrlProteccion:Clave' o 'Jwt:Key'. Defina UrlProteccion__Clave "
+        + "o Jwt__Key en el .env.");
+}
 
 UrlProtectorApi.Inicializar(claveUrl);
 
@@ -287,3 +302,11 @@ static void ConfiguracionSwaggerBearer(Swashbuckle.AspNetCore.SwaggerGen.Swagger
     });
 }
 
+// Devuelve el primer valor no nulo ni vacío. Evita que una clave vacía en
+// appsettings.json tape el valor real que llega por variables de entorno.
+static string PrimeraNoVacia(params string?[] valores)
+{
+    return valores.FirstOrDefault(
+            valor => !string.IsNullOrWhiteSpace(valor))
+        ?? string.Empty;
+}

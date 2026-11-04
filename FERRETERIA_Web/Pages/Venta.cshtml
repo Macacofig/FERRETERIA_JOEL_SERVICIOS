@@ -1,0 +1,205 @@
+@page
+@model FERRETERIA__Joel.Pages.VentaModel
+@{
+    ViewData["Title"] = "Registrar venta";
+    ViewData["ActiveMenu"] = "Ventas";
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/ventas-componentes.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/venta.css" asp-append-version="true" />
+}
+
+<div class="fj-container fj-page-venta"
+     id="ventaApp"
+     data-url-clientes="@Url.Page("/Venta", "BuscarClientes")"
+     data-url-productos="@Url.Page("/Venta", "BuscarProductos")"
+     data-url-registrar-ajax="@Url.Page("/Venta", "RegistrarAjax")"
+     data-url-ventas="@Url.Page("/Ventas")">
+
+    <section class="fj-page-head">
+        <p class="fj-eyebrow">Módulo · Ventas</p>
+        <h1>Registrar venta</h1>
+        <p class="fj-page-sub">Seleccione el cliente, agregue productos y confirme la venta.</p>
+    </section>
+
+    @if (Model.MensajeError is not null)
+    {
+        <div class="fj-alert" role="alert">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            <span>@Model.MensajeError</span>
+        </div>
+    }
+
+    <form method="post"
+          asp-page-handler="Registrar"
+          id="ventaForm"
+          class="fj-form fj-venta-grid">
+
+        <section class="fj-card fj-venta-panel" aria-label="Cliente y pago">
+            <h2 class="fj-venta-titulo">Cliente y pago</h2>
+
+            <div class="fj-form-field">
+                <label for="buscarCliente">Cliente</label>
+                <div class="fj-buscador">
+                    <input type="search"
+                           id="buscarCliente"
+                           autocomplete="off"
+                           placeholder="Buscar por CI o nombre…" />
+                    <div class="fj-resultados" id="resultadosCliente" hidden></div>
+                </div>
+
+                <input type="hidden" asp-for="IdCliente" id="clienteId" />
+                <input type="hidden" asp-for="NombreCliente" id="clienteNombre" />
+
+                <p class="fj-seleccion" id="clienteSeleccionado" hidden></p>
+
+                <p class="fj-form-ayuda">
+                    ¿No encuentra al cliente?
+                    <button type="button" class="fj-link-btn" id="btnNuevoCliente">Registrar cliente nuevo</button>
+                </p>
+            </div>
+
+            <div class="fj-form-field">
+                <label asp-for="MetodoPago">Método de pago</label>
+                <select asp-for="MetodoPago" class="fj-input fj-select">
+                    @foreach (var metodo in Model.MetodosPago)
+                    {
+                        <option value="@metodo">@metodo</option>
+                    }
+                </select>
+                <p class="fj-form-ayuda">
+                    La venta se registra con el pago completado (Pagado).
+                </p>
+            </div>
+        </section>
+
+        <section class="fj-card fj-venta-panel" aria-label="Productos de la venta">
+            <h2 class="fj-venta-titulo">Productos</h2>
+
+            <div class="fj-buscador">
+                <input type="search"
+                       id="buscarProducto"
+                       autocomplete="off"
+                       placeholder="Buscar producto por nombre o código…" />
+                <div class="fj-resultados" id="resultadosProducto" hidden></div>
+            </div>
+
+            <div class="fj-table-wrap fj-venta-tabla-wrap">
+                <table class="fj-table" id="tablaLineas">
+                    <thead>
+                        <tr>
+                            <th scope="col">Producto</th>
+                            <th scope="col">Unidad</th>
+                            <th scope="col" class="fj-td-precio">Precio</th>
+                            <th scope="col" class="fj-td-cantidad">Cantidad</th>
+                            <th scope="col" class="fj-td-precio">Importe</th>
+                            <th scope="col" class="fj-td-acciones"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="lineasBody"></tbody>
+                </table>
+            </div>
+
+            <div class="fj-empty fj-venta-vacio" id="lineasVacio">
+                <span class="fj-empty-ico" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="9" cy="21" r="1" />
+                        <circle cx="20" cy="21" r="1" />
+                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+                    </svg>
+                </span>
+                <p>Todavía no hay productos en esta venta.</p>
+                <span>Busque un producto por nombre o código para agregarlo.</span>
+            </div>
+
+            <div id="lineasInputs"></div>
+
+            <div class="fj-venta-totales">
+                <div class="fj-venta-total-fila fj-venta-total-final">
+                    <span>Total</span>
+                    <span id="totalFinal">0.00 Bs</span>
+                </div>
+            </div>
+
+            <div class="fj-venta-acciones">
+                <button type="button" class="fj-btn fj-btn-primary" id="btnRegistrar" disabled>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    <span id="btnRegistrarTexto">Registrar venta</span>
+                </button>
+            </div>
+        </section>
+    </form>
+</div>
+
+@* Modal de confirmación propio del flujo de venta *@
+<div class="fj-modal" id="ventaConfirmModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="ventaConfirmTitle">
+    <div class="fj-modal-backdrop" data-fj-modal-close aria-hidden="true"></div>
+    <div class="fj-modal-wrapper" role="document">
+        <div class="fj-modal-dialog">
+            <div class="fj-modal-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" /><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" /></svg>
+            </div>
+            <h2 class="fj-modal-title" id="ventaConfirmTitle">Confirmar venta</h2>
+            <p class="fj-modal-message" id="ventaConfirmMessage"></p>
+            <div class="fj-modal-actions">
+                <button type="button" class="fj-btn fj-btn-ghost" data-fj-modal-close>Cancelar</button>
+                <button type="button" class="fj-btn fj-btn-primary" id="ventaConfirmOk">Registrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* Modal "Nuevo cliente" *@
+<div class="fj-modal" id="nuevoClienteModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="nuevoClienteTitle">
+    <div class="fj-modal-backdrop" data-fj-modal-close aria-hidden="true"></div>
+    <div class="fj-modal-wrapper" role="document">
+        <div class="fj-modal-dialog fj-modal-dialog-form">
+            <h2 class="fj-modal-title" id="nuevoClienteTitle">Registrar cliente nuevo</h2>
+            <p class="fj-modal-message" id="nuevoClienteIntro">
+                Complete los datos del cliente. Al guardar se seleccionará
+                automáticamente en la venta sin perder los productos agregados.
+            </p>
+
+            <form id="nuevoClienteForm" class="fj-form" novalidate>
+                @Html.AntiForgeryToken()
+                <input type="hidden" id="nuevoClienteUrl"
+                       value="@Url.Page("/Venta", "CrearCliente")" />
+
+                <div class="fj-form-field">
+                    <label for="nuevoClienteCi">CI</label>
+                    <input type="text" id="nuevoClienteCi" class="fj-input"
+                           name="nuevoClienteCi" maxlength="11" autocomplete="off"
+                           placeholder="Ej: 1234567 o 1234567-1A" />
+                </div>
+
+                <div class="fj-form-field">
+                    <label for="nuevoClienteNombre">Nombres</label>
+                    <input type="text" id="nuevoClienteNombre" class="fj-input"
+                           name="nuevoClienteNombre" maxlength="100" autocomplete="off" />
+                </div>
+                <div class="fj-form-field">
+                    <label for="nuevoClienteApellido">Apellidos</label>
+                    <input type="text" id="nuevoClienteApellido" class="fj-input"
+                           name="nuevoClienteApellido" maxlength="100" autocomplete="off" />
+                </div>
+
+                <div class="fj-alert" id="nuevoClienteError" role="alert" hidden></div>
+
+                <div class="fj-modal-actions">
+                    <button type="button" class="fj-btn fj-btn-ghost" data-fj-modal-close>Cancelar</button>
+                    <button type="submit" class="fj-btn fj-btn-primary" id="nuevoClienteOk">Guardar cliente</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/venta.js" asp-append-version="true"></script>
+}

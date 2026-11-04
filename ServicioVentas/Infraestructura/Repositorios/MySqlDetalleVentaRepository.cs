@@ -10,7 +10,7 @@ namespace ServicioVentas.Infraestructura.Repositorios
     /// <see cref="IRepository{T}"/> y expone la consulta por venta como método
     /// concreto inyectado por DI. Participa de la transacción ambiente.
     /// </summary>
-    public class MySqlDetalleVentaRepository : IRepository<DetalleVenta>
+    public class MySqlDetalleVentaRepository : IDetalleVentaRepository
     {
         private const string Columnas = @"
             IdDetalleVenta,

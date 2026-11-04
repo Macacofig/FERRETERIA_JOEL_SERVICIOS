@@ -26,6 +26,47 @@ namespace ServicioVentas.Controllers
         }
 
         /// <summary>
+        /// Catálogo completo para la pantalla de consulta. Incluye productos
+        /// activos e inactivos (opcionalmente solo activos). Administrador y
+        /// EmpleadoVenta pueden consultarlo.
+        /// </summary>
+        [HttpGet("catalogo")]
+        [Authorize(Roles = RolesSistema.Personal)]
+        public async Task<IActionResult> Catalogo([FromQuery] bool soloActivos = false)
+        {
+            try
+            {
+                var productos = await _fachada.ListarProductosAsync();
+
+                if (soloActivos)
+                {
+                    productos = productos.Where(p => p.Estado == 1).ToList();
+                }
+
+                var resultado = productos.Select(p => new
+                {
+                    id = p.IdProducto,
+                    codigo = p.Codigo,
+                    nombre = p.Nombre,
+                    marca = p.NombreMarca,
+                    categoria = p.NombreCategoria,
+                    descripcion = p.Descripcion,
+                    unidad = p.UnidadMedida,
+                    precio = p.PrecioVenta,
+                    stock = p.CantidadStock,
+                    estado = p.Estado
+                });
+
+                return Ok(new { exito = true, productos = resultado });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener el catálogo de productos");
+                return StatusCode(503, new { exito = false, mensaje = "No se pudo obtener el catálogo de productos." });
+            }
+        }
+
+        /// <summary>
         /// Busca productos por término (nombre o código). Solo rol EmpleadoVenta.
         /// </summary>
         [HttpGet("buscar")]

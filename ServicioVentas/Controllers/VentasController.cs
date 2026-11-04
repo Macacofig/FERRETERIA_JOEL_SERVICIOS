@@ -59,7 +59,15 @@ namespace ServicioVentas.Controllers
                     idVenta = resultado.IdVenta,
                     codigoVenta = resultado.CodigoVenta,
                     montoTotal = resultado.MontoTotal,
-                    detalles = resultado.Detalles
+                    detalles = resultado.Detalles.Select(d => new
+                    {
+                        nombre = d.Nombre,
+                        codigo = d.Codigo,
+                        unidad = d.UnidadMedida,
+                        cantidad = d.Cantidad,
+                        precio = d.PrecioUnitario,
+                        total = d.TotalProducto
+                    })
                 });
             }
             catch (Exception ex)
@@ -189,7 +197,27 @@ namespace ServicioVentas.Controllers
                     return NotFound(new { exito = false, mensaje = "Comprobante no encontrado." });
                 }
 
-                return Ok(new { exito = true, comprobante });
+                return Ok(new
+                {
+                    exito = true,
+                    comprobante = new
+                    {
+                        venta = comprobante.Venta,
+                        nombreCliente = comprobante.NombreCliente,
+                        ciCliente = comprobante.CiCliente,
+                        nombreEmpleadoResponsable = comprobante.NombreEmpleadoResponsable,
+                        nombreEmpleadoAnulacion = comprobante.NombreEmpleadoAnulacion,
+                        lineas = comprobante.Lineas.Select(d => new
+                        {
+                            nombre = d.Nombre,
+                            codigo = d.Codigo,
+                            unidad = d.UnidadMedida,
+                            cantidad = d.Cantidad,
+                            precio = d.PrecioUnitario,
+                            total = d.TotalProducto
+                        })
+                    }
+                });
             }
             catch (Exception ex)
             {

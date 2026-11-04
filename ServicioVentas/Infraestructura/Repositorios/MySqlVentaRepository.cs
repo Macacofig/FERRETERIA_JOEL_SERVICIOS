@@ -12,7 +12,7 @@ namespace ServicioVentas.Infraestructura.Repositorios
     /// de venta (folios, y anulación) como métodos concretos que
     /// se inyectan directamente por DI. Participa de la transacción ambiente.
     /// </summary>
-    public class MySqlVentaRepository : IRepository<Venta>
+    public class MySqlVentaRepository : IVentaRepository
     {
         private const string Columnas = @"
             IdVenta,

@@ -1,0 +1,271 @@
+@page
+@model FERRETERIA__Joel.Pages.VentasModel
+@using FERRETERIA__Joel.Dominio.Constantes
+@using FERRETERIA__Joel.Helpers
+@{
+    ViewData["Title"] = "Historial de ventas";
+    ViewData["ActiveMenu"] = "Ventas";
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/ventas-componentes.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/ventas.css" asp-append-version="true" />
+}
+
+<div class="fj-container fj-page-ventas">
+
+    <section class="fj-page-head">
+        <p class="fj-eyebrow">Módulo · Ventas</p>
+        <h1>Historial de ventas</h1>
+        <p class="fj-page-sub">Consulta de comprobantes y anulación de ventas registradas.</p>
+    </section>
+
+    @if (TempData["MensajeError"] != null)
+    {
+        <div class="fj-alert" role="alert">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            <span>@TempData["MensajeError"]</span>
+        </div>
+    }
+
+    @if (TempData["Mensaje"] != null)
+    {
+        <div class="fj-alert fj-alert-success" role="status">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                <polyline points="22 4 12 14.01 9 11.01" />
+            </svg>
+            <span>@TempData["Mensaje"]</span>
+        </div>
+    }
+
+    <section class="fj-toolbar fj-toolbar-simple">
+        <p class="fj-toolbar-count">
+            <strong>@Model.Ventas.Count</strong>
+            @(Model.Ventas.Count == 1 ? "venta" : "ventas") registradas
+        </p>
+
+        <div class="fj-toolbar-actions">
+            <a class="fj-btn fj-btn-ghost" asp-page="Ventas" title="Recargar el listado">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M21 12a9 9 0 1 1-2.64-6.36" />
+                    <polyline points="21 3 21 9 15 9" />
+                </svg>
+                Actualizar
+            </a>
+            @if (User.IsInRole(RolesSistema.EmpleadoVenta))
+            {
+                <a class="fj-btn fj-btn-primary" asp-page="Venta">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <line x1="12" y1="5" x2="12" y2="19" />
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                    </svg>
+                    Nueva venta
+                </a>
+            }
+        </div>
+    </section>
+
+    <section class="fj-card fj-table-card" aria-label="Listado de ventas">
+        <div class="fj-table-wrap">
+            <table class="fj-table fj-table-ventas">
+                <thead>
+                    <tr>
+                        <th scope="col">Comprobante</th>
+                        <th scope="col">Cliente</th>
+                        <th scope="col">Fecha</th>
+                        <th scope="col">Pago</th>
+                        <th scope="col" class="fj-td-precio">Total</th>
+                        <th scope="col" class="fj-td-estado">Estado</th>
+                        <th scope="col" class="fj-td-acciones">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                    @if (Model.Ventas.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="7" class="fj-table-vacio">
+                                <div class="fj-empty">
+                                    <span class="fj-empty-ico" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                            <polyline points="14 2 14 8 20 8" />
+                                        </svg>
+                                    </span>
+                                    <p>Aún no hay ventas registradas.</p>
+                                    <span>Cuando se registre una venta, aparecerá en este listado.</span>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+
+                    @foreach (var item in Model.Ventas)
+                    {
+                        <tr>
+                            <td class="fj-td-codigo">
+                                <span class="fj-codigo">@item.Venta.CodigoVenta</span>
+                            </td>
+
+                            <td>
+                                <span class="fj-nombre">@item.NombreCliente</span>
+                                <span class="fj-nombre-sub">@item.Venta.MetodoPago</span>
+                            </td>
+
+                            <td class="fj-td-secundario">@item.Venta.FechaRegistro.ToString("dd/MM/yyyy HH:mm")</td>
+
+                            <td class="fj-td-secundario">@item.Venta.EstadoPago</td>
+
+                            <td class="fj-td-precio">
+                                <span class="fj-precio">@item.Venta.MontoTotal.ToString("N2")</span>
+                                <span class="fj-currency">Bs</span>
+                            </td>
+
+                            <td class="fj-td-estado">
+                                <span class="fj-pill"
+                                      style="--pill: var(@(item.Venta.EstadoVenta == EstadoVenta.Registrada ? "--success" : "--danger"));">
+                                    @(item.Venta.EstadoVenta == EstadoVenta.Registrada ? "Registrada" : "Anulada")
+                                </span>
+                            </td>
+
+                            <td class="fj-td-acciones">
+                                <div class="fj-acciones">
+
+                                    <a class="fj-btn fj-btn-edit fj-btn-icon"
+                                       asp-page="VentaComprobante"
+                                       asp-page-handler="Pdf"
+                                       asp-route-token="@UrlProtector.Cifrar(item.Venta.IdVenta.ToString())"
+                                       target="_blank"
+                                       rel="noopener"
+                                       title="Ver comprobante (PDF)"
+                                       aria-label="Ver comprobante de la venta en PDF">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1Z" /><path d="M14 13H8" /><path d="M16 9H8" /><path d="M10 17H8" /></svg>
+                                    </a>
+
+                                    <button type="button"
+                                            class="fj-btn fj-btn-edit fj-btn-icon"
+                                            data-ventas-detalle
+                                            data-id="@item.Venta.IdVenta"
+                                            data-cliente="@item.NombreCliente"
+                                            title="Ver detalle"
+                                            aria-label="Ver detalle de la venta">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
+                                    </button>
+
+                                    @if (item.Venta.EstadoVenta == EstadoVenta.Registrada
+                                                                    && User.IsInRole(RolesSistema.EmpleadoVenta))
+                                    {
+                                        <button type="button"
+                                                class="fj-btn fj-btn-danger fj-btn-icon"
+                                                data-ventas-anular
+                                                data-id="@item.Venta.IdVenta"
+                                                data-codigo="@item.Venta.CodigoVenta"
+                                                title="Anular venta"
+                                                aria-label="Anular venta">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z" /><line x1="18" y1="9" x2="12.99" y2="14.01" /><line x1="12.01" y1="9" x2="18" y2="14" /></svg>
+                                        </button>
+                                    }
+
+                                </div>
+                            </td>
+                        </tr>
+                    }
+
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+
+<partial name="_ConfirmModal" />
+
+@* Modal de detalle de la venta (solo lectura) *@
+<div class="fj-modal" id="ventasDetalleModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="ventasDetalleTitle">
+    <div class="fj-modal-backdrop" data-fj-modal-close aria-hidden="true"></div>
+    <div class="fj-modal-wrapper" role="document">
+        <div class="fj-modal-dialog fj-ventas-modal-dlg">
+            <h2 class="fj-modal-title" id="ventasDetalleTitle">Detalle de la venta</h2>
+            <p class="fj-modal-message" id="ventasDetalleCodigo"></p>
+
+            <dl class="fj-detalle ventas-detalle-cabecera">
+                <div>
+                    <dt>Cliente</dt>
+                    <dd id="ventasDetalleCliente"></dd>
+                </div>
+                <div>
+                    <dt>Fecha</dt>
+                    <dd id="ventasDetalleFecha"></dd>
+                </div>
+                <div>
+                    <dt>Pago</dt>
+                    <dd id="ventasDetallePago"></dd>
+                </div>
+            </dl>
+
+            <div class="ventas-detalle-tabla">
+                <table class="fj-table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Producto</th>
+                            <th scope="col" class="fj-td-cantidad">Cant.</th>
+                            <th scope="col" class="fj-td-precio">Precio</th>
+                            <th scope="col" class="fj-td-precio">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ventasDetalleLineas"></tbody>
+                </table>
+            </div>
+
+            <div class="ventas-detalle-totales">
+                <div class="ventas-detalle-total"><span>Total</span><span id="ventasDetalleTotal"></span></div>
+            </div>
+
+            <p class="ventas-detalle-motivo" id="ventasDetalleMotivo" hidden></p>
+
+            <div class="fj-modal-actions">
+                <button type="button" class="fj-btn fj-btn-primary" data-fj-modal-close>Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* Modal de anulación con motivo *@
+<div class="fj-modal" id="ventasAnularModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="ventasAnularTitle">
+    <div class="fj-modal-backdrop" data-fj-modal-close aria-hidden="true"></div>
+    <div class="fj-modal-wrapper" role="document">
+        <div class="fj-modal-dialog">
+            <div class="fj-modal-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z" /></svg>
+            </div>
+            <h2 class="fj-modal-title" id="ventasAnularTitle">Anular venta</h2>
+            <p class="fj-modal-message" id="ventasAnularContexto"></p>
+
+            <form method="post" asp-page-handler="Anular" id="ventasAnularForm" class="fj-form">
+                <input type="hidden" id="ventasAnularId" name="IdVenta" value="" />
+
+                <div class="fj-form-field">
+                    <label for="ventasAnularMotivo">Motivo de la anulación</label>
+                    <textarea id="ventasAnularMotivo"
+                              class="fj-input fj-input-area"
+                              name="MotivoAnulacion"
+                              rows="3"
+                              placeholder="Describa el motivo de la anulación…"
+                              maxlength="500"></textarea>
+                    <p class="fj-form-error" id="ventasAnularError" hidden>Indique el motivo de la anulación.</p>
+                </div>
+
+                <div class="fj-modal-actions">
+                    <button type="button" class="fj-btn fj-btn-ghost" data-fj-modal-close>Cancelar</button>
+                    <button type="submit" class="fj-btn fj-btn-danger">Anular venta</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/ventas.js" asp-append-version="true"></script>
+}

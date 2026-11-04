@@ -68,11 +68,14 @@ services:
     depends_on:
       servicio-usuarios:
         condition: service_healthy
+      servicio-ventas:
+        condition: service_healthy
     ports:
       - "5267:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Docker
       - Servicios__UsuariosApiUrl=http://servicio-usuarios:8080
+      - Servicios__VentasApiUrl=http://servicio-ventas:8080
       - Jwt__Key=${Jwt__Key:?defina Jwt__Key en .env}
       - Jwt__Issuer=${Jwt__Issuer:-FerreteriaJoel}
       - Jwt__Audience=${Jwt__Audience:-FerreteriaJoel}

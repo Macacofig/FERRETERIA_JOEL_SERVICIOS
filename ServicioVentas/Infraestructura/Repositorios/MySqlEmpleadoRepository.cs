@@ -10,7 +10,7 @@ namespace ServicioVentas.Infraestructura.Repositorios
     /// Solo se usa para obtener el nombre del empleado responsable en
     /// comprobantes de venta. No incluye credenciales ni tokens.
     /// </summary>
-    public class MySqlEmpleadoRepository : IRepository<Empleado>
+    public class MySqlEmpleadoRepository : IEmpleadoRepository
     {
         private const string Columnas = @"
             IdEmpleado,
