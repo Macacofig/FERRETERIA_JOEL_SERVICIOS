@@ -1,4 +1,5 @@
-﻿using FERRETERIA__Joel.Aplicacion.Modelos;
+﻿using System.Collections.Concurrent;
+using FERRETERIA__Joel.Aplicacion.Modelos;
 using FERRETERIA__Joel.Dominio.Constantes;
 using FERRETERIA__Joel.Dominio.Entidades;
 using FERRETERIA__Joel.Dominio.Puertos;
@@ -12,6 +13,10 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
     // Los clientes ya no inician sesión.
     public class ServicioInicioSesion
     {
+        private const int IntentosPermitidos = 5;
+        private static readonly TimeSpan DuracionBloqueo = TimeSpan.FromMinutes(15);
+        private static readonly ConcurrentDictionary<string, IntentosLogin> Intentos =
+            new(StringComparer.OrdinalIgnoreCase);
         private const string MensajeCredenciales =
             "Correo o contraseña incorrectos.";
 
@@ -26,14 +31,16 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
 
         private readonly IRepositoryEmpleado _repositorioEmpleado;
         private readonly IHasheadorContrasena _hasheador;
-        private readonly CredencialesValidaciones _credenciales = new();
+        private readonly ICredencialesValidaciones _credenciales;
 
         public ServicioInicioSesion(
             IRepositoryEmpleado repositorioEmpleado,
-            IHasheadorContrasena hasheador)
+            IHasheadorContrasena hasheador,
+            ICredencialesValidaciones credenciales)
         {
             _repositorioEmpleado = repositorioEmpleado;
             _hasheador = hasheador;
+            _credenciales = credenciales;
         }
 
         public async Task<ResultadoInicioSesion> IniciarAsync(
@@ -42,12 +49,22 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
             string correo = solicitud.CorreoElectronico?.Trim() ?? string.Empty;
             string contrasena = solicitud.Contrasena ?? string.Empty;
 
+            if (EstaBloqueado(correo, out TimeSpan restante))
+            {
+                return new ResultadoInicioSesion
+                {
+                    Exitoso = false,
+                    Mensaje = $"Demasiados intentos fallidos. Intente nuevamente en {Math.Ceiling(restante.TotalMinutes)} minutos."
+                };
+            }
+
             bool identificadorValido = correo.Contains('@')
                 ? _credenciales.EsCorreoValido(correo)
                 : !string.IsNullOrWhiteSpace(correo);
 
             if (!identificadorValido || string.IsNullOrEmpty(contrasena))
             {
+                RegistrarIntentoFallido(correo);
                 return new ResultadoInicioSesion
                 {
                     Exitoso = false,
@@ -65,6 +82,7 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
 
             if (empleado is null)
             {
+                RegistrarIntentoFallido(correo);
                 return new ResultadoInicioSesion
                 {
                     Exitoso = false,
@@ -88,11 +106,15 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
                 };
             }
 
-            if (!Coincide(
-                    contrasena,
-                    empleado.Contrasena ?? string.Empty,
-                    out bool rehash))
+            bool coincide = _hasheador.Verificar(
+                contrasena,
+                empleado.Contrasena ?? string.Empty);
+            if (!coincide)
             {
+                RegistrarIntentoFallido(
+                    empleado.CorreoElectronico
+                    ?? empleado.NombreUsuario
+                    ?? empleado.IdEmpleado.ToString());
                 return CredencialesInvalidas();
             }
 
@@ -105,11 +127,17 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
                 };
             }
 
-            if (rehash)
+            Intentos.TryRemove(
+                empleado.CorreoElectronico
+                ?? empleado.NombreUsuario
+                ?? empleado.IdEmpleado.ToString(),
+                out _);
+            if (_hasheador.NecesitaRehash(empleado.Contrasena ?? string.Empty))
             {
                 await _repositorioEmpleado.ActualizarContrasenaAsync(
                     empleado.IdEmpleado,
-                    _hasheador.Hashear(contrasena));
+                    _hasheador.Hashear(contrasena),
+                    empleado.IdEmpleado);
             }
 
             return new ResultadoInicioSesion
@@ -137,45 +165,35 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
             };
         }
 
-        // Verifica la contraseña. Detecta contraseñas heredadas guardadas en
-        // texto plano (semillas) y marca que deben re-hashearse.
-        private bool Coincide(
-            string contrasena,
-            string almacenada,
-            out bool rehash)
+        private static bool EsHashArgon2Actual(string valor) =>
+            valor.StartsWith("$argon2id$", StringComparison.Ordinal);
+
+        private static bool EstaBloqueado(string identificador, out TimeSpan restante)
         {
-            rehash = false;
-
-            if (string.IsNullOrEmpty(almacenada))
-            {
+            restante = TimeSpan.Zero;
+            if (string.IsNullOrWhiteSpace(identificador)
+                || !Intentos.TryGetValue(identificador, out IntentosLogin? intento))
                 return false;
-            }
-
-            if (EsHashArgon2(almacenada))
-            {
-                try
-                {
-                    return _hasheador.Verificar(contrasena, almacenada);
-                }
-                catch
-                {
-                    return false;
-                }
-            }
-
-            if (string.Equals(almacenada, contrasena, StringComparison.Ordinal))
-            {
-                rehash = true;
-                return true;
-            }
-
-            return false;
+            if (intento.BloqueadoHasta <= DateTime.UtcNow) return false;
+            restante = intento.BloqueadoHasta - DateTime.UtcNow;
+            return true;
         }
 
-        private static bool EsHashArgon2(string valor)
+        private static void RegistrarIntentoFallido(string identificador)
         {
-            return valor.StartsWith("$argon2", StringComparison.Ordinal);
+            if (string.IsNullOrWhiteSpace(identificador)) return;
+            var estado = Intentos.GetOrAdd(identificador, _ => new IntentosLogin());
+            estado.Fallidos++;
+            if (estado.Fallidos >= IntentosPermitidos)
+            {
+                estado.BloqueadoHasta = DateTime.UtcNow.Add(DuracionBloqueo);
+            }
+        }
+
+        private sealed class IntentosLogin
+        {
+            public int Fallidos;
+            public DateTime BloqueadoHasta;
         }
     }
 }
-

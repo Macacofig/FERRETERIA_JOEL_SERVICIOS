@@ -34,14 +34,19 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
 
         private readonly IRepositoryEmpleado _repositorio;
         private readonly IHasheadorContrasena _hasheador;
-        private readonly CredencialesValidaciones _validaciones = new();
+        private readonly ICredencialesValidaciones _validaciones;
+        private readonly IContextoUsuario _contextoUsuario;
 
         public ServicioCambioContrasena(
             IRepositoryEmpleado repositorio,
-            IHasheadorContrasena hasheador)
+            IHasheadorContrasena hasheador,
+            ICredencialesValidaciones validaciones,
+            IContextoUsuario contextoUsuario)
         {
             _repositorio = repositorio;
             _hasheador = hasheador;
+            _validaciones = validaciones;
+            _contextoUsuario = contextoUsuario;
         }
 
         public async Task<ResultadoCambioContrasena> CambiarAsync(
@@ -70,10 +75,11 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
                 errores[nameof(CambioContrasenaSolicitud.ContrasenaNueva)] =
                     MensajePolitica;
             }
-            else if (!_validaciones.EsConfirmacionValida(nueva, confirmacion))
+            
+            if (!string.IsNullOrWhiteSpace(nueva)
+                && !_validaciones.EsConfirmacionValida(nueva, confirmacion))
             {
-                errores[
-                    nameof(CambioContrasenaSolicitud.ConfirmarContrasena)] =
+                errores[nameof(CambioContrasenaSolicitud.ConfirmarContrasena)] =
                     MensajeConfirmacion;
             }
 
@@ -96,7 +102,7 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
                     "La cuenta no existe.");
             }
 
-            if (!Coincide(actual, empleado.Contrasena))
+            if (!_hasheador.Verificar(actual, empleado.Contrasena ?? string.Empty))
             {
                 return new ResultadoCambioContrasena
                 {
@@ -110,7 +116,7 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
                 };
             }
 
-            if (Coincide(nueva, empleado.Contrasena))
+            if (_hasheador.Verificar(nueva, empleado.Contrasena ?? string.Empty))
             {
                 return new ResultadoCambioContrasena
                 {
@@ -126,35 +132,14 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
 
             await _repositorio.ActualizarContrasenaAsync(
                 idEmpleado,
-                _hasheador.Hashear(nueva));
+                _hasheador.Hashear(nueva),
+                _contextoUsuario.IdEmpleado > 0
+                    ? _contextoUsuario.IdEmpleado
+                    : idEmpleado);
 
             return ResultadoCambioContrasena.Ok(
                 "Contraseña actualizada. Use la nueva contraseña en su próximo inicio de sesión.");
         }
 
-        private bool Coincide(string contrasena, string? almacenada)
-        {
-            if (string.IsNullOrEmpty(contrasena)
-                || string.IsNullOrEmpty(almacenada))
-            {
-                return false;
-            }
-
-            if (almacenada.StartsWith("$argon2", StringComparison.Ordinal))
-            {
-                try
-                {
-                    return _hasheador.Verificar(contrasena, almacenada);
-                }
-                catch
-                {
-                    return false;
-                }
-            }
-
-            // Compatibilidad con las contraseñas heredadas en texto plano.
-            return string.Equals(almacenada, contrasena, StringComparison.Ordinal);
-        }
     }
 }
-

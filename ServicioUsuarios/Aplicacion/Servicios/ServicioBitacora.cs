@@ -14,6 +14,7 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
     {
         public const string AccionLogin = "login";
         public const string AccionLogout = "logout";
+        public const string AccionLoginFallido = "login_fallido";
         public const string OperacionInsert = "INSERT";
         public const string OperacionUpdate = "UPDATE";
         public const string OperacionDelete = "DELETE";
@@ -47,6 +48,20 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
                 idUsuario,
                 nombreUsuario,
                 tipoUsuario);
+        }
+
+        public async Task RegistrarLoginFallidoAsync(
+            string? nombreIdentificador,
+            string tipoUsuario = "EmpleadoVenta")
+        {
+            await _repositorio.RegistrarOperacionAsync(
+                AccionLoginFallido,
+                null,
+                null,
+                "FALLIDO",
+                null,
+                nombreIdentificador,
+                NormalizarRol(tipoUsuario));
         }
 
         /// <summary>
@@ -102,4 +117,3 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
         }
     }
 }
-
