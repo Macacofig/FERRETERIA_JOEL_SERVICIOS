@@ -57,6 +57,38 @@ services:
       start_period: 30s
 
   # ---------------------------------------------------------------------------
+  # FERRETERIA_Web — UI Razor Pages; consume ServicioUsuarios por HTTP/JSON.
+  # ---------------------------------------------------------------------------
+  ferreteria-web:
+    build:
+      context: ./FERRETERIA_Web
+      dockerfile: Dockerfile
+    container_name: ferreteria-web
+    restart: always
+    depends_on:
+      servicio-usuarios:
+        condition: service_healthy
+      servicio-ventas:
+        condition: service_healthy
+    ports:
+      - "5267:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
+      - Servicios__UsuariosApiUrl=http://servicio-usuarios:8080
+      - Servicios__VentasApiUrl=http://servicio-ventas:8080
+      - Jwt__Key=${Jwt__Key:?defina Jwt__Key en .env}
+      - Jwt__Issuer=${Jwt__Issuer:-FerreteriaJoel}
+      - Jwt__Audience=${Jwt__Audience:-FerreteriaJoel}
+    networks:
+      - ferreteria-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8080/Login || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ---------------------------------------------------------------------------
   # ServicioUsuarios — API de autenticación, empleados, sesiones
   # ---------------------------------------------------------------------------
   servicio-usuarios:
@@ -76,6 +108,14 @@ services:
       - Jwt__Key=${Jwt__Key:?defina Jwt__Key en .env}
       - Jwt__Issuer=${Jwt__Issuer:-FerreteriaJoel}
       - Jwt__Audience=${Jwt__Audience:-FerreteriaJoel}
+      - App__UrlWeb=http://localhost:5267
+      - Smtp__Host=${Smtp__Host:-}
+      - Smtp__Puerto=${Smtp__Puerto:-587}
+      - Smtp__Usuario=${Smtp__Usuario:-}
+      - Smtp__Clave=${Smtp__Clave:-}
+      - Smtp__UsarSsl=${Smtp__UsarSsl:-true}
+      - Smtp__Remitente=${Smtp__Remitente:-}
+      - Smtp__RemitenteNombre=${Smtp__RemitenteNombre:-Ferreteria Joel}
     networks:
       - ferreteria-net
     healthcheck:
