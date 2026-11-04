@@ -12,7 +12,7 @@ namespace ServicioVentas.Infraestructura.Repositorios
     /// inyectan directamente por DI. Ningún método dispone la conexión: su
     /// ciclo de vida lo administra <see cref="IConexionTransaccional"/>.
     /// </summary>
-    public class MySqlClienteRepository : IRepository<Cliente>
+    public class MySqlClienteRepository : IClienteRepository
     {
         private const string Columnas = @"
             IdCliente,

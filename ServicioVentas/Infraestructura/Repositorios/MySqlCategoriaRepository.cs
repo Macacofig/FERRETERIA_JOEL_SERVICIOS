@@ -5,7 +5,7 @@ using MySql.Data.MySqlClient;
 
 namespace ServicioVentas.Infraestructura.Repositorios
 {
-    public class MySqlCategoriaRepository : IGestionarRepository<Categoria>
+    public class MySqlCategoriaRepository : ICategoriaRepository
     {
         private readonly IDbConnectionFactory _connectionFactory;
 

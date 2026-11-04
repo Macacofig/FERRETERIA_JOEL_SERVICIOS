@@ -1,4 +1,5 @@
 using ServicioVentas.Dominio.Entidades;
+using ServicioVentas.Dominio.Puertos;
 using ServicioVentas.Infraestructura.Conexion;
 using MySql.Data.MySqlClient;
 
@@ -9,7 +10,7 @@ namespace ServicioVentas.Infraestructura.Repositorios
     /// encaja en un contrato genérico CRUD, por lo que se inyecta como clase
     /// concreta en <c>FachadaActualizacionStock</c> (operación especial).
     /// </summary>
-    public class MySqlInventarioRepository
+    public class MySqlInventarioRepository : IInventarioRepository
     {
         private const string ColumnasProducto = @"
             p.IdProducto,
