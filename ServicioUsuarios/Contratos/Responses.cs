@@ -1,4 +1,4 @@
-﻿namespace FERRETERIA__Joel.Aplicacion.Modelos
+﻿namespace FERRETERIA__Joel.ServicioUsuarios.Contratos
 {
     public class RespuestaApi<T>
     {

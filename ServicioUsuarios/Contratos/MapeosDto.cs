@@ -1,6 +1,6 @@
 ﻿using FERRETERIA__Joel.Dominio.Entidades;
 
-namespace FERRETERIA__Joel.Aplicacion.Modelos
+namespace FERRETERIA__Joel.ServicioUsuarios.Contratos
 {
     /// <summary>
     /// Traduce entidades del dominio a DTOs públicos. Es el único punto que
