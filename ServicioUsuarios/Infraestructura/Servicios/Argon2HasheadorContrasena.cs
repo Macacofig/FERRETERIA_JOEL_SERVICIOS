@@ -53,13 +53,23 @@ namespace FERRETERIA__Joel.Infraestructura.Servicios
             {
                 return Argon2.Verify(hash, contrasena);
             }
-            catch
+            catch (FormatException)
             {
-                // Hash almacenado con formato inválido o no generado con
-                // Argon2: se trata como credencial no válida.
                 return false;
             }
         }
+
+        public bool NecesitaRehash(string hash)
+        {
+            if (string.IsNullOrWhiteSpace(hash)
+                || !hash.StartsWith("$argon2id$", StringComparison.Ordinal))
+            {
+                return true;
+            }
+
+            return !hash.Contains($"m={ConfiguracionArgon2.MemoryCost},", StringComparison.Ordinal)
+                || !hash.Contains($"t={ConfiguracionArgon2.TimeCost},", StringComparison.Ordinal)
+                || !hash.Contains($"p={ConfiguracionArgon2.Lanes}", StringComparison.Ordinal);
+        }
     }
 }
-
