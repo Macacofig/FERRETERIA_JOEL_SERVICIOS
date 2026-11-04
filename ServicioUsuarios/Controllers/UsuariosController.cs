@@ -27,6 +27,7 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
         private readonly ServicioBitacora _bitacora;
         private readonly IRevocacionTokens _revocacion;
         private readonly ILogger<UsuariosController> _logger;
+        private readonly IContextoUsuario _contextoUsuario;
 
         public UsuariosController(
             ServicioRegistroEmpleado registro,
@@ -36,7 +37,8 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
             ServicioCambioContrasena cambioContrasena,
             ServicioBitacora bitacora,
             IRevocacionTokens revocacion,
-            ILogger<UsuariosController> logger)
+            ILogger<UsuariosController> logger,
+            IContextoUsuario contextoUsuario)
         {
             _registro = registro;
             _edicion = edicion;
@@ -46,6 +48,7 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
             _bitacora = bitacora;
             _revocacion = revocacion;
             _logger = logger;
+            _contextoUsuario = contextoUsuario;
         }
 
         // ===================== Consultas =====================
@@ -171,7 +174,7 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
                     CorreoElectronico = solicitud.CorreoElectronico,
                     Rol = solicitud.Rol
                 },
-                ObtenerIdEmpleado());
+                _contextoUsuario.IdEmpleado);
 
             await AuditarAsync(
                 ServicioBitacora.OperacionUpdate,
@@ -327,7 +330,7 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
         public async Task<IActionResult> CambiarContrasena(
             [FromBody] CambioContrasenaRequest solicitud)
         {
-            int id = ObtenerIdEmpleado();
+            int id = _contextoUsuario.IdEmpleado;
 
             if (id <= 0)
             {
@@ -371,13 +374,6 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
 
         // ===================== Auxiliares =====================
 
-        private int ObtenerIdEmpleado()
-        {
-            return int.TryParse(
-                User.FindFirstValue(ClaimTypes.NameIdentifier),
-                out int id) ? id : 0;
-        }
-
         private async Task AuditarAsync(
             string operacion,
             string entidad,
@@ -386,7 +382,7 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
         {
             try
             {
-                int id = ObtenerIdEmpleado();
+                int id = _contextoUsuario.IdEmpleado;
 
                 await _bitacora.RegistrarOperacionAsync(
                     operacion,
@@ -415,4 +411,3 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
         }
     }
 }
-
