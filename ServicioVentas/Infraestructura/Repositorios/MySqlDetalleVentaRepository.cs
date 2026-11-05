@@ -74,6 +74,7 @@ namespace ServicioVentas.Infraestructura.Repositorios
                     Cantidad,
                     PrecioUnitario,
                     TotalProducto,
+                    FechaRegistro,
                     IdEmpleadoResponsable
                 )
                 VALUES
@@ -83,6 +84,7 @@ namespace ServicioVentas.Infraestructura.Repositorios
                     @cantidad,
                     @precioUnitario,
                     @totalProducto,
+                    DATE_SUB(UTC_TIMESTAMP(), INTERVAL 4 HOUR),
                     @idEmpleadoResponsable
                 )";
 

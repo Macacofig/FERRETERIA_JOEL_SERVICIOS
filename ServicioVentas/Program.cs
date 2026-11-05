@@ -1,4 +1,5 @@
 using ServicioVentas.Aplicacion.Servicios;
+using ServicioVentas.Dominio.Factories;
 using ServicioVentas.Dominio.Puertos;
 using ServicioVentas.Infraestructura;
 using ServicioVentas.Infraestructura.Conexion;

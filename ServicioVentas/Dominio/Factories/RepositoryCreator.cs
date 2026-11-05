@@ -1,4 +1,4 @@
-namespace ServicioVentas.Infraestructura.Factories
+namespace ServicioVentas.Dominio.Factories
 {
     /// <summary>
     /// Base del patrón Factory Method para repositorios. Cada creador
