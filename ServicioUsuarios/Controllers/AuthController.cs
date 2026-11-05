@@ -26,6 +26,7 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
         private readonly IEmisorToken _jwt;
         private readonly IRevocacionTokens _revocacion;
         private readonly ILogger<AuthController> _logger;
+        private readonly IContextoUsuario _contextoUsuario;
 
         public AuthController(
             ServicioInicioSesion inicioSesion,
@@ -33,7 +34,8 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
             ServicioPersonal personal,
             IEmisorToken jwt,
             IRevocacionTokens revocacion,
-            ILogger<AuthController> logger)
+            ILogger<AuthController> logger,
+            IContextoUsuario contextoUsuario)
         {
             _inicioSesion = inicioSesion;
             _bitacora = bitacora;
@@ -41,6 +43,7 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
             _jwt = jwt;
             _revocacion = revocacion;
             _logger = logger;
+            _contextoUsuario = contextoUsuario;
         }
 
         /// <summary>
@@ -68,6 +71,16 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
 
             if (!resultado.Exitoso || resultado.Usuario is null)
             {
+                try
+                {
+                    await _bitacora.RegistrarLoginFallidoAsync(
+                        solicitud.CorreoElectronico);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex,
+                        "No se pudo registrar el intento fallido de inicio de sesión.");
+                }
                 return Unauthorized(RespuestaApi<LoginResponse>.Error(
                     resultado.Mensaje));
             }
@@ -156,7 +169,7 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
             try
             {
                 await _bitacora.RegistrarLogoutAsync(
-                    ObtenerIdEmpleado(),
+                    _contextoUsuario.IdEmpleado,
                     User.FindFirstValue(ClaimTypes.Name),
                     User.FindFirstValue(ClaimTypes.Role) ?? RolesSistema.EmpleadoVenta);
             }
@@ -177,7 +190,7 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
         [Authorize]
         public async Task<IActionResult> Me()
         {
-            int id = ObtenerIdEmpleado();
+            int id = _contextoUsuario.IdEmpleado;
 
             if (id <= 0)
             {
@@ -198,13 +211,5 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
                 MapeosDto.AUsuario(empleado)));
         }
 
-        private int ObtenerIdEmpleado()
-        {
-            return int.TryParse(
-                User.FindFirstValue(ClaimTypes.NameIdentifier),
-                out int id) ? id : 0;
-        }
     }
 }
-
-

@@ -18,7 +18,7 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
             "El apellido es obligatorio, debe tener máximo 100 caracteres y solo admite letras y espacios.";
 
         private const string MensajeTelefono =
-            "El teléfono debe tener 8 dígitos y comenzar con 5, 6, 7 u 8.";
+            "El teléfono debe tener 8 dígitos y comenzar con 6 o 7.";
 
         private const string MensajeCorreo =
             "El correo debe tener un formato válido, por ejemplo correo@ejemplo.com.";
@@ -34,7 +34,12 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
             + $"{ConfiguracionCredenciales.ContrasenaLongitudMaxima} caracteres e incluir al menos una "
             + "mayúscula, una minúscula, un número y un símbolo.";
 
-        private readonly CredencialesValidaciones _credenciales = new();
+        private readonly ICredencialesValidaciones _credenciales;
+
+        public RegistroCredencialesValidador(ICredencialesValidaciones credenciales)
+        {
+            _credenciales = credenciales;
+        }
 
         /// <summary>
         /// Valida los datos del alta de empleado. No valida contraseña: se
@@ -109,5 +114,3 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
         }
     }
 }
-
-

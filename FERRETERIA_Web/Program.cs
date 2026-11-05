@@ -67,7 +67,7 @@ builder.Services.AddHttpClient<VentasApiCliente>(client =>
 
 string reportesApiUrl = builder.Configuration["Servicios:ReportesApiUrl"]
     ?? builder.Configuration["Servicios__ReportesApiUrl"]
-    ?? "http://localhost:5073";
+?? "http://localhost:5073";
 
 // La generación de PDF/Excel puede tardar más que una consulta JSON.
 builder.Services.AddHttpClient<ReportesApiCliente>(client =>

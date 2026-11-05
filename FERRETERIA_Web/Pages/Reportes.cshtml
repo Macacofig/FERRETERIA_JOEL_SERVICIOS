@@ -1,0 +1,69 @@
+@page
+@model FERRETERIA__Joel.Pages.ReportesModel
+@{
+    ViewData["Title"] = "Reportes";
+}
+
+<div class="fj-container fj-page-products">
+    <section class="fj-page-head">
+        <p class="fj-eyebrow">Administración · Reportes</p>
+        <h1>Reportes y estadísticas</h1>
+    </section>
+
+    @if (TempData["Mensaje"] is string mensaje && !string.IsNullOrWhiteSpace(mensaje))
+    {
+        <div class="fj-alert" role="alert"><span>@mensaje</span></div>
+    }
+
+    <section class="fj-card fj-form">
+        <h2>Reporte detallado de ventas</h2>
+        <form method="post" class="fj-form-grid">
+            <div class="fj-form-field">
+                <label class="fj-form-label" asp-for="Desde">Desde</label>
+                <input class="fj-input" asp-for="Desde" type="date" />
+            </div>
+            <div class="fj-form-field">
+                <label class="fj-form-label" asp-for="Hasta">Hasta</label>
+                <input class="fj-input" asp-for="Hasta" type="date" />
+            </div>
+            <div class="fj-form-field">
+                <label class="fj-form-label" asp-for="EmpleadoId">Identificador de empleado</label>
+                <input class="fj-input" asp-for="EmpleadoId" type="number" min="1" />
+            </div>
+            <div class="fj-form-field">
+                <label class="fj-form-label" asp-for="Estado">Estado</label>
+                <select class="fj-input" asp-for="Estado">
+                    <option value="">Todos</option>
+                    <option value="Registrada">Registrada</option>
+                    <option value="Anulada">Anulada</option>
+                </select>
+            </div>
+            <div class="fj-form-actions fj-form-field--full">
+                <button class="fj-btn fj-btn-primary" asp-page-handler="DetallePdf">Generar PDF</button>
+                <button class="fj-btn fj-btn-ghost" asp-page-handler="DetalleExcel">Exportar a Excel</button>
+            </div>
+        </form>
+    </section>
+
+    <section class="fj-card fj-form">
+        <h2>Resumen de ventas por categoría</h2>
+        <form method="post" class="fj-form-grid">
+            <div class="fj-form-field">
+                <label class="fj-form-label" asp-for="Desde">Desde</label>
+                <input class="fj-input" asp-for="Desde" type="date" />
+            </div>
+            <div class="fj-form-field">
+                <label class="fj-form-label" asp-for="Hasta">Hasta</label>
+                <input class="fj-input" asp-for="Hasta" type="date" />
+            </div>
+            <div class="fj-form-field">
+                <label class="fj-form-label" asp-for="CategoriaId">Identificador de categoría</label>
+                <input class="fj-input" asp-for="CategoriaId" type="number" min="1" />
+            </div>
+            <div class="fj-form-actions fj-form-field--full">
+                <button class="fj-btn fj-btn-primary" asp-page-handler="ResumenPdf">Generar PDF</button>
+                <button class="fj-btn fj-btn-ghost" asp-page-handler="ResumenExcel">Exportar a Excel</button>
+            </div>
+        </form>
+    </section>
+</div>
