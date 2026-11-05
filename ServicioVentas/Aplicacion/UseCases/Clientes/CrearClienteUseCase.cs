@@ -1,18 +1,24 @@
-﻿using ServicioVentas.Aplicacion.Modelos;
+using ServicioVentas.Aplicacion.Modelos;
 using ServicioVentas.Dominio.Entidades;
 using ServicioVentas.Dominio.Factories;
 using ServicioVentas.Dominio.Puertos;
-using System.Text.RegularExpressions;
 
-namespace ServicioVentas.Aplicacion.Servicios
+namespace ServicioVentas.Aplicacion.UseCases.Clientes
 {
     /// <summary>
-    /// Caso de uso de clientes. Permite dar de alta un cliente desde el
-    /// propio flujo de venta (sin abandonar la pantalla) y consultar el
-    /// catálogo de clientes activos. El cliente no tiene credenciales: el
-    /// empleado en sesión queda registrado como responsable del alta.
+    /// Caso de uso: dar de alta un cliente desde el flujo de venta. Valida
+    /// los datos, evita CI duplicados y registra al empleado en sesión como
+    /// responsable del alta.
     /// </summary>
-    public class ServicioCliente
+    public interface ICrearClienteUseCase
+    {
+        Task<ResultadoCliente> CrearClienteAsync(
+            string ci,
+            string nombre,
+            string apellido);
+    }
+
+    public class CrearClienteUseCase : ICrearClienteUseCase
     {
         private const string MensajeRevisarDatos =
             "Revise los datos señalados e inténtelo nuevamente.";
@@ -22,7 +28,7 @@ namespace ServicioVentas.Aplicacion.Servicios
         private readonly IContextoUsuario _contextoUsuario;
         private IClienteRepository? _repositorio;
 
-        public ServicioCliente(
+        public CrearClienteUseCase(
             RepositoryCreator<IClienteRepository> creadorRepositorio,
             IContextoUsuario contextoUsuario)
         {
@@ -33,26 +39,7 @@ namespace ServicioVentas.Aplicacion.Servicios
         private IClienteRepository Repositorio =>
             _repositorio ??= _creadorRepositorio.CreateRepository();
 
-        public async Task<List<Cliente>> ListarAsync()
-        {
-            return await Repositorio.ObtenerTodosAsync();
-        }
-
-        public async Task<List<Cliente>> BuscarAsync(string termino)
-        {
-            string buscado = NormalizarTexto(termino);
-
-            return buscado.Length == 0
-                ? new List<Cliente>()
-                : await Repositorio.BuscarAsync(buscado);
-        }
-
-        public async Task<Cliente?> ObtenerPorIdAsync(int idCliente)
-        {
-            return await Repositorio.ObtenerPorIdAsync(idCliente);
-        }
-
-        public async Task<ResultadoCliente> CrearAsync(
+        public async Task<ResultadoCliente> CrearClienteAsync(
             string ci,
             string nombre,
             string apellido)
@@ -67,9 +54,9 @@ namespace ServicioVentas.Aplicacion.Servicios
                 };
             }
 
-            nombre = NormalizarTexto(nombre);
-            apellido = NormalizarTexto(apellido);
-            ci = NormalizarCi(ci);
+            nombre = ClienteNormalizador.Texto(nombre);
+            apellido = ClienteNormalizador.Texto(apellido);
+            ci = ClienteNormalizador.Ci(ci);
 
             Dictionary<string, string> errores =
                 _validador.Validar(ci, nombre, apellido);
@@ -109,18 +96,6 @@ namespace ServicioVentas.Aplicacion.Servicios
                 Mensaje = "Cliente registrado correctamente.",
                 Cliente = cliente
             };
-        }
-
-        // Quita espacios sobrantes: "  Ana   María " -> "Ana María".
-        private static string NormalizarTexto(string? texto)
-        {
-            return Regex.Replace(texto?.Trim() ?? string.Empty, @"\s+", " ");
-        }
-
-        // Quita espacios y pasa a mayúsculas: "1234567 - 1a" -> "1234567-1A".
-        private static string NormalizarCi(string? ci)
-        {
-            return Regex.Replace(ci ?? string.Empty, @"\s", string.Empty).ToUpperInvariant();
         }
     }
 }

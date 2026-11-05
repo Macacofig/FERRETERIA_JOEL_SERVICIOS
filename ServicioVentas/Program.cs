@@ -1,4 +1,7 @@
 using ServicioVentas.Aplicacion.Servicios;
+using ServicioVentas.Aplicacion.UseCases.Clientes;
+using ServicioVentas.Aplicacion.UseCases.Stock;
+using ServicioVentas.Aplicacion.UseCases.Ventas;
 using ServicioVentas.Dominio.Factories;
 using ServicioVentas.Dominio.Puertos;
 using ServicioVentas.Infraestructura;
@@ -114,9 +117,80 @@ builder.Services.AddScoped<RepositoryCreator<IInventarioRepository>, InventarioR
 builder.Services.AddScoped<RepositoryCreator<ICategoriaRepository>, CategoriaRepositoryCreator>();
 builder.Services.AddScoped<RepositoryCreator<IEmpleadoRepository>, EmpleadoRepositoryCreator>();
 
-// Servicios de aplicación (fachadas de ventas)
-builder.Services.AddScoped<ServicioCliente>();
+// Casos de uso de clientes
+builder.Services.AddScoped<ListarClientesUseCase>();
+builder.Services.AddScoped<BuscarClientesUseCase>();
+builder.Services.AddScoped<ObtenerClienteUseCase>();
+builder.Services.AddScoped<CrearClienteUseCase>();
+
+// Casos de uso de stock (lógica del subsistema de inventario)
+builder.Services.AddScoped<ListarProductosActivosUseCase>();
+builder.Services.AddScoped<ObtenerProductoParaVentaUseCase>();
+builder.Services.AddScoped<ObtenerProductosPorIdsUseCase>();
+builder.Services.AddScoped<DescontarStockUseCase>();
+builder.Services.AddScoped<ReponerStockUseCase>();
+builder.Services.AddScoped<MapearLineasVentaUseCase>();
+
+// Casos de uso de ventas
+builder.Services.AddScoped<BuscarProductosUseCase>();
+builder.Services.AddScoped<ListarProductosUseCase>();
+builder.Services.AddScoped<ObtenerProductoUseCase>();
+builder.Services.AddScoped<CalcularLineaVentaUseCase>();
+builder.Services.AddScoped<CalcularResumenVentaUseCase>();
+builder.Services.AddScoped<RegistrarVentaUseCase>();
+builder.Services.AddScoped<ObtenerComprobanteUseCase>();
+builder.Services.AddScoped<ListarVentasUseCase>();
+builder.Services.AddScoped<ObtenerVentaUseCase>();
+builder.Services.AddScoped<AnularVentaUseCase>();
+
+// Contratos de casos de uso de clientes
+builder.Services.AddScoped<IListarClientesUseCase>(
+    sp => sp.GetRequiredService<ListarClientesUseCase>());
+builder.Services.AddScoped<IBuscarClientesUseCase>(
+    sp => sp.GetRequiredService<BuscarClientesUseCase>());
+builder.Services.AddScoped<IObtenerClienteUseCase>(
+    sp => sp.GetRequiredService<ObtenerClienteUseCase>());
+builder.Services.AddScoped<ICrearClienteUseCase>(
+    sp => sp.GetRequiredService<CrearClienteUseCase>());
+
+// Contratos de stock: los implementa la fachada del subsistema
 builder.Services.AddScoped<FachadaActualizacionStock>();
+builder.Services.AddScoped<IListarProductosActivosUseCase>(
+    sp => sp.GetRequiredService<FachadaActualizacionStock>());
+builder.Services.AddScoped<IObtenerProductoParaVentaUseCase>(
+    sp => sp.GetRequiredService<FachadaActualizacionStock>());
+builder.Services.AddScoped<IObtenerProductosPorIdsUseCase>(
+    sp => sp.GetRequiredService<FachadaActualizacionStock>());
+builder.Services.AddScoped<IDescontarStockUseCase>(
+    sp => sp.GetRequiredService<FachadaActualizacionStock>());
+builder.Services.AddScoped<IReponerStockUseCase>(
+    sp => sp.GetRequiredService<FachadaActualizacionStock>());
+builder.Services.AddScoped<IMapearLineasVentaUseCase>(
+    sp => sp.GetRequiredService<FachadaActualizacionStock>());
+
+// Contratos de casos de uso de ventas
+builder.Services.AddScoped<IBuscarProductosUseCase>(
+    sp => sp.GetRequiredService<BuscarProductosUseCase>());
+builder.Services.AddScoped<IListarProductosUseCase>(
+    sp => sp.GetRequiredService<ListarProductosUseCase>());
+builder.Services.AddScoped<IObtenerProductoUseCase>(
+    sp => sp.GetRequiredService<ObtenerProductoUseCase>());
+builder.Services.AddScoped<ICalcularLineaVentaUseCase>(
+    sp => sp.GetRequiredService<CalcularLineaVentaUseCase>());
+builder.Services.AddScoped<ICalcularResumenVentaUseCase>(
+    sp => sp.GetRequiredService<CalcularResumenVentaUseCase>());
+builder.Services.AddScoped<IRegistrarVentaUseCase>(
+    sp => sp.GetRequiredService<RegistrarVentaUseCase>());
+builder.Services.AddScoped<IObtenerComprobanteUseCase>(
+    sp => sp.GetRequiredService<ObtenerComprobanteUseCase>());
+builder.Services.AddScoped<IListarVentasUseCase>(
+    sp => sp.GetRequiredService<ListarVentasUseCase>());
+builder.Services.AddScoped<IObtenerVentaUseCase>(
+    sp => sp.GetRequiredService<ObtenerVentaUseCase>());
+builder.Services.AddScoped<IAnularVentaUseCase>(
+    sp => sp.GetRequiredService<AnularVentaUseCase>());
+
+// Fachadas consumidas por los controladores. Implementan los casos de uso.
 builder.Services.AddScoped<FachadaVenta>();
 builder.Services.AddScoped<FachadaAnulacion>();
 

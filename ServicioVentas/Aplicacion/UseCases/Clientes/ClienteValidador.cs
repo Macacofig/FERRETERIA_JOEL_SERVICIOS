@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
 
-namespace ServicioVentas.Aplicacion.Servicios
+namespace ServicioVentas.Aplicacion.UseCases.Clientes
 {
     /// <summary>
     /// Valida los datos del cliente que se registra desde la pantalla de
