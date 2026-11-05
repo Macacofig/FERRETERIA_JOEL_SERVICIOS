@@ -26,6 +26,7 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
         private readonly ServicioCambioContrasena _cambioContrasena;
         private readonly ServicioBitacora _bitacora;
         private readonly IRevocacionTokens _revocacion;
+        private readonly IEmisorToken _jwt;
         private readonly ILogger<UsuariosController> _logger;
         private readonly IContextoUsuario _contextoUsuario;
 
@@ -37,6 +38,7 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
             ServicioCambioContrasena cambioContrasena,
             ServicioBitacora bitacora,
             IRevocacionTokens revocacion,
+            IEmisorToken jwt,
             ILogger<UsuariosController> logger,
             IContextoUsuario contextoUsuario)
         {
@@ -47,6 +49,7 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
             _cambioContrasena = cambioContrasena;
             _bitacora = bitacora;
             _revocacion = revocacion;
+            _jwt = jwt;
             _logger = logger;
             _contextoUsuario = contextoUsuario;
         }
@@ -365,11 +368,34 @@ namespace FERRETERIA__Joel.ServicioUsuarios.Controllers
                 });
             }
 
-            // La contraseña anterior deja de ser válida y las sesiones abiertas
-            // con ella se invalidan.
+            // La contraseña anterior deja de ser válida y las demás sesiones
+            // abiertas se invalidan. La sesión que realizó el cambio recibe un
+            // token nuevo con la generación vigente para no tener que volver a
+            // iniciar sesión.
             _revocacion.RevocarUsuario(id);
 
-            return Ok(RespuestaApi<object>.Ok(new { }, resultado.Mensaje));
+            Empleado? empleado = await _personal.ObtenerPorIdAsync(id);
+
+            if (empleado is null)
+            {
+                return Ok(RespuestaApi<object>.Ok(new { }, resultado.Mensaje));
+            }
+
+            (string token, DateTime expira) = _jwt.Emitir(
+                empleado.IdEmpleado,
+                $"{empleado.Nombre} {empleado.Apellido}".Trim(),
+                empleado.CorreoElectronico ?? string.Empty,
+                RolesSistema.Normalizar(empleado.Rol),
+                empleado.NombreUsuario);
+
+            return Ok(RespuestaApi<object>.Ok(
+                new
+                {
+                    Token = token,
+                    Expira = expira,
+                    Usuario = MapeosDto.AUsuario(empleado)
+                },
+                resultado.Mensaje));
         }
 
         // ===================== Auxiliares =====================

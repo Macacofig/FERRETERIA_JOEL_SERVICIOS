@@ -12,7 +12,7 @@
     <section class="fj-page-head">
         <p class="fj-eyebrow">Cuenta · Seguridad</p>
         <h1>Cambiar contraseña</h1>
-        <p class="fj-page-sub">Ingrese su contraseña actual y defina una nueva. Al guardar se cerrarán sus sesiones abiertas.</p>
+        <p class="fj-page-sub">Ingrese su contraseña actual y defina una nueva. Al guardar, su sesión actual se mantiene activa y las demás sesiones abiertas se cierran.</p>
     </section>
 
     @if (!string.IsNullOrWhiteSpace(Model.Mensaje))
@@ -50,7 +50,7 @@
                     </button>
                 </div>
                 <span class="fj-form-hint">Mínimo 8 caracteres, con mayúscula, minúscula, número y símbolo. Debe ser distinta de la actual.</span>
-                <span class="fj-form-hint">La nueva contraseña aplicará desde el próximo inicio de sesión.</span>
+                <span class="fj-form-hint">La nueva contraseña se usará en sus próximos inicios de sesión.</span>
                 @if (Model.ErroresCampo.TryGetValue("ContrasenaNueva", out var errorNueva))
                 {
                     <p class="fj-form-error" role="alert">@errorNueva</p>
@@ -74,7 +74,7 @@
         </div>
 
         <div class="fj-form-actions">
-            <a asp-page="/Index" class="fj-btn fj-btn-ghost">Cancelar</a>
+            <a asp-page="/Perfil" class="fj-btn fj-btn-ghost">Volver a mi perfil</a>
             <button type="submit" class="fj-btn fj-btn-primary">Actualizar contraseña</button>
         </div>
     </form>

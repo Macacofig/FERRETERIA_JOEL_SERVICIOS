@@ -129,12 +129,6 @@
 
                             <td class="fj-td-acciones">
                                 <div class="fj-acciones">
-                                    <a class="fj-btn fj-btn-ghost fj-btn-sm"
-                                       asp-page="/PersonalEditar"
-                                       asp-route-id="@empleado.IdEmpleado"
-                                       title="Editar datos del empleado">
-                                        Editar
-                                    </a>
                                     @if (empleado.Estado == EstadoEmpleado.Inactivo)
                                     {
                                         <form method="post"

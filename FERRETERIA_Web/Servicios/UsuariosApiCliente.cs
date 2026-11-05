@@ -204,12 +204,12 @@ namespace FERRETERIA__Joel.Servicios
                 cancelacion);
         }
 
-        public async Task<RespuestaApi<object>> CambiarContrasenaAsync(
+        public async Task<RespuestaApi<CambioContrasenaApiRespuesta>> CambiarContrasenaAsync(
             string? token,
             CambioContrasenaApi solicitud,
             CancellationToken cancelacion = default)
         {
-            return await EnviarAsync<object>(
+            return await EnviarAsync<CambioContrasenaApiRespuesta>(
                 HttpMethod.Post,
                 "api/usuarios/cambiar-contrasena",
                 token,

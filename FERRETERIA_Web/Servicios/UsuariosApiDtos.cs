@@ -111,6 +111,15 @@ namespace FERRETERIA__Joel.Servicios
         public string ConfirmarContrasena { get; set; } = string.Empty;
     }
 
+    public class CambioContrasenaApiRespuesta
+    {
+        public string Token { get; set; } = string.Empty;
+
+        public DateTime Expira { get; set; }
+
+        public UsuarioApi? Usuario { get; set; }
+    }
+
     public class RegistroBitacoraApi
     {
         public string Operacion { get; set; } = string.Empty;

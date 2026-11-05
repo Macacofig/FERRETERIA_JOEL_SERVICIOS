@@ -1,0 +1,108 @@
+@page
+@model FERRETERIA__Joel.Pages.PerfilModel
+@using FERRETERIA__Joel.Dominio.Constantes
+@{
+    ViewData["Title"] = "Mi perfil";
+    ViewData["ActiveMenu"] = "Perfil";
+
+    string inicial = string.IsNullOrWhiteSpace(Model.Usuario?.Nombre)
+        ? "U"
+        : Model.Usuario!.Nombre.Trim()[..1].ToUpperInvariant();
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/productos.css" asp-append-version="true" />
+}
+
+<div class="fj-container fj-page-products">
+
+    <section class="fj-page-head">
+        <p class="fj-eyebrow">Cuenta · Perfil</p>
+        <h1>Mi perfil</h1>
+        <p class="fj-page-sub">Consulte los datos de su cuenta y gestione su contraseña.</p>
+    </section>
+
+    @if (TempData["Mensaje"] != null)
+    {
+        <div class="fj-alert fj-alert-success" role="status">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>
+            <span>@TempData["Mensaje"]</span>
+        </div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(Model.MensajeError))
+    {
+        <div class="fj-alert" role="alert">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
+            <span>@Model.MensajeError</span>
+        </div>
+    }
+
+    @if (Model.Usuario is not null)
+    {
+        <section class="fj-card fj-perfil" aria-label="Datos de mi cuenta">
+            <div class="fj-perfil-cabecera">
+                <span class="fj-perfil-avatar" aria-hidden="true">@inicial</span>
+
+                <div class="fj-perfil-identidad">
+                    <h2>@Model.Usuario.NombreCompleto</h2>
+                    <p>
+                        @(string.IsNullOrWhiteSpace(Model.Usuario.NombreUsuario)
+                            ? "Sin nombre de usuario"
+                            : Model.Usuario.NombreUsuario)
+                        · @Model.Usuario.Rol
+                    </p>
+
+                    @switch (Model.Usuario.Estado)
+                    {
+                        case EstadoEmpleado.Activo:
+                            <span class="fj-pill" style="--pill: var(--success);">Activo</span>
+                            break;
+                        case EstadoEmpleado.Inactivo:
+                            <span class="fj-pill" style="--pill: var(--texto-ter);">Inactivo</span>
+                            break;
+                        default:
+                            <span class="fj-pill" style="--pill: var(--warning);">Pendiente</span>
+                            break;
+                    }
+                </div>
+            </div>
+
+            <dl class="fj-perfil-datos">
+                <div>
+                    <dt>Nombre completo</dt>
+                    <dd>@Model.Usuario.NombreCompleto</dd>
+                </div>
+                <div>
+                    <dt>Nombre de usuario</dt>
+                    <dd>@(string.IsNullOrWhiteSpace(Model.Usuario.NombreUsuario) ? "—" : Model.Usuario.NombreUsuario)</dd>
+                </div>
+                <div>
+                    <dt>Correo electrónico</dt>
+                    <dd>@(string.IsNullOrWhiteSpace(Model.Usuario.CorreoElectronico) ? "—" : Model.Usuario.CorreoElectronico)</dd>
+                </div>
+                <div>
+                    <dt>Teléfono</dt>
+                    <dd>@(string.IsNullOrWhiteSpace(Model.Usuario.Telefono) ? "—" : Model.Usuario.Telefono)</dd>
+                </div>
+                <div>
+                    <dt>Rol</dt>
+                    <dd>@Model.Usuario.Rol</dd>
+                </div>
+                <div>
+                    <dt>Fecha de alta</dt>
+                    <dd>@Model.Usuario.FechaRegistro.ToString("dd/MM/yyyy")</dd>
+                </div>
+            </dl>
+
+            <div class="fj-perfil-acciones">
+                <a class="fj-btn fj-btn-primary" asp-page="/CambiarContrasena">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
+                    Cambiar contraseña
+                </a>
+                <a class="fj-btn fj-btn-ghost" asp-page="/Index">Volver al inicio</a>
+            </div>
+        </section>
+    }
+
+</div>

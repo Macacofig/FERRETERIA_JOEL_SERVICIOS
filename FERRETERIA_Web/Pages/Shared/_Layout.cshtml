@@ -152,27 +152,6 @@
                             </li>
                         }
 
-                        <!-- Cuenta: disponible para cualquier usuario autenticado -->
-                        <li class="fj-menu-item fj-dropdown">
-                            <button class="fj-menu-link fj-dropdown-toggle" type="button"
-                                    aria-expanded="false">
-                                <span>Mi cuenta</span>
-                                <svg class="fj-dropdown-chevron" viewBox="0 0 24 24"
-                                     fill="none" stroke="currentColor" stroke-width="1.8"
-                                     stroke-linecap="round" stroke-linejoin="round"
-                                     aria-hidden="true">
-                                    <polyline points="6 9 12 15 18 9" />
-                                </svg>
-                            </button>
-
-                            <div class="fj-dropdown-menu">
-                                <a asp-page="/CambiarContrasena">Cambiar contraseña</a>
-                                @if (User.IsInRole(RolesSistema.Administrador))
-                                {
-                                    <a asp-page="/Bitacora">Bitácora de auditoría</a>
-                                }
-                            </div>
-                        </li>
                     }
                     else
                     {
@@ -183,7 +162,7 @@
                 @if (User.Identity?.IsAuthenticated == true)
                 {
                     <div class="fj-nav-side">
-                        <a class="fj-userchip" href="#" aria-label="Perfil de usuario">
+                        <a class="fj-userchip" asp-page="/Perfil" aria-label="Ver mi perfil" title="Ver mi perfil">
                             <span class="fj-userchip-avatar" aria-hidden="true">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
                             </span>

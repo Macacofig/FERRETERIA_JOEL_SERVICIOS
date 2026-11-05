@@ -2548,3 +2548,98 @@ body.fj-modal-open {
 .fj-password.is-visible .fj-password-toggle .fj-eye-off {
     display: block;
 }
+
+/* ============================================================
+   Perfil de la cuenta
+   ============================================================ */
+
+.fj-perfil {
+    padding: 2rem;
+}
+
+.fj-perfil-cabecera {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 0.0625rem solid var(--borde);
+}
+
+.fj-perfil-avatar {
+    width: 4.5rem;
+    height: 4.5rem;
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--amarillo-bg);
+    border: 0.0625rem solid var(--amarillo-borde);
+    color: var(--amarillo-texto);
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.fj-perfil-identidad h2 {
+    margin: 0 0 0.25rem;
+    font-size: 1.35rem;
+    line-height: 1.2;
+}
+
+.fj-perfil-identidad p {
+    margin: 0 0 0.5rem;
+    color: var(--texto-ter);
+    font-size: 0.9rem;
+}
+
+.fj-perfil-datos {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.25rem 2rem;
+    margin: 1.75rem 0;
+}
+
+    .fj-perfil-datos div {
+        min-width: 0;
+    }
+
+    .fj-perfil-datos dt {
+        margin-bottom: 0.25rem;
+        color: var(--texto-ter);
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+    }
+
+    .fj-perfil-datos dd {
+        margin: 0;
+        color: var(--texto);
+        font-size: 0.95rem;
+        font-weight: 600;
+        overflow-wrap: anywhere;
+    }
+
+.fj-perfil-acciones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    padding-top: 1.5rem;
+    border-top: 0.0625rem solid var(--borde);
+}
+
+    .fj-perfil-acciones .fj-btn svg {
+        width: 1rem;
+        height: 1rem;
+    }
+
+@media (max-width: 40rem) {
+    .fj-perfil {
+        padding: 1.25rem;
+    }
+
+    .fj-perfil-datos {
+        grid-template-columns: 1fr;
+    }
+}

@@ -54,7 +54,7 @@ namespace FERRETERIA__Joel.Pages
 
             try
             {
-                RespuestaApi<object> respuesta =
+                RespuestaApi<CambioContrasenaApiRespuesta> respuesta =
                     await _api.CambiarContrasenaAsync(token, Solicitud);
 
                 if (!respuesta.Exitoso)
@@ -66,17 +66,35 @@ namespace FERRETERIA__Joel.Pages
                     return Page();
                 }
 
-                // El servicio revoca los tokens previos: la sesión actual ya no
-                // sirve. Se cierra ordenadamente y se pide un login nuevo.
-                HttpContext.Session.Remove(UsuariosApiCliente.ClaveSesionJwt);
+                string? nuevoToken = respuesta.Datos?.Token;
 
-                await HttpContext.SignOutAsync(
-                    CookieAuthenticationDefaults.AuthenticationScheme);
+                if (string.IsNullOrWhiteSpace(nuevoToken))
+                {
+                    // El servicio no pudo renovar la sesión: se cierra por
+                    // seguridad y se pide un inicio de sesión nuevo.
+                    HttpContext.Session.Remove(UsuariosApiCliente.ClaveSesionJwt);
 
-                TempData["Mensaje"] =
-                    "Contraseña actualizada. Inicie sesión con su nueva contraseña.";
+                    await HttpContext.SignOutAsync(
+                        CookieAuthenticationDefaults.AuthenticationScheme);
 
-                return RedirectToPage("/Login");
+                    TempData["Mensaje"] =
+                        "Contraseña actualizada. Inicie sesión nuevamente.";
+
+                    return RedirectToPage("/Login");
+                }
+
+                // El servicio revocó los tokens anteriores y devolvió uno
+                // nuevo con la generación vigente: la sesión actual continúa
+                // activa sin pasar por el login.
+                HttpContext.Session.SetString(
+                    UsuariosApiCliente.ClaveSesionJwt,
+                    nuevoToken);
+
+                TempData["Mensaje"] = string.IsNullOrWhiteSpace(respuesta.Mensaje)
+                    ? "Contraseña actualizada correctamente. Su sesión continúa activa."
+                    : respuesta.Mensaje;
+
+                return RedirectToPage("/Perfil");
             }
             catch (Exception ex)
             {

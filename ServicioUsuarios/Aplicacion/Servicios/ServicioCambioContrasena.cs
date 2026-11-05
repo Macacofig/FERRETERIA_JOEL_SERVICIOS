@@ -138,7 +138,7 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
                     : idEmpleado);
 
             return ResultadoCambioContrasena.Ok(
-                "Contraseña actualizada. Use la nueva contraseña en su próximo inicio de sesión.");
+                "Contraseña actualizada correctamente. Su sesión actual continúa activa.");
         }
 
     }
