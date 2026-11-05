@@ -49,7 +49,7 @@
                 </div>
                 <div class="comprobante-datos">
                     <span>Comprobante @venta.CodigoVenta</span>
-                    <span>@venta.FechaRegistro.ToString("dd/MM/yyyy HH:mm")</span>
+                    <span>@venta.FechaRegistro.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</span>
                     <span class="comprobante-estado @(registrada ? "es-registrada" : "es-anulada")">
                         @VentaComprobanteModel.ImprimirEstado(venta.EstadoVenta)
                     </span>
@@ -81,7 +81,7 @@
                 </div>
                 <div>
                     <dt>Fecha de emisión</dt>
-                    <dd>@venta.FechaRegistro.ToString("dd/MM/yyyy HH:mm")</dd>
+                    <dd>@venta.FechaRegistro.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</dd>
                 </div>
                 <div>
                     <dt>Estado</dt>
@@ -130,7 +130,7 @@
                     <span>Motivo: @venta.MotivoAnulacion</span>
                     <span>
                         Anulada el
-                        @venta.FechaAnulacion?.ToString("dd/MM/yyyy HH:mm")
+                        @venta.FechaAnulacion?.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
                         @if (!string.IsNullOrWhiteSpace(Model.Comprobante.NombreEmpleadoAnulacion))
                         {
                             @:por @FERRETERIA__Joel.Dominio.Utilidades.NombreAbreviado.De(Model.Comprobante.NombreEmpleadoAnulacion)
@@ -143,7 +143,7 @@
                 Documento generado por el sistema de Ferretería Joel.
                 @if (!registrada)
                 {
-                    @:Venta anulada el @venta.FechaAnulacion?.ToString("dd/MM/yyyy HH:mm").
+                    @:Venta anulada el @venta.FechaAnulacion?.ToLocalTime().ToString("dd/MM/yyyy HH:mm").
                 }
             </p>
         </section>

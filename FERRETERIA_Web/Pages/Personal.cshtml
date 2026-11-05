@@ -109,7 +109,7 @@
                                 }
                             </td>
                             <td class="fj-td-secundario">
-                                @empleado.FechaRegistro.ToString("dd/MM/yyyy")
+                                @empleado.FechaRegistro.ToLocalTime().ToString("dd/MM/yyyy")
                             </td>
 
                             <td class="fj-td-estado">
