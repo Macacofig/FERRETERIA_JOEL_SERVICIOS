@@ -342,27 +342,25 @@
                     }
                 });
 
+                // Convertir fechas UTC (data-utc) a hora local del cliente (ej. Bolivia UTC-4)
+                document.querySelectorAll('.fecha-utc').forEach(function (el) {
+                    var utc = el.getAttribute('data-utc');
+                    if (utc) {
+                        try {
+                            var d = new Date(utc);
+                            if (!isNaN(d.getTime())) {
+                                el.textContent = d.toLocaleString('es-BO', {
+                                    day: '2-digit',
+                                    month: '2-digit',
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                });
+                            }
+                        } catch (e) { /* ignora si no se puede parsear */ }
+                    }
+                });
             });
-
-            // Convertir fechas UTC (data-utc) a hora local del cliente (ej. Bolivia UTC-4)
-            document.querySelectorAll('.fecha-utc').forEach(function (el) {
-                var utc = el.getAttribute('data-utc');
-                if (utc) {
-                    try {
-                        var d = new Date(utc);
-                        if (!isNaN(d.getTime())) {
-                            el.textContent = d.toLocaleString('es-BO', {
-                                day: '2-digit',
-                                month: '2-digit',
-                                year: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                            });
-                        }
-                    } catch (e) { /* ignora si no se puede parsear */ }
-                }
-            });
-        });
     </script>
 
     @await RenderSectionAsync("Scripts", required: false)
