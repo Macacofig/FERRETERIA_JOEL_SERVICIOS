@@ -82,7 +82,8 @@ namespace ServicioVentas.Infraestructura.Repositorios
                     MetodoPago,
                     EstadoPago,
                     MontoTotal,
-                    IdEmpleadoResponsable
+                    IdEmpleadoResponsable,
+                    FechaRegistro
                 )
                 VALUES
                 (
@@ -91,7 +92,8 @@ namespace ServicioVentas.Infraestructura.Repositorios
                     @metodoPago,
                     @estadoPago,
                     @montoTotal,
-                    @idEmpleadoResponsable
+                    @idEmpleadoResponsable,
+                    @fechaRegistro
                 )";
 
             using MySqlCommand command = await CrearComandoAsync(query);
@@ -105,6 +107,10 @@ namespace ServicioVentas.Infraestructura.Repositorios
             command.Parameters.AddWithValue(
                 "@idEmpleadoResponsable",
                 venta.IdEmpleadoResponsable);
+
+            command.Parameters.AddWithValue(
+                "@fechaRegistro",
+                venta.FechaRegistro);
 
             await command.ExecuteNonQueryAsync();
 

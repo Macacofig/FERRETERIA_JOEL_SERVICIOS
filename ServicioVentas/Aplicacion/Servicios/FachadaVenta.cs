@@ -325,7 +325,8 @@ namespace ServicioVentas.Aplicacion.Servicios
                     MetodoPago = metodoPago,
                     EstadoPago = estadoPago,
                     MontoTotal = Math.Round(total, 2),
-                    IdEmpleadoResponsable = idEmpleado
+                    IdEmpleadoResponsable = idEmpleado,
+                    FechaRegistro = DateTime.UtcNow
                 };
 
                 int idVenta = await Ventas.InsertarAsync(venta);
