@@ -96,7 +96,7 @@ namespace ServicioVentas.Aplicacion.Servicios
                 Nombre = nombre,
                 Apellido = apellido,
                 Estado = 1,
-                FechaRegistro = DateTime.UtcNow,
+                FechaRegistro = DateTime.Now,
                 IdEmpleadoResponsable = idEmpleado
             };
 

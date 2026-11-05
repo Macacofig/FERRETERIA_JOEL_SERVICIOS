@@ -159,7 +159,7 @@ app.MapGet("/health", () => Results.Ok(new
 {
     servicio = "ServicioVentas",
     estado = "saludable",
-    fecha = DateTime.UtcNow
+    fecha = DateTime.Now
 }));
 
 app.Run();
