@@ -13,7 +13,7 @@
     <section class="fj-page-head">
         <p class="fj-eyebrow">Cuenta · Empleado</p>
         <h1>Iniciar sesión</h1>
-        <p class="fj-page-sub">Acceso al panel interno. Ingrese con su correo o nombre de usuario y contraseña.</p>
+        <p class="fj-page-sub">Acceso al panel interno. Ingrese con su correo y contraseña.</p>
     </section>
 
     @if (Model.Mensaje != null)
@@ -29,8 +29,8 @@
     <form method="post" class="fj-card fj-form" novalidate>
         <div class="fj-form-grid">
             <div class="fj-form-field fj-form-field--full">
-                <label class="fj-form-label" asp-for="Solicitud.CorreoElectronico">Correo o usuario</label>
-                <input class="fj-input" asp-for="Solicitud.CorreoElectronico" type="text" maxlength="150" placeholder="correo@ejemplo.com o mlopez" autocomplete="username" required />
+                <label class="fj-form-label" asp-for="Solicitud.CorreoElectronico">Correo</label>
+                <input class="fj-input" asp-for="Solicitud.CorreoElectronico" type="text" maxlength="150" placeholder="correo@ejemplo.com" autocomplete="username" required />
             </div>
 
             <div class="fj-form-field fj-form-field--full">

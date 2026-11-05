@@ -3,7 +3,15 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Ferretería Joel</title>
+    @{
+        string tituloPagina = ViewData["Title"] as string ?? string.Empty;
+        string tituloDocumento =
+            string.IsNullOrWhiteSpace(tituloPagina)
+            || tituloPagina.Equals("Ferretería Joel", StringComparison.OrdinalIgnoreCase)
+                ? "Ferretería Joel"
+                : $"{tituloPagina} - Ferretería Joel";
+    }
+    <title>@tituloDocumento</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="icon" type="image/png" href="~/favicon.png" asp-append-version="true" />
@@ -21,7 +29,6 @@
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" /></svg>
                 </span>
                 <span class="fj-brand-name">FERRETERÍA <strong>JOEL</strong></span>
-                <span class="fj-header-atendido">Ferretería Joel</span>
             </a>
 
             <nav class="fj-nav" id="fjNav" aria-label="Navegación principal">
