@@ -1,7 +1,7 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 
-namespace FERRETERIA__Joel.Infraestructura.Servicios
+namespace FERRETERIA__Joel.Servicios
 {
     /// <summary>
     /// Protección del token de activación que viaja en el enlace. Usa el mismo

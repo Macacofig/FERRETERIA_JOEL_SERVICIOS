@@ -1,4 +1,4 @@
-﻿namespace FERRETERIA__Joel.Infraestructura.Servicios
+﻿namespace FERRETERIA__Joel.Servicios
 {
     /// <summary>
     /// Parámetros de Argon2id (variante híbrida) usados por el hasheador.

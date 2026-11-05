@@ -4,7 +4,7 @@ using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using FERRETERIA__Joel.Dominio.Puertos;
 
-namespace FERRETERIA__Joel.Infraestructura.Servicios
+namespace FERRETERIA__Joel.Servicios
 {
     /// <summary>
     /// Emite los JWT de la API. El token solo contiene datos de identidad

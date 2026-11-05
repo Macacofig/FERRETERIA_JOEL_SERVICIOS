@@ -1,6 +1,7 @@
 ﻿using FERRETERIA__Joel.Aplicacion.Modelos;
 using FERRETERIA__Joel.Dominio.Entidades;
 using FERRETERIA__Joel.Dominio.Puertos;
+using FERRETERIA__Joel.Infraestructura.Factories;
 using FERRETERIA__Joel.Dominio.Utilidades;
 
 namespace FERRETERIA__Joel.Aplicacion.Servicios
@@ -32,22 +33,26 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
         private static readonly string MensajePolitica =
             "La nueva contraseña debe tener entre 8 y 64 caracteres e incluir al menos una mayúscula, una minúscula, un número y un símbolo.";
 
-        private readonly IRepositoryEmpleado _repositorio;
+        private readonly RepositoryCreator<IRepositoryEmpleado> _creadorRepositorio;
         private readonly IHasheadorContrasena _hasheador;
         private readonly ICredencialesValidaciones _validaciones;
         private readonly IContextoUsuario _contextoUsuario;
+        private IRepositoryEmpleado? _repositorio;
 
         public ServicioCambioContrasena(
-            IRepositoryEmpleado repositorio,
+            RepositoryCreator<IRepositoryEmpleado> creadorRepositorio,
             IHasheadorContrasena hasheador,
             ICredencialesValidaciones validaciones,
             IContextoUsuario contextoUsuario)
         {
-            _repositorio = repositorio;
+            _creadorRepositorio = creadorRepositorio;
             _hasheador = hasheador;
             _validaciones = validaciones;
             _contextoUsuario = contextoUsuario;
         }
+
+        private IRepositoryEmpleado Repositorio =>
+            _repositorio ??= _creadorRepositorio.CreateRepository();
 
         public async Task<ResultadoCambioContrasena> CambiarAsync(
             int idEmpleado,
@@ -94,7 +99,7 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
             }
 
             Empleado? empleado =
-                await _repositorio.ObtenerPorIdConCredencialesAsync(idEmpleado);
+                await Repositorio.ObtenerPorIdConCredencialesAsync(idEmpleado);
 
             if (empleado is null)
             {
@@ -130,7 +135,7 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
                 };
             }
 
-            await _repositorio.ActualizarContrasenaAsync(
+            await Repositorio.ActualizarContrasenaAsync(
                 idEmpleado,
                 _hasheador.Hashear(nueva),
                 _contextoUsuario.IdEmpleado > 0

@@ -2,6 +2,7 @@
 using FERRETERIA__Joel.Dominio.Constantes;
 using FERRETERIA__Joel.Dominio.Entidades;
 using FERRETERIA__Joel.Dominio.Puertos;
+using FERRETERIA__Joel.Infraestructura.Factories;
 
 namespace FERRETERIA__Joel.Aplicacion.Servicios
 {
@@ -20,25 +21,29 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
 
         private const int MaximoSufijoNombreUsuario = 9999;
 
-        private readonly IRepositoryEmpleado _repositorio;
+        private readonly RepositoryCreator<IRepositoryEmpleado> _creadorRepositorio;
         private readonly RegistroCredencialesValidador _validador;
         private readonly IEnviadorCorreo _enviadorCorreo;
         private readonly IConstructorEnlaceActivacion _constructorEnlace;
         private readonly IContextoUsuario _contextoUsuario;
+        private IRepositoryEmpleado? _repositorio;
 
         public ServicioRegistroEmpleado(
-            IRepositoryEmpleado repositorio,
+            RepositoryCreator<IRepositoryEmpleado> creadorRepositorio,
             RegistroCredencialesValidador validador,
             IEnviadorCorreo enviadorCorreo,
             IConstructorEnlaceActivacion constructorEnlace,
             IContextoUsuario contextoUsuario)
         {
-            _repositorio = repositorio;
+            _creadorRepositorio = creadorRepositorio;
             _validador = validador;
             _enviadorCorreo = enviadorCorreo;
             _constructorEnlace = constructorEnlace;
             _contextoUsuario = contextoUsuario;
         }
+
+        private IRepositoryEmpleado Repositorio =>
+            _repositorio ??= _creadorRepositorio.CreateRepository();
 
         public async Task<ResultadoRegistro> RegistrarAsync(
             IRegistroCredenciales solicitud)
@@ -48,7 +53,7 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
 
             if (!erroresCampo.ContainsKey(
                     nameof(IRegistroCredenciales.CorreoElectronico))
-                && await _repositorio.ExistePorCorreoAsync(
+                && await Repositorio.ExistePorCorreoAsync(
                     solicitud.CorreoElectronico.Trim()))
             {
                 erroresCampo[
@@ -94,7 +99,7 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
                 FechaCreacion = DateTime.Now
             };
 
-            int id = await _repositorio.InsertarAsync(empleado);
+            int id = await Repositorio.InsertarAsync(empleado);
 
             string enlace = _constructorEnlace.Construir(token);
 
@@ -124,7 +129,7 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
             int idEmpleado)
         {
             Empleado? empleado =
-                await _repositorio.ObtenerPorIdSinCredencialesAsync(idEmpleado);
+                await Repositorio.ObtenerPorIdSinCredencialesAsync(idEmpleado);
 
             if (empleado is null)
             {
@@ -161,7 +166,7 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
 
             string token = GeneradorTokenActivacion.Generar();
 
-            await _repositorio.ReasignarTokenActivacionAsync(
+            await Repositorio.ReasignarTokenActivacionAsync(
                 empleado.IdEmpleado,
                 token,
                 DateTime.Now.Add(VigenciaToken));
@@ -204,7 +209,7 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
             }
 
             Empleado? empleado =
-                await _repositorio.ObtenerPorCorreoSinCredencialesAsync(
+                await Repositorio.ObtenerPorCorreoSinCredencialesAsync(
                     correo.Trim());
 
             if (empleado is null)
@@ -246,7 +251,7 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
             }
 
             Empleado? empleado =
-                await _repositorio.ObtenerPorCorreoSinCredencialesAsync(
+                await Repositorio.ObtenerPorCorreoSinCredencialesAsync(
                     correo.Trim());
 
             return empleado is not null
@@ -258,7 +263,7 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
         /// </summary>
         public async Task<List<Empleado>> ObtenerPendientesAsync()
         {
-            return await _repositorio.ObtenerPendientesActivacionAsync();
+            return await Repositorio.ObtenerPendientesActivacionAsync();
         }
 
         private async Task<string> GenerarNombreUsuarioDisponibleAsync(
@@ -274,7 +279,7 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
                 string candidato =
                     GeneradorNombreUsuario.ConSufijo(baseUsuario, sufijo);
 
-                if (!await _repositorio.ExistePorNombreUsuarioAsync(candidato))
+                if (!await Repositorio.ExistePorNombreUsuarioAsync(candidato))
                 {
                     return candidato;
                 }

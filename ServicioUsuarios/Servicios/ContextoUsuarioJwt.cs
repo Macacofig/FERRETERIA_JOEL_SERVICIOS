@@ -1,7 +1,7 @@
 ﻿using System.Security.Claims;
 using FERRETERIA__Joel.Dominio.Puertos;
 
-namespace FERRETERIA__Joel.Infraestructura.Servicios
+namespace FERRETERIA__Joel.Servicios
 {
     /// <summary>
     /// Resuelve la identidad del empleado a partir del JWT validado. Es el

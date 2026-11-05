@@ -1,6 +1,6 @@
 ﻿using FERRETERIA__Joel.Dominio.Puertos;
 
-namespace FERRETERIA__Joel.Infraestructura.Servicios
+namespace FERRETERIA__Joel.Servicios
 {
     /// <summary>
     /// Registro de tokens invalidados antes de su expiración natural.
