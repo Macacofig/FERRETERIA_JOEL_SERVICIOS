@@ -2,16 +2,16 @@ namespace ServicioReportes.Dominio.Puertos;
 
 public interface IReporteVentasRepository
 {
-    Task<IReadOnlyList<ReporteVentaDetalle>> ObtenerDetalleAsync(
-        DateTime desde, DateTime hasta, int? empleadoId, string? estado, CancellationToken cancellationToken = default);
-
-    Task<IReadOnlyList<ReporteVentaResumen>> ObtenerResumenAsync(
-        DateTime desde, DateTime hasta, int? categoriaId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<ProductoEstable>> ObtenerProductosEstablesAsync(
+        ReporteProductoFiltros filtros, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<VentaProducto>> ObtenerVentasPorProductoAsync(
+        ReporteVentaProductoFiltros filtros, CancellationToken cancellationToken = default);
 }
 
-public sealed record ReporteVentaDetalle(
-    int IdVenta, string Codigo, DateTime Fecha, string Cliente, string Empleado,
-    string Estado, decimal MontoTotal);
-
-public sealed record ReporteVentaResumen(
-    string Categoria, int CantidadVendida, decimal TotalVentas);
+public sealed record ReporteProductoFiltros(
+    decimal? PrecioMinimo, decimal? PrecioMaximo, int? CantidadVendidaMinima);
+public sealed record ProductoEstable(
+    string Codigo, string Nombre, decimal CostoUnitario, string Descripcion,
+    string Marca, string Categoria);
+public sealed record ReporteVentaProductoFiltros(DateTime Desde, DateTime Hasta, string MetodoPago);
+public sealed record VentaProducto(string Nombre, int Cantidad, decimal TotalProducto);
