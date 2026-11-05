@@ -1,5 +1,3 @@
-using System.Globalization;
-using System.Net.Http.Headers;
 using FERRETERIA__Joel.Dominio.Constantes;
 using FERRETERIA__Joel.Servicios;
 using Microsoft.AspNetCore.Authorization;
@@ -11,86 +9,174 @@ namespace FERRETERIA__Joel.Pages;
 [Authorize(Roles = RolesSistema.Administrador)]
 public sealed class ReportesModel : PageModel
 {
-    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly ReportesApiCliente _reportes;
     private readonly ILogger<ReportesModel> _logger;
 
-    public ReportesModel(IHttpClientFactory httpClientFactory, ILogger<ReportesModel> logger)
+    public ReportesModel(ReportesApiCliente reportes, ILogger<ReportesModel> logger)
     {
-        _httpClientFactory = httpClientFactory;
+        _reportes = reportes;
         _logger = logger;
     }
 
-    [BindProperty(SupportsGet = true)] public DateTime Desde { get; set; } = DateTime.Today.AddDays(-30);
-    [BindProperty(SupportsGet = true)] public DateTime Hasta { get; set; } = DateTime.Today;
-    [BindProperty(SupportsGet = true)] public int? EmpleadoId { get; set; }
-    [BindProperty(SupportsGet = true)] public string Estado { get; set; } = "Registrada";
-    [BindProperty(SupportsGet = true)] public int? CategoriaId { get; set; }
+    [BindProperty] public decimal? PrecioMinimo { get; set; }
+    [BindProperty] public decimal? PrecioMaximo { get; set; }
+    [BindProperty] public int? CantidadVendidaMinima { get; set; }
+    [BindProperty] public DateTime Desde { get; set; } = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+    [BindProperty] public DateTime Hasta { get; set; } = DateTime.Today;
+    [BindProperty] public string MetodoPago { get; set; } = "Efectivo";
+    public string? Mensaje { get; private set; }
+    public List<ProductoEstableApi> Productos { get; private set; } = [];
+    public List<VentaProductoApi> VentasProducto { get; private set; } = [];
+    public string TortaCss { get; private set; } = "conic-gradient(#4472C4 0)";
 
-    public void OnGet() => ViewData["ActiveMenu"] = "";
+    public void OnGet() => ViewData["ActiveMenu"] = "Reportes";
 
-    public async Task<IActionResult> OnPostDetallePdfAsync()
-        => await DescargarAsync("ventas-detalle/pdf", "application/pdf", $"ventas-detalladas-{DateTime.Now:yyyyMMdd}.pdf",
-            new[] { ObtenerEmpleadoFiltro(), ObtenerEstadoFiltro() });
-
-    public async Task<IActionResult> OnPostDetalleExcelAsync()
-        => await DescargarAsync("ventas-detalle/excel",
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            $"ventas-detalladas-{DateTime.Now:yyyyMMdd}.xlsx",
-            new[] { ObtenerEmpleadoFiltro(), ObtenerEstadoFiltro() });
-
-    public async Task<IActionResult> OnPostResumenPdfAsync()
-        => await DescargarAsync("ventas-resumen/pdf", "application/pdf",
-            $"resumen-ventas-{DateTime.Now:yyyyMMdd}.pdf", new[] { ObtenerCategoriaFiltro() });
-
-    public async Task<IActionResult> OnPostResumenExcelAsync()
-        => await DescargarAsync("ventas-resumen/excel",
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            $"resumen-ventas-{DateTime.Now:yyyyMMdd}.xlsx", new[] { ObtenerCategoriaFiltro() });
-
-    private string? ObtenerEmpleadoFiltro() =>
-        EmpleadoId.HasValue ? $"empleadoId={EmpleadoId.Value}" : null;
-    private string? ObtenerEstadoFiltro() =>
-        string.IsNullOrWhiteSpace(Estado) ? null : $"estado={Uri.EscapeDataString(Estado)}";
-    private string? ObtenerCategoriaFiltro() =>
-        CategoriaId.HasValue ? $"categoriaId={CategoriaId.Value}" : null;
-
-    private async Task<IActionResult> DescargarAsync(
-        string ruta, string contentType, string nombreArchivo, IEnumerable<string?> filtrosExtra)
+    public async Task<IActionResult> OnPostConsultarProductosAsync(CancellationToken cancellationToken)
     {
-        if (Hasta.Date < Desde.Date)
-        {
-            TempData["Mensaje"] = "La fecha hasta debe ser igual o posterior a la fecha desde.";
-            return RedirectToPage();
-        }
-
+        if (!ValidarProductos()) return Page();
         var token = HttpContext.Session.GetString(UsuariosApiCliente.ClaveSesionJwt);
-        if (string.IsNullOrWhiteSpace(token))
-            return RedirectToPage("/Login");
-
+        if (string.IsNullOrWhiteSpace(token)) return RedirectToPage("/Login");
         try
         {
-            var cliente = _httpClientFactory.CreateClient("ReportesApi");
-            cliente.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-            var parametros = new List<string>
+            var resultado = await _reportes.ConsultarProductosAsync(
+                token, PrecioMinimo, PrecioMaximo, CantidadVendidaMinima, cancellationToken);
+            if (!resultado.Exito)
             {
-                $"desde={Desde:yyyy-MM-dd}",
-                $"hasta={Hasta:yyyy-MM-dd}"
-            };
-            parametros.AddRange(filtrosExtra.Where(filtro => !string.IsNullOrWhiteSpace(filtro))!);
-            var respuesta = await cliente.GetAsync($"api/reportes/{ruta}?{string.Join("&", parametros)}");
-            if (!respuesta.IsSuccessStatusCode)
-            {
-                TempData["Mensaje"] = "No se pudo generar el reporte solicitado.";
-                return RedirectToPage();
+                Mensaje = resultado.Mensaje ?? "La solicitud del reporte no es válida.";
+                return Page();
             }
-            var archivo = await respuesta.Content.ReadAsByteArrayAsync();
-            return File(archivo, contentType, nombreArchivo);
+            Productos = resultado.Datos ?? [];
+            Mensaje = Productos.Count == 0 ? "No se encontraron productos con los filtros indicados." : null;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error al descargar el reporte desde ServicioReportes.");
-            TempData["Mensaje"] = "No se pudo conectar con el servicio de reportes. Inténtelo nuevamente.";
-            return RedirectToPage();
+            _logger.LogError(ex, "Error al consultar productos.");
+            Mensaje = "No se pudo consultar el reporte de productos. Inténtelo nuevamente.";
         }
+        return Page();
+    }
+
+    public async Task<IActionResult> OnPostConsultarVentasAsync(CancellationToken cancellationToken)
+    {
+        if (!ValidarVentas()) return Page();
+        var token = HttpContext.Session.GetString(UsuariosApiCliente.ClaveSesionJwt);
+        if (string.IsNullOrWhiteSpace(token)) return RedirectToPage("/Login");
+        try
+        {
+            var resultado = await _reportes.ConsultarVentasAsync(
+                token, Desde, Hasta, MetodoPago, cancellationToken);
+            if (!resultado.Exito)
+            {
+                Mensaje = resultado.Mensaje ?? "La solicitud del reporte no es válida.";
+                return Page();
+            }
+            VentasProducto = resultado.Datos ?? [];
+            Mensaje = VentasProducto.Count == 0 ? "No se encontraron ventas con los filtros indicados." : null;
+            PrepararTorta();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al consultar ventas por producto.");
+            Mensaje = "No se pudo consultar el reporte de ventas. Inténtelo nuevamente.";
+        }
+        return Page();
+    }
+
+    public Task<IActionResult> OnPostProductosPdfAsync(CancellationToken cancellationToken)
+        => DescargarAsync($"api/reportes/productos-estables/pdf{ProductosQuery}", "application/pdf",
+            $"productos-stock-estable-{DateTime.Now:yyyyMMdd}.pdf", cancellationToken);
+
+    public Task<IActionResult> OnPostProductosExcelAsync(CancellationToken cancellationToken)
+        => DescargarAsync($"api/reportes/productos-estables/excel{ProductosQuery}",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            $"productos-stock-estable-{DateTime.Now:yyyyMMdd}.xlsx", cancellationToken);
+
+    public Task<IActionResult> OnPostVentasPdfAsync(CancellationToken cancellationToken)
+        => DescargarAsync($"api/reportes/ventas-producto/pdf{VentasQuery}", "application/pdf",
+            $"ventas-producto-{DateTime.Now:yyyyMMdd}.pdf", cancellationToken);
+
+    public Task<IActionResult> OnPostVentasExcelAsync(CancellationToken cancellationToken)
+        => DescargarAsync($"api/reportes/ventas-producto/excel{VentasQuery}",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            $"ventas-producto-{DateTime.Now:yyyyMMdd}.xlsx", cancellationToken);
+
+    private string ProductosQuery
+    {
+        get
+        {
+            var valores = new List<string>();
+            if (PrecioMinimo.HasValue) valores.Add($"precioMinimo={PrecioMinimo.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)}");
+            if (PrecioMaximo.HasValue) valores.Add($"precioMaximo={PrecioMaximo.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)}");
+            if (CantidadVendidaMinima.HasValue) valores.Add($"cantidadVendidaMinima={CantidadVendidaMinima.Value}");
+            return valores.Count == 0 ? "" : "?" + string.Join("&", valores);
+        }
+    }
+    private string VentasQuery =>
+        $"?desde={Desde:yyyy-MM-dd}&hasta={Hasta:yyyy-MM-dd}&metodoPago={Uri.EscapeDataString(MetodoPago)}";
+
+    private bool ValidarProductos()
+    {
+        if (PrecioMinimo.HasValue && PrecioMaximo.HasValue && PrecioMinimo > PrecioMaximo)
+        {
+            Mensaje = "El precio mínimo no puede superar el precio máximo.";
+            return false;
+        }
+        if (CantidadVendidaMinima.HasValue && CantidadVendidaMinima < 0)
+        {
+            Mensaje = "La cantidad vendida mínima no puede ser negativa.";
+            return false;
+        }
+        return true;
+    }
+
+    private bool ValidarVentas()
+    {
+        if (Hasta.Date < Desde.Date)
+        {
+            Mensaje = "La fecha hasta debe ser igual o posterior a la fecha desde.";
+            return false;
+        }
+        return true;
+    }
+
+    private async Task<IActionResult> DescargarAsync(
+        string ruta, string tipoContenido, string nombreArchivo, CancellationToken cancellationToken)
+    {
+        var token = HttpContext.Session.GetString(UsuariosApiCliente.ClaveSesionJwt);
+        if (string.IsNullOrWhiteSpace(token)) return RedirectToPage("/Login");
+        try
+        {
+            var resultado = await _reportes.DescargarAsync(ruta, token, cancellationToken);
+            return resultado.Exito && resultado.Datos is not null
+                ? File(resultado.Datos, tipoContenido, nombreArchivo)
+                : PageWithError(resultado.Mensaje ?? "No se pudo generar el reporte solicitado.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al descargar reporte.");
+            return PageWithError("No se pudo conectar con el servicio de reportes. Inténtelo nuevamente.");
+        }
+    }
+
+    private PageResult PageWithError(string mensaje)
+    {
+        Mensaje = mensaje;
+        return Page();
+    }
+
+    private void PrepararTorta()
+    {
+        var total = VentasProducto.Sum(v => v.TotalProducto);
+        if (total <= 0 || VentasProducto.Count == 0) return;
+        var colores = new[] { "#4472C4", "#ED7D31", "#70AD47", "#FFC000", "#5B9BD5", "#A5A5A5" };
+        var segmentos = new List<string>();
+        decimal inicio = 0;
+        for (int i = 0; i < VentasProducto.Count; i++)
+        {
+            var fin = inicio + VentasProducto[i].TotalProducto / total * 100;
+            segmentos.Add($"{colores[i % colores.Length]} {inicio.ToString(System.Globalization.CultureInfo.InvariantCulture)}% {fin.ToString(System.Globalization.CultureInfo.InvariantCulture)}%");
+            inicio = fin;
+        }
+        TortaCss = "conic-gradient(" + string.Join(", ", segmentos) + ")";
     }
 }
