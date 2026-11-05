@@ -190,7 +190,7 @@ namespace ServicioVentas.Servicios
             contenedor.BorderTop(1).BorderColor(ColorBorde).PaddingTop(6).Row(fila =>
             {
                 fila.RelativeItem().Text(
-                    $"Generado el {DateTime.Now:dd/MM/yyyy HH:mm:ss} · {NombreAbreviado.De(comprobante.NombreEmpleadoResponsable)}")
+                    $"Generado el {DateTime.UtcNow:dd/MM/yyyy HH:mm:ss} · {NombreAbreviado.De(comprobante.NombreEmpleadoResponsable)}")
                     .FontSize(8).FontColor(ColorTextoSecundario);
 
                 fila.AutoItem().Text(texto =>

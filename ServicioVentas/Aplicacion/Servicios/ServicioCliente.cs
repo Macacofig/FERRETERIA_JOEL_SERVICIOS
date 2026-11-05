@@ -1,7 +1,7 @@
 ﻿using ServicioVentas.Aplicacion.Modelos;
 using ServicioVentas.Dominio.Entidades;
 using ServicioVentas.Dominio.Puertos;
-using ServicioVentas.Infraestructura.Factories;
+using ServicioVentas.Dominio.Factories;
 using System.Text.RegularExpressions;
 
 namespace ServicioVentas.Aplicacion.Servicios
@@ -96,7 +96,7 @@ namespace ServicioVentas.Aplicacion.Servicios
                 Nombre = nombre,
                 Apellido = apellido,
                 Estado = 1,
-                FechaRegistro = DateTime.Now,
+                FechaRegistro = DateTime.UtcNow,
                 IdEmpleadoResponsable = idEmpleado
             };
 

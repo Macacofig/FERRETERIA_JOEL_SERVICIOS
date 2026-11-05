@@ -1,5 +1,6 @@
 using ServicioVentas.Aplicacion.Servicios;
 using ServicioVentas.Dominio.Puertos;
+using ServicioVentas.Dominio.Factories;
 using ServicioVentas.Infraestructura;
 using ServicioVentas.Infraestructura.Conexion;
 using ServicioVentas.Infraestructura.Factories;

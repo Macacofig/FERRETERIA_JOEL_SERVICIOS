@@ -2,7 +2,7 @@ using ServicioVentas.Aplicacion.Modelos;
 using ServicioVentas.Dominio.Constantes;
 using ServicioVentas.Dominio.Entidades;
 using ServicioVentas.Dominio.Puertos;
-using ServicioVentas.Infraestructura.Factories;
+using ServicioVentas.Dominio.Factories;
 
 namespace ServicioVentas.Aplicacion.Servicios
 {

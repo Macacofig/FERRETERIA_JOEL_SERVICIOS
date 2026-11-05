@@ -1,3 +1,4 @@
+using ServicioVentas.Dominio.Factories;
 using ServicioVentas.Dominio.Puertos;
 using ServicioVentas.Infraestructura.Conexion;
 using ServicioVentas.Infraestructura.Repositorios;
