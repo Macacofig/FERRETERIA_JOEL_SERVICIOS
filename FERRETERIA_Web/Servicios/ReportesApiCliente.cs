@@ -1,78 +1,223 @@
 using System.Net.Http.Headers;
-using System.Net.Http.Json;
 using System.Text.Json;
+using Microsoft.AspNetCore.WebUtilities;
 
 namespace FERRETERIA__Joel.Servicios;
 
 public sealed class ReportesApiCliente
 {
+    private static readonly JsonSerializerOptions OpcionesJson = new()
+    {
+        PropertyNameCaseInsensitive = true
+    };
+
     private readonly HttpClient _http;
-    public ReportesApiCliente(HttpClient http) => _http = http;
+    private readonly ILogger<ReportesApiCliente> _logger;
 
-    public Task<ResultadoReporteApi<List<ProductoEstableApi>>> ConsultarProductosAsync(
-        string token, decimal? precioMinimo, decimal? precioMaximo, int? cantidadVendidaMinima,
-        CancellationToken cancellationToken = default)
-        => GetAsync<List<ProductoEstableApi>>(
-            ConstruirRuta("productos-estables", null, precioMinimo, precioMaximo, cantidadVendidaMinima, null),
-            token, cancellationToken);
-
-    public Task<ResultadoReporteApi<List<VentaProductoApi>>> ConsultarVentasAsync(
-        string token, DateTime desde, DateTime hasta, string metodoPago,
-        CancellationToken cancellationToken = default)
-        => GetAsync<List<VentaProductoApi>>(
-            $"api/reportes/ventas-producto?desde={desde:yyyy-MM-dd}&hasta={hasta:yyyy-MM-dd}&metodoPago={Uri.EscapeDataString(metodoPago)}",
-            token, cancellationToken);
-
-    public async Task<ResultadoArchivoApi> DescargarAsync(string ruta, string token,
-        CancellationToken cancellationToken = default)
+    public ReportesApiCliente(HttpClient http, ILogger<ReportesApiCliente> logger)
     {
-        _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-        var respuesta = await _http.GetAsync(ruta, cancellationToken);
-        if (respuesta.IsSuccessStatusCode)
-            return new ResultadoArchivoApi(true, await respuesta.Content.ReadAsByteArrayAsync(cancellationToken), null);
-        return new ResultadoArchivoApi(false, null, await LeerMensajeErrorAsync(respuesta, cancellationToken));
+        _http = http;
+        _logger = logger;
     }
 
-    private async Task<ResultadoReporteApi<T>> GetAsync<T>(string ruta, string token, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<CategoriaOpcionApi>> ObtenerCategoriasAsync(
+        string? token,
+        CancellationToken cancelacion = default)
     {
-        _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-        var respuesta = await _http.GetAsync(ruta, cancellationToken);
-        if (!respuesta.IsSuccessStatusCode)
-            return new ResultadoReporteApi<T>(false, default, await LeerMensajeErrorAsync(respuesta, cancellationToken));
-        return new ResultadoReporteApi<T>(true,
-            await respuesta.Content.ReadFromJsonAsync<T>(cancellationToken: cancellationToken), null);
+        using HttpRequestMessage peticion = new(HttpMethod.Get, "api/reportes/categorias");
+        AdjuntarToken(peticion, token);
+
+        using HttpResponseMessage respuesta = await _http.SendAsync(
+            peticion, HttpCompletionOption.ResponseHeadersRead, cancelacion);
+
+        await AsegurarExitoAsync(respuesta, "No se pudieron obtener las categorías.", cancelacion);
+
+        using Stream flujo = await respuesta.Content.ReadAsStreamAsync(cancelacion);
+        RespuestaCategoriasApi? datos = await JsonSerializer.DeserializeAsync<RespuestaCategoriasApi>(
+            flujo, OpcionesJson, cancelacion);
+
+        return (IReadOnlyList<CategoriaOpcionApi>?)datos?.Categorias ?? Array.Empty<CategoriaOpcionApi>();
     }
 
-    private static async Task<string> LeerMensajeErrorAsync(HttpResponseMessage respuesta, CancellationToken cancellationToken)
+    public async Task<ReporteVentasApi> ObtenerVentasAsync(
+        string? token,
+        FiltroConsultaReporte filtro,
+        CancellationToken cancelacion = default)
     {
-        var contenido = await respuesta.Content.ReadAsStringAsync(cancellationToken);
+        string uri = ConstruirUri("api/reportes/ventas", filtro);
+        using HttpRequestMessage peticion = new(HttpMethod.Get, uri);
+        AdjuntarToken(peticion, token);
+
+        using HttpResponseMessage respuesta = await _http.SendAsync(
+            peticion, HttpCompletionOption.ResponseHeadersRead, cancelacion);
+
+        await AsegurarExitoAsync(respuesta, "No se pudo cargar el reporte de inventario.", cancelacion);
+
+        using Stream flujo = await respuesta.Content.ReadAsStreamAsync(cancelacion);
+        RespuestaVentasApi? datos = await JsonSerializer.DeserializeAsync<RespuestaVentasApi>(
+            flujo, OpcionesJson, cancelacion);
+
+        return datos?.Reporte
+            ?? throw new ReportesApiException("El servicio de reportes devolvió una respuesta vacía.");
+    }
+
+    public Task<ArchivoDescargaApi> DescargarVentasPdfAsync(
+        string? token,
+        FiltroConsultaReporte filtro,
+        CancellationToken cancelacion = default)
+    {
+        return DescargarArchivoAsync(
+            ConstruirUri("api/reportes/ventas/pdf", filtro),
+            token,
+            "No se pudo descargar el PDF de stock.",
+            cancelacion);
+    }
+
+    public Task<ArchivoDescargaApi> DescargarVentasExcelAsync(
+        string? token,
+        FiltroConsultaReporte filtro,
+        CancellationToken cancelacion = default)
+    {
+        return DescargarArchivoAsync(
+            ConstruirUri("api/reportes/ventas/excel", filtro),
+            token,
+            "No se pudo descargar el Excel de stock.",
+            cancelacion);
+    }
+
+    public async Task<ReporteEstadisticasApi> ObtenerEstadisticasAsync(
+        string? token,
+        FiltroConsultaReporte filtro,
+        CancellationToken cancelacion = default)
+    {
+        string uri = ConstruirUri("api/reportes/estadisticas", filtro);
+        using HttpRequestMessage peticion = new(HttpMethod.Get, uri);
+        AdjuntarToken(peticion, token);
+
+        using HttpResponseMessage respuesta = await _http.SendAsync(
+            peticion, HttpCompletionOption.ResponseHeadersRead, cancelacion);
+
+        await AsegurarExitoAsync(respuesta, "No se pudo cargar el reporte sumariado.", cancelacion);
+
+        using Stream flujo = await respuesta.Content.ReadAsStreamAsync(cancelacion);
+        RespuestaEstadisticasApi? datos = await JsonSerializer.DeserializeAsync<RespuestaEstadisticasApi>(
+            flujo, OpcionesJson, cancelacion);
+
+        return datos?.Reporte
+            ?? throw new ReportesApiException("El servicio de reportes devolvió una respuesta vacía.");
+    }
+
+    public Task<ArchivoDescargaApi> DescargarEstadisticasPdfAsync(
+        string? token,
+        FiltroConsultaReporte filtro,
+        CancellationToken cancelacion = default)
+    {
+        return DescargarArchivoAsync(
+            ConstruirUri("api/reportes/estadisticas/pdf", filtro),
+            token,
+            "No se pudo descargar el PDF de estadísticas.",
+            cancelacion);
+    }
+
+    public Task<ArchivoDescargaApi> DescargarEstadisticasExcelAsync(
+        string? token,
+        FiltroConsultaReporte filtro,
+        CancellationToken cancelacion = default)
+    {
+        return DescargarArchivoAsync(
+            ConstruirUri("api/reportes/estadisticas/excel", filtro),
+            token,
+            "No se pudo descargar el Excel de estadísticas.",
+            cancelacion);
+    }
+
+    private async Task<ArchivoDescargaApi> DescargarArchivoAsync(
+        string uri,
+        string? token,
+        string mensajeFallo,
+        CancellationToken cancelacion)
+    {
+        using HttpRequestMessage peticion = new(HttpMethod.Get, uri);
+        AdjuntarToken(peticion, token);
+
+        using HttpResponseMessage respuesta = await _http.SendAsync(
+            peticion, HttpCompletionOption.ResponseHeadersRead, cancelacion);
+
+        await AsegurarExitoAsync(respuesta, mensajeFallo, cancelacion);
+
+        byte[] contenido = await respuesta.Content.ReadAsByteArrayAsync(cancelacion);
+        string tipoContenido = respuesta.Content.Headers.ContentType?.MediaType
+            ?? "application/octet-stream";
+        string nombreArchivo = respuesta.Content.Headers.ContentDisposition?.FileNameStar
+            ?? respuesta.Content.Headers.ContentDisposition?.FileName?.Trim('"')
+            ?? "reporte";
+
+        return new ArchivoDescargaApi(contenido, tipoContenido, nombreArchivo);
+    }
+
+    private static string ConstruirUri(string ruta, FiltroConsultaReporte filtro)
+    {
+        Dictionary<string, string?> parametros = new();
+
+        if (filtro.StockMinimo.HasValue)
+            parametros["stockMinimo"] = filtro.StockMinimo.Value.ToString();
+
+        if (filtro.PrecioMaximo.HasValue)
+            parametros["precioMaximo"] = filtro.PrecioMaximo.Value.ToString();
+
+        if (filtro.CantidadMinima.HasValue)
+            parametros["cantidadMinima"] = filtro.CantidadMinima.Value.ToString();
+
+        if (!string.IsNullOrWhiteSpace(filtro.MetodoPago))
+            parametros["metodoPago"] = filtro.MetodoPago;
+
+        return QueryHelpers.AddQueryString(ruta, parametros);
+    }
+
+    private static void AdjuntarToken(HttpRequestMessage peticion, string? token)
+    {
+        if (!string.IsNullOrWhiteSpace(token))
+        {
+            peticion.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        }
+    }
+
+    private async Task AsegurarExitoAsync(
+        HttpResponseMessage respuesta,
+        string mensajePorDefecto,
+        CancellationToken cancelacion)
+    {
+        if (respuesta.IsSuccessStatusCode) return;
+
+        string cuerpo = string.Empty;
         try
         {
-            using var json = JsonDocument.Parse(contenido);
-            if (json.RootElement.TryGetProperty("mensaje", out var mensaje) && mensaje.ValueKind == JsonValueKind.String)
-                return mensaje.GetString() ?? "La solicitud del reporte no es válida.";
-            if (json.RootElement.TryGetProperty("title", out var titulo) && titulo.ValueKind == JsonValueKind.String)
-                return titulo.GetString() ?? "La solicitud del reporte no es válida.";
+            cuerpo = await respuesta.Content.ReadAsStringAsync(cancelacion);
+            using JsonDocument documento = JsonDocument.Parse(cuerpo);
+            if (documento.RootElement.TryGetProperty("mensaje", out JsonElement propMensaje))
+            {
+                string? mensajeServidor = propMensaje.GetString();
+                if (!string.IsNullOrWhiteSpace(mensajeServidor))
+                {
+                    throw new ReportesApiException(mensajeServidor);
+                }
+            }
         }
         catch (JsonException) { }
-        return string.IsNullOrWhiteSpace(contenido)
-            ? "La solicitud del reporte no es válida."
-            : contenido.Trim();
-    }
+        catch (ReportesApiException) { throw; }
+        catch (Exception ex)
+        {
+            _logger.LogDebug(ex, "No se pudo interpretar el error JSON del servicio de reportes.");
+        }
 
-    private static string ConstruirRuta(string baseRuta, DateTime? desde, decimal? precioMinimo,
-        decimal? precioMaximo, int? cantidadVendidaMinima, string? metodoPago)
-    {
-        var parametros = new List<string>();
-        if (precioMinimo.HasValue) parametros.Add($"precioMinimo={precioMinimo.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)}");
-        if (precioMaximo.HasValue) parametros.Add($"precioMaximo={precioMaximo.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)}");
-        if (cantidadVendidaMinima.HasValue) parametros.Add($"cantidadVendidaMinima={cantidadVendidaMinima.Value}");
-        return $"api/reportes/{baseRuta}" + (parametros.Count == 0 ? "" : "?" + string.Join("&", parametros));
+        if (respuesta.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            throw new ReportesApiException("Su sesión ha expirado o no tiene permisos.");
+
+        throw new ReportesApiException($"{mensajePorDefecto} (HTTP {(int)respuesta.StatusCode})");
     }
 }
 
-public sealed record ProductoEstableApi(
-    string Codigo, string Nombre, decimal CostoUnitario, string Descripcion, string Marca, string Categoria);
-public sealed record VentaProductoApi(string Nombre, int Cantidad, decimal TotalProducto);
-public sealed record ResultadoReporteApi<T>(bool Exito, T? Datos, string? Mensaje);
-public sealed record ResultadoArchivoApi(bool Exito, byte[]? Datos, string? Mensaje);
+public class ReportesApiException : Exception
+{
+    public ReportesApiException(string mensaje) : base(mensaje) { }
+}

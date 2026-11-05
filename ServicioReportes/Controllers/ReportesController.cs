@@ -7,96 +7,212 @@ using ServicioReportes.Dominio.Puertos;
 namespace ServicioReportes.Controllers;
 
 [ApiController]
-[Route("api/reportes")]
+[Route("api/[controller]")]
 [Authorize(Roles = "Administrador")]
 public sealed class ReportesController : ControllerBase
 {
-    private readonly ReporteService _reportes;
-    public ReportesController(ReporteService reportes) => _reportes = reportes;
+    private readonly ReporteService _reporteService;
+    private readonly IReporteVentasRepository _repositorio;
+    private readonly ILogger<ReportesController> _logger;
 
-    [HttpGet("productos-estables")]
-    public Task<IReadOnlyList<ProductoEstable>> ProductosEstables(
-        [FromQuery] decimal? precioMinimo, [FromQuery] decimal? precioMaximo,
-        [FromQuery] int? cantidadVendidaMinima, CancellationToken cancellationToken)
-        => _reportes.ObtenerProductosEstablesAsync(
-            ValidarProductos(precioMinimo, precioMaximo, cantidadVendidaMinima), cancellationToken);
-
-    [HttpGet("productos-estables/pdf")]
-    public async Task<IActionResult> ProductosEstablesPdf(
-        [FromQuery] decimal? precioMinimo, [FromQuery] decimal? precioMaximo,
-        [FromQuery] int? cantidadVendidaMinima, CancellationToken cancellationToken)
+    public ReportesController(
+        ReporteService reporteService,
+        IReporteVentasRepository repositorio,
+        ILogger<ReportesController> logger)
     {
-        var filtros = ValidarProductos(precioMinimo, precioMaximo, cantidadVendidaMinima);
-        var pdf = await _reportes.GenerarProductosEstablesPdfAsync(filtros, UsuarioGenerador(), cancellationToken);
-        return File(pdf, "application/pdf", $"productos-stock-estable-{DateTime.Now:yyyyMMdd-HHmm}.pdf");
+        _reporteService = reporteService;
+        _repositorio = repositorio;
+        _logger = logger;
     }
 
-    [HttpGet("productos-estables/excel")]
-    public async Task<IActionResult> ProductosEstablesExcel(
-        [FromQuery] decimal? precioMinimo, [FromQuery] decimal? precioMaximo,
-        [FromQuery] int? cantidadVendidaMinima, CancellationToken cancellationToken)
+    [HttpGet("categorias")]
+    public IActionResult Categorias()
     {
-        var filtros = ValidarProductos(precioMinimo, precioMaximo, cantidadVendidaMinima);
-        var excel = await _reportes.GenerarProductosEstablesExcelAsync(filtros, UsuarioGenerador(), cancellationToken);
-        return File(excel, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            $"productos-stock-estable-{DateTime.Now:yyyyMMdd-HHmm}.xlsx");
+        return Ok(new { exito = true, categorias = Array.Empty<object>() });
     }
 
-    [HttpGet("ventas-producto")]
-    public Task<IReadOnlyList<VentaProducto>> VentasProducto(
-        [FromQuery] DateTime? desde, [FromQuery] DateTime? hasta,
-        [FromQuery] string? metodoPago, CancellationToken cancellationToken)
-        => _reportes.ObtenerVentasPorProductoAsync(
-            ValidarVentas(desde, hasta, metodoPago), cancellationToken);
+    // ---------- REPORTE 1: INVENTARIO / STOCK ----------
 
-    [HttpGet("ventas-producto/pdf")]
-    public async Task<IActionResult> VentasProductoPdf([FromQuery] DateTime? desde, [FromQuery] DateTime? hasta,
-        [FromQuery] string? metodoPago, CancellationToken cancellationToken)
+    [HttpGet("ventas")]
+    public async Task<IActionResult> Ventas(
+        [FromQuery] decimal? precioMaximo,
+        [FromQuery] int? stockMinimo,
+        CancellationToken cancellationToken)
     {
-        var filtros = ValidarVentas(desde, hasta, metodoPago);
-        var pdf = await _reportes.GenerarVentasProductoPdfAsync(filtros, UsuarioGenerador(), cancellationToken);
-        return File(pdf, "application/pdf", $"ventas-producto-{DateTime.Now:yyyyMMdd-HHmm}.pdf");
+        try
+        {
+            var filtros = new ReporteProductoFiltros(null, precioMaximo ?? 500m, null, stockMinimo ?? 10);
+            var productos = await _repositorio.ObtenerProductosEstablesAsync(filtros, cancellationToken);
+
+            var lineas = productos.Select(p => new
+            {
+                codigo = p.Codigo,
+                producto = p.Nombre,
+                precio = p.Precio,
+                descripcion = p.Descripcion,
+                marca = p.Marca,
+                categoria = p.Categoria,
+                cantidadStock = p.CantidadStock
+            }).ToList();
+
+            var totalRegistros = lineas.Count;
+            var totalStock = lineas.Sum(l => l.cantidadStock);
+            var precioPromedio = totalRegistros > 0 ? lineas.Average(l => l.precio) : 0m;
+
+            return Ok(new
+            {
+                exito = true,
+                reporte = new
+                {
+                    titulo = "Productos de stock estable y precio razonable",
+                    filtro = new
+                    {
+                        stockMinimo = stockMinimo ?? 10,
+                        precioMaximo = precioMaximo ?? 500m,
+                        filtroTexto = $"Stock > {stockMinimo ?? 10} unidades, Precio < Bs {precioMaximo ?? 500m:N2}"
+                    },
+                    generadoPor = UsuarioActual(),
+                    generadoPorCompleto = UsuarioActual(),
+                    generadoEl = DateTime.Now,
+                    totalRegistros,
+                    totalStock,
+                    precioPromedio,
+                    lineas
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al generar reporte de productos estables");
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, new { exito = false, mensaje = "Error interno al generar reporte." });
+        }
     }
 
-    [HttpGet("ventas-producto/excel")]
-    public async Task<IActionResult> VentasProductoExcel([FromQuery] DateTime? desde, [FromQuery] DateTime? hasta,
-        [FromQuery] string? metodoPago, CancellationToken cancellationToken)
+    [HttpGet("ventas/pdf")]
+    public async Task<IActionResult> VentasPdf(
+        [FromQuery] decimal? precioMaximo,
+        [FromQuery] int? stockMinimo,
+        CancellationToken cancellationToken)
     {
-        var filtros = ValidarVentas(desde, hasta, metodoPago);
-        var excel = await _reportes.GenerarVentasProductoExcelAsync(filtros, UsuarioGenerador(), cancellationToken);
-        return File(excel, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            $"ventas-producto-{DateTime.Now:yyyyMMdd-HHmm}.xlsx");
+        var filtros = new ReporteProductoFiltros(null, precioMaximo ?? 500m, null, stockMinimo ?? 10);
+        var bytes = await _reporteService.GenerarProductosEstablesPdfAsync(filtros, UsuarioActual(), cancellationToken);
+        return File(bytes, "application/pdf", $"Productos-Estables-{DateTime.Now:yyyyMMdd-HHmm}.pdf");
     }
 
-    private static ReporteProductoFiltros ValidarProductos(
-        decimal? minimo, decimal? maximo, int? cantidad)
+    [HttpGet("ventas/excel")]
+    public async Task<IActionResult> VentasExcel(
+        [FromQuery] decimal? precioMaximo,
+        [FromQuery] int? stockMinimo,
+        CancellationToken cancellationToken)
     {
-        if (minimo.HasValue && maximo.HasValue && minimo.Value > maximo.Value)
-            throw new ArgumentException("El precio mínimo no puede superar el precio máximo.");
-        if (cantidad.HasValue && cantidad.Value < 0)
-            throw new ArgumentException("La cantidad vendida mínima no puede ser negativa.");
-        return new(minimo, maximo, cantidad);
+        var filtros = new ReporteProductoFiltros(null, precioMaximo ?? 500m, null, stockMinimo ?? 10);
+        var bytes = await _reporteService.GenerarProductosEstablesExcelAsync(filtros, UsuarioActual(), cancellationToken);
+        return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Productos-Estables-{DateTime.Now:yyyyMMdd-HHmm}.xlsx");
     }
 
-    private static ReporteVentaProductoFiltros ValidarVentas(
-        DateTime? desde, DateTime? hasta, string? metodoPago)
+    // ---------- REPORTE 2: ESTADÍSTICAS / VENTAS SUMARIADAS ----------
+
+    [HttpGet("estadisticas")]
+    public async Task<IActionResult> Estadisticas(
+        [FromQuery] int? cantidadMinima,
+        [FromQuery] string? metodoPago,
+        CancellationToken cancellationToken)
     {
-        var inicio = desde ?? new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
-        var fin = hasta ?? inicio.AddMonths(1).AddDays(-1);
-        if (fin.Date < inicio.Date) throw new ArgumentException("El rango de fechas no es válido.");
-        var pago = string.IsNullOrWhiteSpace(metodoPago) ? "Efectivo" : metodoPago.Trim();
-        if (!pago.Equals("Efectivo", StringComparison.OrdinalIgnoreCase)
-            && !pago.Equals("Tarjeta", StringComparison.OrdinalIgnoreCase)
-            && !pago.Equals("QR/Transferencia", StringComparison.OrdinalIgnoreCase)
-            && !pago.Equals("Transferencia", StringComparison.OrdinalIgnoreCase))
-            throw new ArgumentException("El método de pago no es válido.");
-        return new(inicio.Date, fin.Date,
-            pago.Equals("QR/Transferencia", StringComparison.OrdinalIgnoreCase) ? "QR/Transferencia" : pago);
+        try
+        {
+            var metodo = string.IsNullOrWhiteSpace(metodoPago) ? "Efectivo" : metodoPago;
+            var filtros = new ReporteVentaProductoFiltros(
+                DateTime.Today.AddYears(-1), DateTime.Today.AddDays(1), metodo, cantidadMinima ?? 3);
+            var ventas = await _repositorio.ObtenerVentasPorProductoAsync(filtros, cancellationToken);
+
+            var filasFiltradas = ventas.ToList();
+
+            var totalImporte = filasFiltradas.Sum(v => v.TotalProducto);
+            var totalUnidades = filasFiltradas.Sum(v => v.Cantidad);
+
+            var filas = filasFiltradas.Select(v => new
+            {
+                producto = v.Nombre,
+                cantidadTotal = v.Cantidad,
+                totalRecaudado = v.TotalProducto,
+                participacion = totalImporte > 0 ? Math.Round((v.TotalProducto / totalImporte) * 100m, 2) : 0m
+            }).ToList();
+
+            return Ok(new
+            {
+                exito = true,
+                reporte = new
+                {
+                    titulo = "Ventas por producto y medio de cobro",
+                    filtro = new
+                    {
+                        cantidadMinima = cantidadMinima ?? 3,
+                        metodoPago = metodo,
+                        filtroTexto = $"Cantidad vendida >= {cantidadMinima ?? 3}, Método de cobro: {metodo}"
+                    },
+                    generadoPor = UsuarioActual(),
+                    generadoPorCompleto = UsuarioActual(),
+                    generadoEl = DateTime.Now,
+                    totalProductos = filas.Count,
+                    totalUnidades,
+                    totalImporte,
+                    filas
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al generar reporte estadístico");
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, new { exito = false, mensaje = "Error interno al generar informe." });
+        }
     }
 
-    private string UsuarioGenerador() =>
+    [HttpGet("estadisticas/pdf")]
+    public async Task<IActionResult> EstadisticasPdf(
+        [FromQuery] int? cantidadMinima,
+        [FromQuery] string? metodoPago,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var metodo = string.IsNullOrWhiteSpace(metodoPago) ? "Efectivo" : metodoPago;
+            var filtros = new ReporteVentaProductoFiltros(
+                DateTime.Today.AddYears(-1), DateTime.Today.AddDays(1), metodo, cantidadMinima ?? 3);
+            var bytes = await _reporteService.GenerarVentasProductoPdfAsync(filtros, UsuarioActual(), cancellationToken);
+            return File(bytes, "application/pdf", $"Ventas-Producto-{DateTime.Now:yyyyMMdd-HHmm}.pdf");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al generar el PDF del reporte estadístico");
+            return StatusCode(StatusCodes.Status503ServiceUnavailable,
+                new { exito = false, mensaje = "No se pudo generar el PDF del informe. Intente nuevamente." });
+        }
+    }
+
+    [HttpGet("estadisticas/excel")]
+    public async Task<IActionResult> EstadisticasExcel(
+        [FromQuery] int? cantidadMinima,
+        [FromQuery] string? metodoPago,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var metodo = string.IsNullOrWhiteSpace(metodoPago) ? "Efectivo" : metodoPago;
+            var filtros = new ReporteVentaProductoFiltros(
+                DateTime.Today.AddYears(-1), DateTime.Today.AddDays(1), metodo, cantidadMinima ?? 3);
+            var bytes = await _reporteService.GenerarVentasProductoExcelAsync(filtros, UsuarioActual(), cancellationToken);
+            return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Ventas-Producto-{DateTime.Now:yyyyMMdd-HHmm}.xlsx");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al generar el Excel del reporte estadístico");
+            return StatusCode(StatusCodes.Status503ServiceUnavailable,
+                new { exito = false, mensaje = "No se pudo generar el Excel del informe. Intente nuevamente." });
+        }
+    }
+
+    private string UsuarioActual() =>
         User.FindFirstValue(ClaimTypes.Name)
-        ?? User.FindFirstValue("NombreCompleto")
         ?? User.Identity?.Name
-        ?? "Usuario";
+        ?? "Administrador";
 }

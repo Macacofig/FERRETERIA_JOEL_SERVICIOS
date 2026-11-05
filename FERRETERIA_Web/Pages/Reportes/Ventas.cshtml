@@ -1,0 +1,136 @@
+﻿@page
+@model FERRETERIA__Joel.Pages.Reportes.VentasModel
+@{
+    ViewData["Title"] = "Productos de stock estable y precio razonable";
+    ViewData["ActiveMenu"] = "Reportes";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/reportes.css" asp-append-version="true" />
+}
+
+<div class="fj-container reportes-pagina">
+    <section class="fj-page-head">
+        <p class="fj-eyebrow">MÓDULO · REPORTES</p>
+        <h1>Productos de stock estable y precio razonable</h1>
+        <p class="fj-page-sub">Consulta de inventario disponible con existencias seguras y precios controlados, con exportación a PDF y Excel.</p>
+    </section>
+
+    @if (Model.MensajeError is not null)
+    {
+        <div class="fj-alert" role="alert">@Model.MensajeError</div>
+    }
+
+    <!-- FILTROS -->
+    <section class="fj-card reportes-filtros">
+        <form method="get" class="reportes-filtros-form">
+            <input type="hidden" name="Generar" value="true" />
+            <div class="fj-form-field">
+                <label class="fj-form-label" for="stock">Stock mínimo en almacén</label>
+                <input class="fj-input" id="stock" name="StockMinimo" type="number" min="0" value="@Model.StockMinimo" />
+                <span class="fj-help">Muestra productos con existencias iguales o superiores a esta cifra.</span>
+            </div>
+            <div class="fj-form-field">
+                <label class="fj-form-label" for="precio">Precio tope de venta (Bs)</label>
+                <input class="fj-input" id="precio" name="PrecioMaximo" type="number" step="0.5" min="1" value="@Model.PrecioMaximo" />
+                <span class="fj-help">Filtra productos cuyo precio unitario no exceda este valor.</span>
+            </div>
+            <div class="reportes-filtros-acciones">
+                <a asp-page="/Reportes/Ventas" class="fj-btn fj-btn-ghost">Restablecer</a>
+                <button class="fj-btn fj-btn-primary" type="submit">Generar informe</button>
+            </div>
+        </form>
+
+        @if (Model.Reporte is not null)
+        {
+            <div class="reportes-exportar">
+                <span class="reportes-exportar-titulo">EXPORTAR</span>
+                <a class="fj-btn fj-btn-ghost" asp-page-handler="Pdf" asp-route-stockMinimo="@Model.StockMinimo" asp-route-precioMaximo="@Model.PrecioMaximo">
+                    Descargar PDF
+                </a>
+                <a class="fj-btn fj-btn-ghost" asp-page-handler="Excel" asp-route-stockMinimo="@Model.StockMinimo" asp-route-precioMaximo="@Model.PrecioMaximo">
+                    Descargar Excel
+                </a>
+            </div>
+        }
+    </section>
+
+    @if (Model.Reporte is not null)
+    {
+        <section class="reportes-meta fj-card">
+            <div><span class="reportes-meta-etiqueta">CRITERIOS</span><strong>@Model.Reporte.Filtro.FiltroTexto</strong></div>
+            <div><span class="reportes-meta-etiqueta">GENERADO POR</span><strong>@Model.Reporte.GeneradoPor</strong></div>
+            <div><span class="reportes-meta-etiqueta">EMISIÓN</span><strong>@DateTime.Now.ToString("dd/MM/yyyy HH:mm")</strong></div>
+        </section>
+
+        <section class="reportes-resumen">
+            <article class="fj-card reportes-stat">
+                <span class="reportes-stat-etiqueta">TOTAL PRODUCTOS</span>
+                <strong class="reportes-stat-valor">@Model.Reporte.TotalRegistros</strong>
+                <span class="reportes-stat-sub">Cumplen las condiciones</span>
+            </article>
+            <article class="fj-card reportes-stat">
+                <span class="reportes-stat-etiqueta">TOTAL UNIDADES</span>
+                <strong class="reportes-stat-valor">@Model.Reporte.TotalStock.ToString("N0")</strong>
+                <span class="reportes-stat-sub">Existencias acumuladas</span>
+            </article>
+            <article class="fj-card reportes-stat reportes-stat-destacada">
+                <span class="reportes-stat-etiqueta">PRECIO PROMEDIO</span>
+                <strong class="reportes-stat-valor">Bs @Model.Reporte.PrecioPromedio.ToString("N2")</strong>
+                <span class="reportes-stat-sub">Costo medio por producto</span>
+            </article>
+        </section>
+
+        <section class="fj-card reportes-tabla-card">
+            <div class="reportes-tabla-wrap">
+                <table class="fj-table reportes-tabla">
+                    <thead>
+                        <tr>
+                            <th>CÓDIGO</th>
+                            <th>NOMBRE</th>
+                            <th class="fj-td-precio">PRECIO</th>
+                            <th>DESCRIPCIÓN</th>
+                            <th>MARCA</th>
+                            <th>CATEGORÍA</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Reporte.Lineas.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="6" style="text-align: center; color: #64748b; padding: 2.5rem;">
+                                    No se encontraron productos que coincidan con los criterios seleccionados.
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var fila in Model.Reporte.Lineas)
+                            {
+                                <tr>
+                                    <td><code>@fila.Codigo</code></td>
+                                    <td><strong>@fila.Producto</strong></td>
+                                    <td class="fj-td-precio">Bs @fila.Precio.ToString("N2")</td>
+                                    <td>@fila.Descripcion</td>
+                                    <td>@fila.Marca</td>
+                                    <td>@fila.Categoria</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    }
+    else
+    {
+        <!-- ESTADO INICIAL SIN TABLA -->
+        <section class="fj-card" style="text-align: center; padding: 3rem 1.5rem; color: #64748b; margin-top: 1.5rem;">
+            <svg style="width: 48px; height: 48px; margin: 0 auto 1rem; color: #94a3b8;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <h3 style="font-size: 1.15rem; font-weight: 600; color: #1e293b; margin-bottom: 0.5rem;">Informe listo para consultar</h3>
+            <p style="margin: 0;">Seleccione los parámetros de inventario deseados y presione <strong>Generar informe</strong> para consultar las existencias y habilitar la exportación.</p>
+        </section>
+    }
+</div>

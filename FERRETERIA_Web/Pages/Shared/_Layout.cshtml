@@ -113,6 +113,25 @@
                             </div>
                         </li>
 
+                        <!-- Reportes (Exclusivo Administrador) -->
+                        <li class="fj-menu-item fj-dropdown @(activo == "Reportes" ? "is-active" : null)">
+                            <button class="fj-menu-link fj-dropdown-toggle" type="button"
+                                    aria-expanded="false">
+                                <span>Reportes</span>
+                                <svg class="fj-dropdown-chevron" viewBox="0 0 24 24"
+                                     fill="none" stroke="currentColor" stroke-width="1.8"
+                                     stroke-linecap="round" stroke-linejoin="round"
+                                     aria-hidden="true">
+                                    <polyline points="6 9 12 15 18 9" />
+                                </svg>
+                            </button>
+
+                            <div class="fj-dropdown-menu">
+                                <a asp-page="/Reportes/Ventas">Inventario de productos</a>
+                                <a asp-page="/Reportes/Estadisticas">Ventas por producto</a>
+                            </div>
+                        </li>
+
                         <!-- Administración -->
                         <li class="fj-menu-item fj-dropdown">
                             <button class="fj-menu-link fj-dropdown-toggle" type="button"
@@ -127,7 +146,6 @@
                             </button>
 
                             <div class="fj-dropdown-menu">
-                                <a asp-page="/Reportes">Reportes y estadísticas</a>
                                 <span class="disabled">Clientes</span>
                                 <a asp-page="/Personal">Personal y bajas</a>
                                 <a asp-page="/Bitacora">Bitácora de auditoría</a>

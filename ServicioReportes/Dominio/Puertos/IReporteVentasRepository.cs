@@ -9,9 +9,10 @@ public interface IReporteVentasRepository
 }
 
 public sealed record ReporteProductoFiltros(
-    decimal? PrecioMinimo, decimal? PrecioMaximo, int? CantidadVendidaMinima);
+    decimal? PrecioMinimo, decimal? PrecioMaximo, int? CantidadVendidaMinima, int? StockMinimo = null);
 public sealed record ProductoEstable(
-    string Codigo, string Nombre, decimal CostoUnitario, string Descripcion,
-    string Marca, string Categoria);
-public sealed record ReporteVentaProductoFiltros(DateTime Desde, DateTime Hasta, string MetodoPago);
+    string Codigo, string Nombre, decimal Precio, string Descripcion,
+    string Marca, string Categoria, int CantidadStock);
+public sealed record ReporteVentaProductoFiltros(
+    DateTime Desde, DateTime Hasta, string MetodoPago, int? CantidadMinima = null);
 public sealed record VentaProducto(string Nombre, int Cantidad, decimal TotalProducto);

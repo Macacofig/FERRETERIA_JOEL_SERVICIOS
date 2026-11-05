@@ -1,7 +1,6 @@
 using System.Globalization;
 using System.Text;
 using ClosedXML.Excel;
-using SkiaSharp;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
@@ -19,6 +18,8 @@ public sealed class ReporteService
         QuestPDF.Settings.License = LicenseType.Community;
     }
 
+    // ---------- MÉTODOS DE CONSULTA BASE ----------
+
     public Task<IReadOnlyList<ProductoEstable>> ObtenerProductosEstablesAsync(
         ReporteProductoFiltros filtros, CancellationToken cancellationToken = default)
         => _repositorio.ObtenerProductosEstablesAsync(filtros, cancellationToken);
@@ -27,247 +28,426 @@ public sealed class ReporteService
         ReporteVentaProductoFiltros filtros, CancellationToken cancellationToken = default)
         => _repositorio.ObtenerVentasPorProductoAsync(filtros, cancellationToken);
 
+    // ---------- MÉTODOS DE EXPORTACIÓN PDF (DISEÑO CORPORATIVO ANTIGUO) ----------
+
     public async Task<byte[]> GenerarProductosEstablesPdfAsync(
         ReporteProductoFiltros filtros, string usuario, CancellationToken cancellationToken = default)
     {
         var filas = await _repositorio.ObtenerProductosEstablesAsync(filtros, cancellationToken);
+
         return Document.Create(container => container.Page(page =>
         {
-            EncabezadoPdf(page, "Productos de stock estable y precio razonable", usuario,
-                $"Precio: {FormatearRango(filtros)} | Cantidad vendida mínima: {filtros.CantidadVendidaMinima?.ToString(CultureInfo.InvariantCulture) ?? "Sin filtro"}");
-            page.Content().Table(tabla =>
+            page.Size(PageSizes.A4.Landscape());
+            page.Margin(28);
+            page.Header().Element(x => Cabecera(x, "REPORTE DE STOCK", "RPT-STK-01", DateTime.Now));
+
+            page.Content().Column(col =>
             {
-                tabla.ColumnsDefinition(c =>
-                {
-                    c.RelativeColumn(12); c.RelativeColumn(18); c.RelativeColumn(12);
-                    c.RelativeColumn(18); c.RelativeColumn(12); c.RelativeColumn(12);
-                });
-                tabla.Header(h =>
-                {
-                    CeldaEncabezado(h, "Código de producto"); CeldaEncabezado(h, "Nombre");
-                    CeldaEncabezado(h, "Costo unitario"); CeldaEncabezado(h, "Descripción");
-                    CeldaEncabezado(h, "Marca"); CeldaEncabezado(h, "Categoría");
-                });
-                foreach (var fila in filas)
-                    CeldaFila(tabla, fila.Codigo, fila.Nombre, fila.CostoUnitario.ToString("N2"),
-                        fila.Descripcion, fila.Marca, fila.Categoria);
+                col.Spacing(15);
+                col.Item().Element(x => Titulo(x, "MÓDULO REPORTES", "Productos de stock estable y precio razonable",
+                    "Productos activos con stock superior al mínimo y precio inferior al máximo."));
+
+                col.Item().Element(x => Filtros(x,
+                    ("FILTROS", $"Stock > {filtros.StockMinimo ?? 10} · Precio < Bs {(filtros.PrecioMaximo ?? 500m):N2}"),
+                    ("GENERADO", DateTime.Now.ToString("dd/MM/yyyy HH:mm")),
+                    ("RESPONSABLE", usuario)));
+
+                col.Item().Element(x => TablaStock(x, filas));
             });
-            PiePdf(page, $"Total de productos listados: {filas.Count} | Usuario: {usuario}");
+
+            page.Footer().Element(x => Pie(x, usuario, DateTime.Now, $"{filas.Count} productos · {filas.Sum(f => f.CantidadStock)} unidades en stock"));
         })).GeneratePdf();
     }
+
+    public async Task<byte[]> GenerarVentasProductoPdfAsync(
+        ReporteVentaProductoFiltros filtros, string usuario, CancellationToken cancellationToken = default)
+    {
+        var ventas = await _repositorio.ObtenerVentasPorProductoAsync(filtros, cancellationToken);
+        var totalImporte = ventas.Sum(v => v.TotalProducto);
+        var segmentos = PrepararSegmentos(ventas);
+
+        return Document.Create(container => container.Page(page =>
+        {
+            page.Size(PageSizes.A4);
+            page.Margin(28);
+            page.Header().Element(x => Cabecera(x, "INFORME ESTADÍSTICO", "RPT-VTA-02", DateTime.Now));
+
+            page.Content().Column(col =>
+            {
+                col.Spacing(15);
+                col.Item().Element(x => Titulo(x, "MÓDULO REPORTES", "Ventas por producto y medio de cobro",
+                    "Información sumariada por producto con distribución porcentual de recaudación."));
+
+                col.Item().Element(x => Filtros(x,
+                    ("FILTROS", $"Cantidad > {filtros.CantidadMinima ?? 3} · Método de pago: {filtros.MetodoPago}"),
+                    ("GENERADO", DateTime.Now.ToString("dd/MM/yyyy HH:mm")),
+                    ("RESPONSABLE", usuario)));
+
+                // La leyenda va como texto nativo de QuestPDF: el texto dentro de
+                // un SVG no se rasteriza en todas las plataformas.
+                if (segmentos.Count == 0)
+                {
+                    col.Item().Text("Sin ventas para los filtros seleccionados.")
+                        .FontSize(9).FontColor("#5F5F66");
+                }
+                else
+                {
+                    col.Item().Row(row =>
+                    {
+                        // Height + AlignCenter: el SVG conserva su proporción sin
+                        // entrar en conflicto con el ancho disponible de la página.
+                        row.RelativeItem(1.05f).Height(230).AlignCenter()
+                            .Svg(GenerarSvgTorta(segmentos));
+                        row.RelativeItem(0.95f).PaddingLeft(12)
+                            .Element(x => LeyendaTorta(x, segmentos));
+                    });
+                }
+
+                col.Item().Element(x => TablaVentas(x, ventas));
+            });
+
+            page.Footer().Element(x => Pie(x, usuario, DateTime.Now, $"{ventas.Count} productos · Bs {totalImporte:N2} recaudados"));
+        })).GeneratePdf();
+    }
+
+    // ---------- COMPONENTES VISUALES PDF (ESTILO ANTIGUO) ----------
+
+    private static void Cabecera(IContainer x, string tipo, string codigo, DateTime fecha) =>
+        x.PaddingBottom(10).Row(row =>
+        {
+            row.RelativeItem().Row(r =>
+            {
+                r.AutoItem().Width(45).Height(45).Background("#EAB308").AlignCenter().AlignMiddle()
+                 .Text("FJ").Bold().FontSize(22).FontColor("#1D1D1F");
+                r.RelativeItem().PaddingLeft(10).Column(c =>
+                {
+                    c.Item().Text("FERRETERÍA JOEL").Bold().FontSize(12).FontColor("#1D1D1F");
+                    c.Item().Text("Herramientas y materiales de construcción").FontSize(8).FontColor("#5F5F66");
+                    c.Item().Text("Av. Central N. 123, El Alto · La Paz | +591 2 123 4567 | contacto@ferreteriajoel.com")
+                     .FontSize(7).FontColor("#5F5F66");
+                });
+            });
+            row.AutoItem().AlignRight().Column(c =>
+            {
+                c.Item().Text(tipo).Bold().FontSize(11).FontColor("#1D1D1F").AlignRight();
+                c.Item().Text(codigo).FontSize(9).FontColor("#5F5F66").AlignRight();
+                c.Item().Text($"Emitido: {fecha:dd/MM/yyyy HH:mm}").FontSize(8).FontColor("#5F5F66").AlignRight();
+            });
+        });
+
+    private static void Titulo(IContainer x, string modulo, string titulo, string descripcion) =>
+        x.Column(col =>
+        {
+            col.Item().Text(modulo).FontSize(8).FontColor("#EAB308").Bold();
+            col.Item().Text(titulo).FontSize(16).Bold().FontColor("#1D1D1F");
+            col.Item().Text(descripcion).FontSize(9).FontColor("#5F5F66");
+        });
+
+    private static void Filtros(IContainer x, params (string etiqueta, string valor)[] campos) =>
+        x.Background("#F8FAFC").Border(1).BorderColor("#E7E7EA").Padding(10).Row(row =>
+        {
+            foreach (var (etiqueta, valor) in campos)
+            {
+                row.RelativeItem().Column(col =>
+                {
+                    col.Item().Text(etiqueta).FontSize(7).Bold().FontColor("#8A8A91");
+                    col.Item().Text(valor).FontSize(9).FontColor("#1D1D1F").Bold();
+                });
+            }
+        });
+
+    private static void Pie(IContainer x, string responsable, DateTime fecha, string total) =>
+        x.BorderTop(1).BorderColor("#D2D2D7").PaddingTop(5).Row(row =>
+        {
+            row.RelativeItem().Text($"Generado el {fecha:dd/MM/yyyy HH:mm:ss} - Responsable: {responsable}").FontSize(8).FontColor("#5F5F66");
+            row.RelativeItem().AlignCenter().Text(total).FontSize(8).Bold().FontColor("#1D1D1F");
+            row.RelativeItem().AlignRight().Text(t =>
+            {
+                t.Span("Página ").FontSize(8).FontColor("#5F5F66");
+                t.CurrentPageNumber().FontSize(8).FontColor("#5F5F66");
+                t.Span(" de ").FontSize(8).FontColor("#5F5F66");
+                t.TotalPages().FontSize(8).FontColor("#5F5F66");
+            });
+        });
+
+    private static void TablaStock(IContainer contenedor, IReadOnlyList<ProductoEstable> filas) =>
+        contenedor.Table(tabla =>
+        {
+            tabla.ColumnsDefinition(c =>
+            {
+                c.RelativeColumn(1.2f); c.RelativeColumn(2.2f); c.RelativeColumn(1.1f);
+                c.RelativeColumn(2.6f); c.RelativeColumn(1.5f); c.RelativeColumn(1.5f);
+            });
+            tabla.Header(h => {
+                foreach (string titulo in new[] { "Código", "Nombre", "Precio", "Descripción", "Marca", "Categoría" })
+                    h.Cell().Element(EstiloCabecera).Text(titulo).Bold();
+            });
+            for (int i = 0; i < filas.Count; i++)
+            {
+                var f = filas[i];
+                bool alterna = i % 2 == 1;
+                foreach (string valor in new[] { f.Codigo, f.Nombre, $"Bs {f.Precio:N2}", f.Descripcion, f.Marca, f.Categoria })
+                    tabla.Cell().Element(x => EstiloCelda(x, alterna)).Text(valor).FontSize(8).FontColor("#1D1D1F");
+            }
+        });
+
+    private static void TablaVentas(IContainer contenedor, IReadOnlyList<VentaProducto> filas) =>
+        contenedor.Table(tabla =>
+        {
+            tabla.ColumnsDefinition(c => { c.RelativeColumn(3); c.RelativeColumn(1.4f); c.RelativeColumn(1.7f); });
+            tabla.Header(h => {
+                foreach (string titulo in new[] { "Nombre", "CantidadTotal", "TotalRecaudado" })
+                    h.Cell().Element(EstiloCabecera).Text(titulo).Bold();
+            });
+            for (int i = 0; i < filas.Count; i++)
+            {
+                var f = filas[i];
+                bool alterna = i % 2 == 1;
+                foreach (string valor in new[] { f.Nombre, f.Cantidad.ToString("N0"), $"Bs {f.TotalProducto:N2}" })
+                    tabla.Cell().Element(x => EstiloCelda(x, alterna)).Text(valor).FontSize(8).FontColor("#1D1D1F");
+            }
+        });
+
+    private static IContainer EstiloCabecera(IContainer contenedor) =>
+        contenedor.BorderBottom(2).BorderColor("#EAB308").PaddingVertical(4).PaddingHorizontal(2);
+
+    private static IContainer EstiloCelda(IContainer contenedor, bool alterna) =>
+        contenedor.BorderBottom(1).BorderColor("#E7E7EA").Background(alterna ? "#F8FAFC" : "#FFFFFF").PaddingVertical(4).PaddingHorizontal(2);
+
+    // ---------- MÉTODOS DE EXPORTACIÓN EXCEL ----------
 
     public async Task<byte[]> GenerarProductosEstablesExcelAsync(
         ReporteProductoFiltros filtros, string usuario, CancellationToken cancellationToken = default)
     {
         var filas = await _repositorio.ObtenerProductosEstablesAsync(filtros, cancellationToken);
         using var libro = new XLWorkbook();
-        var hoja = libro.Worksheets.Add("Productos estable");
-        EncabezadoExcel(hoja, "Productos de stock estable y precio razonable", usuario,
-            $"Precio: {FormatearRango(filtros)} | Cantidad vendida mínima: {filtros.CantidadVendidaMinima?.ToString(CultureInfo.InvariantCulture) ?? "Sin filtro"}", 6);
-        string[] encabezados = ["Código de producto", "Nombre", "Costo unitario", "Descripción", "Marca", "Categoría"];
-        for (int i = 0; i < encabezados.Length; i++) hoja.Cell(5, i + 1).Value = encabezados[i];
-        hoja.Range("A5:F5").Style.Fill.BackgroundColor = XLColor.FromHtml("#1F4E78");
-        hoja.Range("A5:F5").Style.Font.FontColor = XLColor.White;
-        int fila = 6;
-        foreach (var producto in filas)
+        var hoja = libro.Worksheets.Add("Productos Stock");
+
+        hoja.Cell("A1").Value = "FERRETERÍA JOEL";
+        hoja.Cell("A1").Style.Font.Bold = true;
+        hoja.Cell("A1").Style.Font.FontSize = 14;
+        hoja.Cell("A1").Style.Font.FontColor = XLColor.FromHtml("#1E293B");
+
+        hoja.Cell("A2").Value = "PRODUCTOS DE STOCK ESTABLE";
+        hoja.Cell("A2").Style.Font.Bold = true;
+        hoja.Cell("A3").Value = $"Filtros: Precio tope Bs {filtros.PrecioMaximo:N2} · Emitido: {DateTime.Now:dd/MM/yyyy HH:mm} · Responsable: {usuario}";
+        hoja.Cell("A3").Style.Font.FontColor = XLColor.Gray;
+
+        var cabeceras = new[] { "Código", "Nombre", "Precio", "Descripción", "Marca", "Categoría" };
+        for (int i = 0; i < cabeceras.Length; i++)
         {
-            hoja.Cell(fila, 1).Value = producto.Codigo; hoja.Cell(fila, 2).Value = producto.Nombre;
-            hoja.Cell(fila, 3).Value = producto.CostoUnitario; hoja.Cell(fila, 4).Value = producto.Descripcion;
-            hoja.Cell(fila, 5).Value = producto.Marca; hoja.Cell(fila, 6).Value = producto.Categoria;
+            hoja.Cell(5, i + 1).Value = cabeceras[i];
+            hoja.Cell(5, i + 1).Style.Font.Bold = true;
+            hoja.Cell(5, i + 1).Style.Fill.BackgroundColor = XLColor.FromHtml("#1E40AF");
+            hoja.Cell(5, i + 1).Style.Font.FontColor = XLColor.White;
+        }
+
+        int fila = 6;
+        foreach (var f in filas)
+        {
+            bool alterna = fila % 2 == 1;
+            hoja.Cell(fila, 1).Value = f.Codigo;
+            hoja.Cell(fila, 2).Value = f.Nombre;
+            hoja.Cell(fila, 3).Value = f.Precio;
+            hoja.Cell(fila, 4).Value = f.Descripcion;
+            hoja.Cell(fila, 5).Value = f.Marca;
+            hoja.Cell(fila, 6).Value = f.Categoria;
+
+            hoja.Cell(fila, 3).Style.NumberFormat.Format = "\"Bs \"#,##0.00";
+
+            var rango = hoja.Range(fila, 1, fila, 6);
+            if (alterna) rango.Style.Fill.BackgroundColor = XLColor.FromHtml("#F8FAFC");
+            rango.Style.Border.BottomBorder = XLBorderStyleValues.Thin;
+            rango.Style.Border.BottomBorderColor = XLColor.FromHtml("#E7E7EA");
             fila++;
         }
-        hoja.Cell(fila, 1).Value = "Total de productos listados:";
-        hoja.Cell(fila, 2).Value = filas.Count;
-        hoja.Range(fila, 1, fila, 2).Style.Font.Bold = true;
         hoja.Columns().AdjustToContents();
-        return GuardarLibro(libro);
-    }
-
-    public async Task<byte[]> GenerarVentasProductoPdfAsync(
-        ReporteVentaProductoFiltros filtros, string usuario, CancellationToken cancellationToken = default)
-    {
-        var filas = await _repositorio.ObtenerVentasPorProductoAsync(filtros, cancellationToken);
-        var total = filas.Sum(fila => fila.TotalProducto);
-        return Document.Create(container => container.Page(page =>
-        {
-            EncabezadoPdf(page, "Ventas por producto", usuario,
-                $"Desde: {filtros.Desde:dd/MM/yyyy} | Hasta: {filtros.Hasta:dd/MM/yyyy} | Método de pago: {filtros.MetodoPago}");
-            page.Content().Column(contenido =>
-            {
-                contenido.Item().Table(tabla =>
-                {
-                    tabla.ColumnsDefinition(c => { c.RelativeColumn(30); c.RelativeColumn(12); c.RelativeColumn(16); });
-                    tabla.Header(h => { CeldaEncabezado(h, "Producto"); CeldaEncabezado(h, "Cantidad"); CeldaEncabezado(h, "Total"); });
-                    foreach (var fila in filas)
-                        CeldaFila(tabla, fila.Nombre, fila.Cantidad.ToString(CultureInfo.InvariantCulture), fila.TotalProducto.ToString("N2"));
-                });
-                contenido.Item().PaddingTop(12).Text("Gráfico de torta por producto").Bold();
-                contenido.Item().Height(220).Svg(GenerarSvgTorta(filas));
-            });
-            PiePdf(page, $"Total general: {total:N2} Bs. | Usuario: {usuario}");
-        })).GeneratePdf();
+        using var stream = new MemoryStream();
+        libro.SaveAs(stream);
+        return stream.ToArray();
     }
 
     public async Task<byte[]> GenerarVentasProductoExcelAsync(
         ReporteVentaProductoFiltros filtros, string usuario, CancellationToken cancellationToken = default)
     {
-        var filas = await _repositorio.ObtenerVentasPorProductoAsync(filtros, cancellationToken);
+        var ventas = await _repositorio.ObtenerVentasPorProductoAsync(filtros, cancellationToken);
+
         using var libro = new XLWorkbook();
-        var hoja = libro.Worksheets.Add("Ventas por producto");
-        EncabezadoExcel(hoja, "Ventas por producto", usuario,
-            $"Desde: {filtros.Desde:dd/MM/yyyy} | Hasta: {filtros.Hasta:dd/MM/yyyy} | Método de pago: {filtros.MetodoPago}", 4);
-        string[] encabezados = ["Nombre de producto", "Cantidad", "Total vendido", "Porcentaje del total"];
-        for (int i = 0; i < encabezados.Length; i++) hoja.Cell(5, i + 1).Value = encabezados[i];
-        hoja.Range("A5:D5").Style.Fill.BackgroundColor = XLColor.FromHtml("#4472C4");
-        hoja.Range("A5:D5").Style.Font.FontColor = XLColor.White;
-        int fila = 6;
-        foreach (var venta in filas)
+        var hoja = libro.Worksheets.Add("Ventas Producto");
+
+        hoja.Cell("A1").Value = "FERRETERÍA JOEL";
+        hoja.Cell("A1").Style.Font.Bold = true;
+        hoja.Cell("A1").Style.Font.FontSize = 14;
+        hoja.Cell("A1").Style.Font.FontColor = XLColor.FromHtml("#1E293B");
+
+        hoja.Cell("A2").Value = "VENTAS POR PRODUCTO Y MEDIO DE COBRO";
+        hoja.Cell("A2").Style.Font.Bold = true;
+        hoja.Cell("A3").Value = $"Filtros: Medio de cobro {filtros.MetodoPago} · Emitido: {DateTime.Now:dd/MM/yyyy HH:mm} · Responsable: {usuario}";
+        hoja.Cell("A3").Style.Font.FontColor = XLColor.Gray;
+
+        var cabeceras = new[] { "Nombre", "CantidadTotal", "TotalRecaudado" };
+        for (int i = 0; i < cabeceras.Length; i++)
         {
-            hoja.Cell(fila, 1).Value = venta.Nombre;
-            hoja.Cell(fila, 2).Value = venta.Cantidad;
-            hoja.Cell(fila, 3).Value = venta.TotalProducto;
+            hoja.Cell(5, i + 1).Value = cabeceras[i];
+            hoja.Cell(5, i + 1).Style.Font.Bold = true;
+            hoja.Cell(5, i + 1).Style.Fill.BackgroundColor = XLColor.FromHtml("#1E40AF");
+            hoja.Cell(5, i + 1).Style.Font.FontColor = XLColor.White;
+        }
+
+        int fila = 6;
+        foreach (var v in ventas)
+        {
+            bool alterna = fila % 2 == 1;
+            hoja.Cell(fila, 1).Value = v.Nombre;
+            hoja.Cell(fila, 2).Value = v.Cantidad;
+            hoja.Cell(fila, 3).Value = v.TotalProducto;
+
+            hoja.Cell(fila, 2).Style.NumberFormat.Format = "#,##0";
+            hoja.Cell(fila, 3).Style.NumberFormat.Format = "\"Bs \"#,##0.00";
+
+            var rango = hoja.Range(fila, 1, fila, 3);
+            if (alterna) rango.Style.Fill.BackgroundColor = XLColor.FromHtml("#F8FAFC");
+            rango.Style.Border.BottomBorder = XLBorderStyleValues.Thin;
+            rango.Style.Border.BottomBorderColor = XLColor.FromHtml("#E7E7EA");
             fila++;
         }
-        hoja.Cell(fila, 1).Value = "Total general:";
-        hoja.Cell(fila, 3).FormulaA1 = $"SUM(C6:C{fila - 1})";
-        hoja.Range(fila, 1, fila, 3).Style.Font.Bold = true;
-        var totalVentas = filas.Sum(filaVenta => filaVenta.TotalProducto);
-        for (int filaPorcentaje = 6; filaPorcentaje < fila; filaPorcentaje++)
-        {
-            var porcentaje = totalVentas == 0 ? 0 : filas[filaPorcentaje - 6].TotalProducto / totalVentas * 100;
-            hoja.Cell(filaPorcentaje, 4).Value = porcentaje / 100;
-            hoja.Cell(filaPorcentaje, 4).Style.NumberFormat.Format = "0.0%";
-        }
-        if (filas.Count > 0)
-        {
-            using var png = GenerarTortaPng(filas);
-            hoja.AddPicture(png, "F5").Scale(0.8);
-        }
+
+        // Gráfico de torta. La imagen vectorial solo dibuja las porciones; la
+        // leyenda se escribe en celdas porque el texto incrustado en el SVG no
+        // se rasteriza de forma fiable en todos los sistemas operativos.
+        var segmentos = PrepararSegmentos(ventas);
         hoja.Columns().AdjustToContents();
-        return GuardarLibro(libro);
-    }
 
-    private static void EncabezadoPdf(PageDescriptor page, string titulo, string usuario, string filtros)
-    {
-        page.Margin(35);
-        page.Header().Column(col =>
+        if (segmentos.Count > 0)
         {
-            col.Item().Text("FERRETERÍA JOEL").FontSize(18).Bold().FontColor(Colors.Blue.Darken3);
-            col.Item().Text(titulo).FontSize(14).Bold().FontColor(Colors.Blue.Darken2);
-            col.Item().Text($"Filtros aplicados: {filtros}");
-            col.Item().Text($"Generado: {DateTime.Now:dd/MM/yyyy HH:mm:ss} | Usuario: {usuario}");
-        });
-        page.Footer().Text(text => text.CurrentPageNumber());
-    }
+            hoja.Cell(5, 6).Value = "Participación por producto";
+            hoja.Cell(5, 6).Style.Font.Bold = true;
+            hoja.Cell(5, 6).Style.Font.FontColor = XLColor.FromHtml("#1E293B");
 
-    private static void PiePdf(PageDescriptor page, string texto)
-    {
-        page.Footer().Column(col =>
-        {
-            col.Item().LineHorizontal(1).LineColor(Colors.Blue.Medium);
-            col.Item().Text(texto);
-        });
-    }
+            int filaLeyenda = 6;
+            foreach (SegmentoTorta segmento in segmentos)
+            {
+                hoja.Cell(filaLeyenda, 5).Style.Fill.BackgroundColor = XLColor.FromHtml(segmento.Color);
+                hoja.Cell(filaLeyenda, 6).Value = $"{segmento.Nombre} ({segmento.Porcentaje:N2}%)";
+                hoja.Cell(filaLeyenda, 6).Style.Font.FontSize = 10;
+                filaLeyenda++;
+            }
 
-    private static void EncabezadoExcel(IXLWorksheet hoja, string titulo, string usuario, string filtros, int columnas)
-    {
-        hoja.Cell(1, 1).Value = "FERRETERÍA JOEL";
-        hoja.Range(1, 1, 1, columnas).Merge();
-        hoja.Cell(1, 1).Style.Font.Bold = true; hoja.Cell(1, 1).Style.Font.FontSize = 16;
-        hoja.Cell(1, 1).Style.Font.FontColor = XLColor.White;
-        hoja.Range(1, 1, 1, columnas).Style.Fill.BackgroundColor = XLColor.FromHtml("#4472C4");
-        hoja.Cell(2, 1).Value = titulo;
-        hoja.Cell(3, 1).Value = $"Filtros aplicados: {filtros} | Generado: {DateTime.Now:dd/MM/yyyy HH:mm:ss} | Usuario: {usuario}";
-    }
+            // Columna E = muestra de color; F = nombre y porcentaje.
+            hoja.Column(5).Width = 3;
+            hoja.Column(6).Width = 38;
 
-    private static void CeldaEncabezado(TableCellDescriptor header, string texto)
-        => header.Cell().Background(Colors.Blue.Medium).Padding(4).Text(texto).FontColor(Colors.White).Bold();
-    private static void CeldaFila(TableDescriptor tabla, params string[] valores)
-    {
-        foreach (var valor in valores) tabla.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(4).Text(valor);
-    }
+            try
+            {
+                string svg = GenerarSvgTorta(segmentos);
+                var doc = Document.Create(d => d.Page(p =>
+                {
+                    p.ContinuousSize(620);
+                    p.Content().Svg(svg);
+                }));
 
-    private static string FormatearRango(ReporteProductoFiltros filtros)
-    {
-        var minimo = filtros.PrecioMinimo?.ToString("N2", CultureInfo.InvariantCulture) ?? "Sin mínimo";
-        var maximo = filtros.PrecioMaximo?.ToString("N2", CultureInfo.InvariantCulture) ?? "Sin máximo";
-        return $"{minimo} - {maximo}";
-    }
+                byte[] img = doc.GenerateImages(new ImageGenerationSettings { ImageFormat = ImageFormat.Png, RasterDpi = 144 }).First();
 
-    private static byte[] GuardarLibro(XLWorkbook libro)
-    {
-        using var salida = new MemoryStream();
-        libro.SaveAs(salida);
-        return salida.ToArray();
-    }
-
-    private static Stream GenerarTortaPng(IReadOnlyList<VentaProducto> filas)
-    {
-        var ancho = 520;
-        var alto = 300;
-        using var bitmap = new SKBitmap(ancho, alto, SKColorType.Rgba8888, SKAlphaType.Premul);
-        using var lienzo = new SKCanvas(bitmap);
-        lienzo.Clear(SKColors.White);
-
-        var colores = new[]
-        {
-            new SKColor(68, 114, 196), new SKColor(237, 125, 49),
-            new SKColor(112, 173, 71), new SKColor(255, 192, 0),
-            new SKColor(91, 155, 213), new SKColor(165, 165, 165)
-        };
-        var total = filas.Sum(fila => fila.TotalProducto);
-        var rectangulo = new SKRect(25, 25, 235, 235);
-        float inicio = -90;
-        using var pincel = new SKPaint { IsAntialias = true };
-        for (var i = 0; i < filas.Count; i++)
-        {
-            var proporcion = total == 0 ? 0f : (float)filas[i].TotalProducto / (float)total;
-            var barrido = proporcion * 360f;
-            pincel.Color = colores[i % colores.Length];
-            lienzo.DrawArc(rectangulo, inicio, barrido, true, pincel);
-            inicio += barrido;
-
-            var leyendaY = 45 + i * 28;
-            lienzo.DrawRect(260, leyendaY - 12, 14, 14, pincel);
-            var porcentaje = proporcion * 100f;
-            pincel.Color = SKColors.Black;
-            lienzo.DrawText($"{filas[i].Nombre}: {porcentaje:F1}%", 282, leyendaY, new SKFont(SKTypeface.Default, 14), pincel);
+                using var ms = new MemoryStream(img);
+                var pic = hoja.AddPicture(ms);
+                pic.MoveTo(hoja.Cell("H5"));
+                pic.Width = 520;
+                pic.Height = 270;
+            }
+            catch { /* Si el SO no puede rasterizar, la leyenda en celdas sigue visible. */ }
         }
 
-        using var imagen = SKImage.FromBitmap(bitmap);
-        using var datos = imagen.Encode(SKEncodedImageFormat.Png, 100);
-        var salida = new MemoryStream();
-        datos.SaveTo(salida);
-        salida.Position = 0;
-        return salida;
+        using var stream = new MemoryStream();
+        libro.SaveAs(stream);
+        return stream.ToArray();
     }
 
-    private static string GenerarSvgTorta(IReadOnlyList<VentaProducto> filas)
+    // ---------- GRÁFICO SVG VECTORIAL PARA TORTAS ----------
+
+    private static readonly string[] ColoresTorta =
     {
-        if (filas.Count == 0) return "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"400\" height=\"220\"><text x=\"10\" y=\"20\">Sin datos</text></svg>";
-        var total = filas.Sum(fila => fila.TotalProducto);
-        if (total == 0) total = 1;
-        var colores = new[] { "#4472C4", "#ED7D31", "#70AD47", "#FFC000", "#5B9BD5", "#A5A5A5" };
-        var svg = new StringBuilder($"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"500\" height=\"220\" viewBox=\"0 0 500 220\">");
-        double inicio = -Math.PI / 2;
-        double cx = 110, cy = 110, radio = 90;
-        for (int i = 0; i < filas.Count; i++)
+        "#EAB308", "#2563EB", "#16A34A", "#DC2626", "#9333EA",
+        "#0891B2", "#EA580C", "#4F46E5", "#65A30D", "#DB2777"
+    };
+
+    private sealed record SegmentoTorta(string Nombre, decimal Valor, decimal Porcentaje, string Color);
+
+    /// <summary>
+    /// Prepara hasta 10 porciones ordenadas por recaudación. La leyenda se
+    /// dibuja con controles nativos (PDF) o celdas (Excel) para no depender del
+    /// soporte de texto dentro del SVG.
+    /// </summary>
+    private static List<SegmentoTorta> PrepararSegmentos(IReadOnlyList<VentaProducto> filas)
+    {
+        var topFilas = filas.OrderByDescending(f => f.TotalProducto).Take(ColoresTorta.Length).ToList();
+        decimal total = topFilas.Sum(f => f.TotalProducto);
+        if (total <= 0) return new List<SegmentoTorta>();
+
+        return topFilas.Select((f, i) => new SegmentoTorta(
+            f.Nombre,
+            f.TotalProducto,
+            Math.Round(f.TotalProducto * 100m / total, 2),
+            ColoresTorta[i % ColoresTorta.Length])).ToList();
+    }
+
+    private static void LeyendaTorta(IContainer contenedor, IReadOnlyList<SegmentoTorta> segmentos) =>
+        contenedor.Column(col =>
         {
-            var angulo = (double)filas[i].TotalProducto / (double)total * Math.PI * 2;
-            var fin = inicio + angulo;
-            var x1 = cx + radio * Math.Cos(inicio); var y1 = cy + radio * Math.Sin(inicio);
-            var x2 = cx + radio * Math.Cos(fin); var y2 = cy + radio * Math.Sin(fin);
-            var arco = angulo > Math.PI ? 1 : 0;
-            svg.Append($"<path d=\"M {cx:F2} {cy:F2} L {x1:F2} {y1:F2} A {radio} {radio} 0 {arco} 1 {x2:F2} {y2:F2} Z\" fill=\"{colores[i % colores.Length]}\"/>");
-            var porcentaje = (double)filas[i].TotalProducto / (double)total * 100;
-            var leyendaY = 28 + i * 26;
-            svg.Append($"<rect x=\"230\" y=\"{leyendaY - 12}\" width=\"14\" height=\"14\" fill=\"{colores[i % colores.Length]}\"/><text x=\"250\" y=\"{leyendaY}\">{EscapeXml(filas[i].Nombre)}: {porcentaje:F1}%</text>");
+            col.Item().Text("Participación por producto").FontSize(9).Bold().FontColor("#1D1D1F");
+            foreach (SegmentoTorta segmento in segmentos)
+            {
+                col.Item().PaddingTop(4).Row(fila =>
+                {
+                    fila.AutoItem().Width(10).Height(10).Background(segmento.Color);
+                    fila.RelativeItem().PaddingLeft(6).Text(texto =>
+                    {
+                        string nombre = segmento.Nombre.Length > 34
+                            ? segmento.Nombre[..34] + "..."
+                            : segmento.Nombre;
+                        texto.Span(nombre).FontSize(8).FontColor("#1D1D1F");
+                        texto.Span($" · {segmento.Porcentaje:N2}%").FontSize(8).Bold().FontColor("#5F5F66");
+                    });
+                });
+            }
+        });
+
+    /// <summary>
+    /// SVG con las porciones de la torta y sin elementos de texto: algunos
+    /// rasterizadores eliminan las etiquetas, por eso la leyenda se dibuja
+    /// aparte.
+    /// </summary>
+    private static string GenerarSvgTorta(IReadOnlyList<SegmentoTorta> segmentos)
+    {
+        decimal total = segmentos.Sum(s => s.Valor);
+
+        double centroX = 200, centroY = 160, radio = 140;
+        StringBuilder svg = new();
+        svg.Append("<svg xmlns='http://www.w3.org/2000/svg' width='420' height='320' viewBox='0 0 420 320'>");
+
+        if (segmentos.Count == 0 || total <= 0)
+        {
+            svg.Append("</svg>");
+            return svg.ToString();
+        }
+
+        double inicio = -Math.PI / 2;
+        for (int i = 0; i < segmentos.Count; i++)
+        {
+            double proporcion = (double)(segmentos[i].Valor / total);
+            double fin = inicio + proporcion * Math.PI * 2;
+            double x1 = centroX + radio * Math.Cos(inicio), y1 = centroY + radio * Math.Sin(inicio);
+            double x2 = centroX + radio * Math.Cos(fin), y2 = centroY + radio * Math.Sin(fin);
+
+            int arcoGrande = fin - inicio > Math.PI ? 1 : 0;
+            string d = $"M {centroX.ToString(CultureInfo.InvariantCulture)} {centroY.ToString(CultureInfo.InvariantCulture)} " +
+                       $"L {x1.ToString(CultureInfo.InvariantCulture)} {y1.ToString(CultureInfo.InvariantCulture)} " +
+                       $"A {radio} {radio} 0 {arcoGrande} 1 {x2.ToString(CultureInfo.InvariantCulture)} {y2.ToString(CultureInfo.InvariantCulture)} Z";
+
+            svg.Append($"<path d='{d}' fill='{segmentos[i].Color}' stroke='white' stroke-width='2'/>");
             inicio = fin;
         }
+
         svg.Append("</svg>");
         return svg.ToString();
     }
-
-    private static string EscapeXml(string valor)
-        => valor.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;");
 }
