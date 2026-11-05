@@ -16,6 +16,8 @@ namespace ServicioVentas.Dominio.Puertos
         Task<bool> MarcarAnuladaAsync(
             int idVenta,
             int idEmpleadoAnulacion,
-            string motivo);
+            string motivo,
+            DateTime fechaAnulacion,
+            DateTime fechaActualizacion);
     }
 }

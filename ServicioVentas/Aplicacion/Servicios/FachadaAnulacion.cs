@@ -144,7 +144,12 @@ namespace ServicioVentas.Aplicacion.Servicios
             try
             {
                 // 1. Marcar la venta como anulada en la BD
-                if (!await Ventas.MarcarAnuladaAsync(idVenta, idEmpleado, motivo.Trim()))
+                if (!await Ventas.MarcarAnuladaAsync(
+                        idVenta,
+                        idEmpleado,
+                        motivo.Trim(),
+                        DateTime.UtcNow,
+                        DateTime.UtcNow))
                 {
                     await _unidadDeTrabajo.RevertirAsync();
                     return ResultadoVenta.Fallido(

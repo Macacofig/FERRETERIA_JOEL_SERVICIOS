@@ -157,17 +157,19 @@ namespace ServicioVentas.Infraestructura.Repositorios
         public virtual async Task<bool> MarcarAnuladaAsync(
             int idVenta,
             int idEmpleadoAnulacion,
-            string motivo)
+            string motivo,
+            DateTime fechaAnulacion,
+            DateTime fechaActualizacion)
         {
             const string query = @"
         UPDATE venta
         SET
             EstadoVenta = @estadoAnulada,
             MontoTotal = 0.00,
-            FechaAnulacion = CURRENT_TIMESTAMP,
+            FechaAnulacion = @fechaAnulacion,
             MotivoAnulacion = @motivo,
             IdEmpleadoAnulacion = @idEmpleadoAnulacion,
-            FechaActualizacion = CURRENT_TIMESTAMP
+            FechaActualizacion = @fechaActualizacion
         WHERE IdVenta = @idVenta
           AND EstadoVenta = @estadoRegistrada";
 
@@ -178,6 +180,8 @@ namespace ServicioVentas.Infraestructura.Repositorios
             command.Parameters.AddWithValue("@estadoRegistrada", EstadoVenta.Registrada);
             command.Parameters.AddWithValue("@motivo", motivo);
             command.Parameters.AddWithValue("@idEmpleadoAnulacion", idEmpleadoAnulacion);
+            command.Parameters.AddWithValue("@fechaAnulacion", fechaAnulacion);
+            command.Parameters.AddWithValue("@fechaActualizacion", fechaActualizacion);
 
             return await command.ExecuteNonQueryAsync() == 1;
         }
