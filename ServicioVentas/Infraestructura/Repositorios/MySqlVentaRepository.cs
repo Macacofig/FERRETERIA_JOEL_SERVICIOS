@@ -82,6 +82,7 @@ namespace ServicioVentas.Infraestructura.Repositorios
                     MetodoPago,
                     EstadoPago,
                     MontoTotal,
+                    FechaRegistro,
                     IdEmpleadoResponsable
                 )
                 VALUES
@@ -91,6 +92,7 @@ namespace ServicioVentas.Infraestructura.Repositorios
                     @metodoPago,
                     @estadoPago,
                     @montoTotal,
+                    DATE_SUB(UTC_TIMESTAMP(), INTERVAL 4 HOUR),
                     @idEmpleadoResponsable
                 )";
 
@@ -157,11 +159,12 @@ namespace ServicioVentas.Infraestructura.Repositorios
         UPDATE venta
         SET
             EstadoVenta = @estadoAnulada,
+            EstadoPago = @estadoPagoAnulado,
             MontoTotal = 0.00,
-            FechaAnulacion = CURRENT_TIMESTAMP,
+            FechaAnulacion = DATE_SUB(UTC_TIMESTAMP(), INTERVAL 4 HOUR),
             MotivoAnulacion = @motivo,
             IdEmpleadoAnulacion = @idEmpleadoAnulacion,
-            FechaActualizacion = CURRENT_TIMESTAMP
+            FechaActualizacion = DATE_SUB(UTC_TIMESTAMP(), INTERVAL 4 HOUR)
         WHERE IdVenta = @idVenta
           AND EstadoVenta = @estadoRegistrada";
 
@@ -169,6 +172,7 @@ namespace ServicioVentas.Infraestructura.Repositorios
 
             command.Parameters.AddWithValue("@idVenta", idVenta);
             command.Parameters.AddWithValue("@estadoAnulada", EstadoVenta.Anulada);
+            command.Parameters.AddWithValue("@estadoPagoAnulado", EstadoPago.Anulado);
             command.Parameters.AddWithValue("@estadoRegistrada", EstadoVenta.Registrada);
             command.Parameters.AddWithValue("@motivo", motivo);
             command.Parameters.AddWithValue("@idEmpleadoAnulacion", idEmpleadoAnulacion);

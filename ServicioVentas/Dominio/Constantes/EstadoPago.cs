@@ -9,5 +9,6 @@ namespace ServicioVentas.Dominio.Constantes
     public static class EstadoPago
     {
         public const string Pagado = "Pagado";
+        public const string Anulado = "Anulado";
     }
 }
