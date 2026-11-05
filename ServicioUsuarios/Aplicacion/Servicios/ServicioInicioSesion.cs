@@ -3,6 +3,7 @@ using FERRETERIA__Joel.Aplicacion.Modelos;
 using FERRETERIA__Joel.Dominio.Constantes;
 using FERRETERIA__Joel.Dominio.Entidades;
 using FERRETERIA__Joel.Dominio.Puertos;
+using FERRETERIA__Joel.Infraestructura.Factories;
 using FERRETERIA__Joel.Dominio.Utilidades;
 
 namespace FERRETERIA__Joel.Aplicacion.Servicios
@@ -29,19 +30,23 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
         private const string MensajePendienteActivacion =
             "La cuenta aún no está activada. Revise el enlace enviado a su correo.";
 
-        private readonly IRepositoryEmpleado _repositorioEmpleado;
+        private readonly RepositoryCreator<IRepositoryEmpleado> _creadorRepositorio;
         private readonly IHasheadorContrasena _hasheador;
         private readonly ICredencialesValidaciones _credenciales;
+        private IRepositoryEmpleado? _repositorio;
 
         public ServicioInicioSesion(
-            IRepositoryEmpleado repositorioEmpleado,
+            RepositoryCreator<IRepositoryEmpleado> creadorRepositorio,
             IHasheadorContrasena hasheador,
             ICredencialesValidaciones credenciales)
         {
-            _repositorioEmpleado = repositorioEmpleado;
+            _creadorRepositorio = creadorRepositorio;
             _hasheador = hasheador;
             _credenciales = credenciales;
         }
+
+        private IRepositoryEmpleado Repositorio =>
+            _repositorio ??= _creadorRepositorio.CreateRepository();
 
         public async Task<ResultadoInicioSesion> IniciarAsync(
             InicioSesionSolicitud solicitud)
@@ -77,7 +82,7 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
             // sin credenciales. El identificador puede ser el correo o el
             // nombre de usuario generado en el alta.
             Empleado? empleado =
-                await _repositorioEmpleado
+                await Repositorio
                     .ObtenerPorIdentificadorConCredencialesAsync(correo);
 
             if (empleado is null)
@@ -134,7 +139,7 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
                 out _);
             if (_hasheador.NecesitaRehash(empleado.Contrasena ?? string.Empty))
             {
-                await _repositorioEmpleado.ActualizarContrasenaAsync(
+                await Repositorio.ActualizarContrasenaAsync(
                     empleado.IdEmpleado,
                     _hasheador.Hashear(contrasena),
                     empleado.IdEmpleado);

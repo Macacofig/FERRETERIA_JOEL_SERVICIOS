@@ -2,6 +2,7 @@
 using FERRETERIA__Joel.Dominio.Constantes;
 using FERRETERIA__Joel.Dominio.Entidades;
 using FERRETERIA__Joel.Dominio.Puertos;
+using FERRETERIA__Joel.Infraestructura.Factories;
 
 namespace FERRETERIA__Joel.Aplicacion.Servicios
 {
@@ -19,22 +20,26 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
     /// </summary>
     public class ServicioPersonal
     {
-        private readonly IRepositoryEmpleado _repositorio;
+        private readonly RepositoryCreator<IRepositoryEmpleado> _creadorRepositorio;
         private readonly IContextoUsuario _contextoUsuario;
         private readonly ServicioRegistroEmpleado _servicioActivacion;
         private readonly ILogger<ServicioPersonal> _logger;
+        private IRepositoryEmpleado? _repositorio;
 
         public ServicioPersonal(
-            IRepositoryEmpleado repositorio,
+            RepositoryCreator<IRepositoryEmpleado> creadorRepositorio,
             IContextoUsuario contextoUsuario,
             ServicioRegistroEmpleado servicioActivacion,
             ILogger<ServicioPersonal> logger)
         {
-            _repositorio = repositorio;
+            _creadorRepositorio = creadorRepositorio;
             _contextoUsuario = contextoUsuario;
             _servicioActivacion = servicioActivacion;
             _logger = logger;
         }
+
+        private IRepositoryEmpleado Repositorio =>
+            _repositorio ??= _creadorRepositorio.CreateRepository();
 
         /// <summary>
         /// Lista el personal con la proyección sin credenciales: la contraseña
@@ -42,7 +47,7 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
         /// </summary>
         public async Task<List<Empleado>> ListarAsync()
         {
-            return await _repositorio.ObtenerTodosSinCredencialesAsync();
+            return await Repositorio.ObtenerTodosSinCredencialesAsync();
         }
 
         /// <summary>
@@ -50,7 +55,7 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
         /// </summary>
         public async Task<List<Empleado>> ListarPendientesAsync()
         {
-            return await _repositorio.ObtenerPendientesActivacionAsync();
+            return await Repositorio.ObtenerPendientesActivacionAsync();
         }
 
         /// <summary>
@@ -58,7 +63,7 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
         /// </summary>
         public async Task<Empleado?> ObtenerPorIdAsync(int idEmpleado)
         {
-            return await _repositorio.ObtenerPorIdSinCredencialesAsync(idEmpleado);
+            return await Repositorio.ObtenerPorIdSinCredencialesAsync(idEmpleado);
         }
 
         /// <summary>
@@ -171,7 +176,7 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
                 };
             }
 
-            bool aplicado = await _repositorio.ActualizarEstadoAsync(
+            bool aplicado = await Repositorio.ActualizarEstadoAsync(
                 idEmpleado,
                 nuevoEstado,
                 _contextoUsuario.IdEmpleado);

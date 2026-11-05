@@ -1,6 +1,7 @@
 ﻿using FERRETERIA__Joel.Dominio.Constantes;
 using FERRETERIA__Joel.Dominio.Entidades;
 using FERRETERIA__Joel.Dominio.Puertos;
+using FERRETERIA__Joel.Infraestructura.Factories;
 
 namespace FERRETERIA__Joel.Aplicacion.Servicios
 {
@@ -19,12 +20,17 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
         public const string OperacionUpdate = "UPDATE";
         public const string OperacionDelete = "DELETE";
 
-        private readonly IRepositoryBitacora _repositorio;
+        private readonly RepositoryCreator<IRepositoryBitacora> _creadorRepositorio;
+        private IRepositoryBitacora? _repositorio;
 
-        public ServicioBitacora(IRepositoryBitacora repositorio)
+        public ServicioBitacora(
+            RepositoryCreator<IRepositoryBitacora> creadorRepositorio)
         {
-            _repositorio = repositorio;
+            _creadorRepositorio = creadorRepositorio;
         }
+
+        private IRepositoryBitacora Repositorio =>
+            _repositorio ??= _creadorRepositorio.CreateRepository();
 
         public async Task RegistrarLoginAsync(
             int? idUsuario,
@@ -54,7 +60,7 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
             string? nombreIdentificador,
             string tipoUsuario = "EmpleadoVenta")
         {
-            await _repositorio.RegistrarOperacionAsync(
+            await Repositorio.RegistrarOperacionAsync(
                 AccionLoginFallido,
                 null,
                 null,
@@ -79,7 +85,7 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
             string? nombreUsuario,
             string tipoUsuario)
         {
-            await _repositorio.RegistrarOperacionAsync(
+            await Repositorio.RegistrarOperacionAsync(
                 operacion,
                 entidad,
                 idRegistroAfectado,
@@ -93,7 +99,7 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
         {
             int limiteSeguro = Math.Clamp(limite, 1, 500);
 
-            return await _repositorio.ListarAsync(limiteSeguro);
+            return await Repositorio.ListarAsync(limiteSeguro);
         }
 
         private async Task RegistrarAsync(
@@ -102,7 +108,7 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
             string? nombreUsuario,
             string tipoUsuario)
         {
-            await _repositorio.RegistrarAsync(
+            await Repositorio.RegistrarAsync(
                 accion,
                 idUsuario,
                 nombreUsuario,

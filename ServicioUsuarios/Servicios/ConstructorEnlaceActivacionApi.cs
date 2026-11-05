@@ -1,6 +1,6 @@
 ﻿using FERRETERIA__Joel.Dominio.Puertos;
 
-namespace FERRETERIA__Joel.Infraestructura.Servicios
+namespace FERRETERIA__Joel.Servicios
 {
     /// <summary>
     /// Construye el enlace absoluto de activación apuntando al front Razor

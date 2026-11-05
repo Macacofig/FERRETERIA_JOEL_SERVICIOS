@@ -5,7 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using MimeKit;
 
-namespace FERRETERIA__Joel.Infraestructura.Servicios
+namespace FERRETERIA__Joel.Servicios
 {
     /// <summary>
     /// Enviador de correo por SMTP (MailKit). La configuración se toma de la

@@ -2,7 +2,6 @@
 using FERRETERIA__Joel.Aplicacion.Servicios;
 using FERRETERIA__Joel.Dominio.Constantes;
 using FERRETERIA__Joel.Dominio.Entidades;
-using FERRETERIA__Joel.ServicioUsuarios.Contratos;
 using FERRETERIA__Joel.Aplicacion.Modelos;
 using FERRETERIA__Joel.Dominio.Puertos;
 using Microsoft.AspNetCore.Authorization;

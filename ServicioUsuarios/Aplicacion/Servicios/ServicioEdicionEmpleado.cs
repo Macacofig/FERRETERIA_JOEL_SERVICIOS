@@ -2,6 +2,7 @@
 using FERRETERIA__Joel.Dominio.Constantes;
 using FERRETERIA__Joel.Dominio.Entidades;
 using FERRETERIA__Joel.Dominio.Puertos;
+using FERRETERIA__Joel.Infraestructura.Factories;
 
 namespace FERRETERIA__Joel.Aplicacion.Servicios
 {
@@ -12,16 +13,20 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
     /// </summary>
     public class ServicioEdicionEmpleado
     {
-        private readonly IRepositoryEmpleado _repositorio;
+        private readonly RepositoryCreator<IRepositoryEmpleado> _creadorRepositorio;
         private readonly RegistroCredencialesValidador _validador;
+        private IRepositoryEmpleado? _repositorio;
 
         public ServicioEdicionEmpleado(
-            IRepositoryEmpleado repositorio,
+            RepositoryCreator<IRepositoryEmpleado> creadorRepositorio,
             RegistroCredencialesValidador validador)
         {
-            _repositorio = repositorio;
+            _creadorRepositorio = creadorRepositorio;
             _validador = validador;
         }
+
+        private IRepositoryEmpleado Repositorio =>
+            _repositorio ??= _creadorRepositorio.CreateRepository();
 
         public async Task<ResultadoRegistro> ActualizarAsync(
             int idEmpleado,
@@ -29,7 +34,7 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
             int idEmpleadoResponsable)
         {
             Empleado? actual =
-                await _repositorio.ObtenerPorIdSinCredencialesAsync(idEmpleado);
+                await Repositorio.ObtenerPorIdSinCredencialesAsync(idEmpleado);
 
             if (actual is null)
             {
@@ -51,7 +56,7 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
                     correo,
                     actual.CorreoElectronico,
                     StringComparison.OrdinalIgnoreCase)
-                && await _repositorio.ExistePorCorreoAsync(correo))
+                && await Repositorio.ExistePorCorreoAsync(correo))
             {
                 errores[nameof(EdicionEmpleadoSolicitud.CorreoElectronico)] =
                     "El correo ya está registrado.";
@@ -72,7 +77,7 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
             actual.CorreoElectronico = correo;
             actual.Rol = RolesSistema.Normalizar(solicitud.Rol);
 
-            bool aplicado = await _repositorio.ActualizarDatosAsync(
+            bool aplicado = await Repositorio.ActualizarDatosAsync(
                 actual,
                 idEmpleadoResponsable);
 

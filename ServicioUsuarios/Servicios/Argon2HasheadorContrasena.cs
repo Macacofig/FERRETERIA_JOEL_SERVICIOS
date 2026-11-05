@@ -4,7 +4,7 @@ using FERRETERIA__Joel.Dominio.Puertos;
 using Isopoh.Cryptography.Argon2;
 using Isopoh.Cryptography.SecureArray;
 
-namespace FERRETERIA__Joel.Infraestructura.Servicios
+namespace FERRETERIA__Joel.Servicios
 {
     // Hasheador de contraseñas con Argon2id (Isopoh): salt aleatorio por usuario y hash PHC autocontenido. (extra: Verificar en tiempo constante)
     public class Argon2HasheadorContrasena : IHasheadorContrasena

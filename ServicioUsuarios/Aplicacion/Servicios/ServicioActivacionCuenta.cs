@@ -2,6 +2,7 @@
 using FERRETERIA__Joel.Dominio.Constantes;
 using FERRETERIA__Joel.Dominio.Entidades;
 using FERRETERIA__Joel.Dominio.Puertos;
+using FERRETERIA__Joel.Infraestructura.Factories;
 
 namespace FERRETERIA__Joel.Aplicacion.Servicios
 {
@@ -21,19 +22,23 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
         private const string MensajeNoPendiente =
             "Esta cuenta ya fue activada. Puede iniciar sesión.";
 
-        private readonly IRepositoryEmpleado _repositorio;
+        private readonly RepositoryCreator<IRepositoryEmpleado> _creadorRepositorio;
         private readonly IHasheadorContrasena _hasheador;
         private readonly RegistroCredencialesValidador _validador;
+        private IRepositoryEmpleado? _repositorio;
 
         public ServicioActivacionCuenta(
-            IRepositoryEmpleado repositorio,
+            RepositoryCreator<IRepositoryEmpleado> creadorRepositorio,
             IHasheadorContrasena hasheador,
             RegistroCredencialesValidador validador)
         {
-            _repositorio = repositorio;
+            _creadorRepositorio = creadorRepositorio;
             _hasheador = hasheador;
             _validador = validador;
         }
+
+        private IRepositoryEmpleado Repositorio =>
+            _repositorio ??= _creadorRepositorio.CreateRepository();
 
         /// <summary>
         /// Comprueba el token y devuelve el nombre del empleado si el enlace
@@ -87,7 +92,7 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
                 };
             }
 
-            await _repositorio.ActivarCuentaAsync(
+            await Repositorio.ActivarCuentaAsync(
                 empleado.IdEmpleado,
                 _hasheador.Hashear(solicitud.Contrasena),
                 EstadoEmpleado.Activo);
@@ -104,7 +109,7 @@ namespace FERRETERIA__Joel.Aplicacion.Servicios
             }
 
             Empleado? empleado =
-                await _repositorio.ObtenerPorTokenActivacionAsync(token.Trim());
+                await Repositorio.ObtenerPorTokenActivacionAsync(token.Trim());
 
             if (empleado is null || empleado.TokenUsado)
             {

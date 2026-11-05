@@ -4,8 +4,8 @@ using FERRETERIA__Joel.Aplicacion.Servicios;
 using FERRETERIA__Joel.Dominio.Puertos;
 using FERRETERIA__Joel.Dominio.Utilidades;
 using FERRETERIA__Joel.Infraestructura.Conexion;
-using FERRETERIA__Joel.Infraestructura.Repositorios;
-using FERRETERIA__Joel.Infraestructura.Servicios;
+using FERRETERIA__Joel.Infraestructura.Factories;
+using FERRETERIA__Joel.Servicios;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -31,12 +31,12 @@ builder.Services.AddSwaggerGen(ConfiguracionSwaggerBearer);
 // La API no tiene tablas propias ni un almacén de usuarios paralelo.
 // ---------------------------------------------------------------------------
 builder.Services.AddSingleton<IDbConnectionFactory, MySqlConnectionFactory>();
-builder.Services.AddScoped<MySqlEmpleadoRepository>();
-builder.Services.AddScoped<IRepositoryEmpleado>(sp =>
-    sp.GetRequiredService<MySqlEmpleadoRepository>());
-builder.Services.AddScoped<MySqlBitacoraRepository>();
-builder.Services.AddScoped<IRepositoryBitacora>(sp =>
-    sp.GetRequiredService<MySqlBitacoraRepository>());
+
+// Repositorios: patrón Factory Method. Los servicios reciben creadores y
+// piden el repositorio concreto a través del contrato del dominio; nunca
+// conocen las clases MySql*.
+builder.Services.AddScoped<RepositoryCreator<IRepositoryEmpleado>, EmpleadoRepositoryCreator>();
+builder.Services.AddScoped<RepositoryCreator<IRepositoryBitacora>, BitacoraRepositoryCreator>();
 
 // ---------------------------------------------------------------------------
 // Servicios de aplicación existentes (reutilizados, no duplicados).
