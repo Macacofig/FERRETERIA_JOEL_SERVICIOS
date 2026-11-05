@@ -1,76 +1,252 @@
-using System.Security.Claims;
+using ServicioReportes.Aplicacion.Excepciones;
+using ServicioReportes.Aplicacion.Modelos.Reportes;
+using ServicioReportes.Aplicacion.Servicios;
+using ServicioReportes.Dominio.Constantes;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using ServicioReportes.Aplicacion;
 
-namespace ServicioReportes.Controllers;
-
-[ApiController]
-[Route("api/reportes")]
-[Authorize]
-public sealed class ReportesController : ControllerBase
+namespace ServicioReportes.Controllers
 {
-    private readonly ReporteService _reportes;
-
-    public ReportesController(ReporteService reportes)
+    /// <summary>
+    /// API de reportes. Expone consultas JSON y descargas PDF/Excel de los dos
+    /// informes exigidos. Toda la lógica vive en la capa de aplicación; este
+    /// controlador solo valida, traduce errores a HTTP y devuelve archivos.
+    /// </summary>
+    [ApiController]
+    [Route("api/[controller]")]
+    [Authorize(Roles = RolesSistema.Personal)]
+    public sealed class ReportesController : ControllerBase
     {
-        _reportes = reportes;
-    }
+        private readonly FachadaReportes _fachada;
+        private readonly ILogger<ReportesController> _logger;
 
-    [HttpGet("ventas-detalle/pdf")]
-    public async Task<IActionResult> VentasDetallePdf(
-        [FromQuery] DateTime desde, [FromQuery] DateTime hasta,
-        [FromQuery] int? empleadoId, [FromQuery] string? estado,
-        CancellationToken cancellationToken)
-    {
-        var filtros = ValidarFiltros(desde, hasta, empleadoId, estado, null);
-        var pdf = await _reportes.GenerarDetallePdfAsync(filtros, UsuarioGenerador(), cancellationToken);
-        return File(pdf, "application/pdf", $"ventas-detalladas-{DateTime.Now:yyyyMMdd-HHmm}.pdf");
-    }
+        public ReportesController(
+            FachadaReportes fachada,
+            ILogger<ReportesController> logger)
+        {
+            _fachada = fachada;
+            _logger = logger;
+        }
 
-    [HttpGet("ventas-detalle/excel")]
-    public async Task<IActionResult> VentasDetalleExcel(
-        [FromQuery] DateTime desde, [FromQuery] DateTime hasta,
-        [FromQuery] int? empleadoId, [FromQuery] string? estado,
-        CancellationToken cancellationToken)
-    {
-        var filtros = ValidarFiltros(desde, hasta, empleadoId, estado, null);
-        var excel = await _reportes.GenerarDetalleExcelAsync(filtros, UsuarioGenerador(), cancellationToken);
-        return File(excel, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            $"ventas-detalladas-{DateTime.Now:yyyyMMdd-HHmm}.xlsx");
-    }
+        // ---------- Catálogo de filtros ----------
 
-    [HttpGet("ventas-resumen/pdf")]
-    public async Task<IActionResult> VentasResumenPdf(
-        [FromQuery] DateTime desde, [FromQuery] DateTime hasta,
-        [FromQuery] int? categoriaId, CancellationToken cancellationToken)
-    {
-        var filtros = ValidarFiltros(desde, hasta, null, null, categoriaId);
-        var pdf = await _reportes.GenerarResumenPdfAsync(filtros, UsuarioGenerador(), cancellationToken);
-        return File(pdf, "application/pdf", $"resumen-ventas-{DateTime.Now:yyyyMMdd-HHmm}.pdf");
-    }
+        [HttpGet("categorias")]
+        public Task<IActionResult> Categorias(CancellationToken cancelacion)
+        {
+            return EjecutarAsync(async () =>
+            {
+                IReadOnlyList<CategoriaOpcion> categorias =
+                    await _fachada.ObtenerCategoriasAsync(cancelacion);
 
-    [HttpGet("ventas-resumen/excel")]
-    public async Task<IActionResult> VentasResumenExcel(
-        [FromQuery] DateTime desde, [FromQuery] DateTime hasta,
-        [FromQuery] int? categoriaId, CancellationToken cancellationToken)
-    {
-        var filtros = ValidarFiltros(desde, hasta, null, null, categoriaId);
-        var excel = await _reportes.GenerarResumenExcelAsync(filtros, UsuarioGenerador(), cancellationToken);
-        return File(excel, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            $"resumen-ventas-{DateTime.Now:yyyyMMdd-HHmm}.xlsx");
-    }
+                return Ok(new
+                {
+                    exito = true,
+                    categorias = categorias.Select(categoria => new
+                    {
+                        categoria.IdCategoria,
+                        categoria.Nombre
+                    })
+                });
+            }, "No se pudieron cargar las categorías para los filtros.");
+        }
 
-    private ReporteFiltros ValidarFiltros(DateTime desde, DateTime hasta, int? empleadoId, string? estado, int? categoriaId)
-    {
-        if (desde == default || hasta == default || hasta.Date < desde.Date)
-            throw new ArgumentException("Debe indicar un rango de fechas válido.");
-        return new ReporteFiltros(desde, hasta, empleadoId, estado?.Trim(), categoriaId);
-    }
+        // ---------- Reporte detallado de ventas ----------
 
-    private string UsuarioGenerador() =>
-        User.FindFirstValue(ClaimTypes.Name)
-        ?? User.FindFirstValue("NombreCompleto")
-        ?? User.Identity?.Name
-        ?? "Usuario";
+        [HttpGet("ventas")]
+        public Task<IActionResult> Ventas(
+            [FromQuery] SolicitudReporteVentas solicitud,
+            CancellationToken cancelacion)
+        {
+            return EjecutarAsync(async () =>
+            {
+                ReporteVentas reporte = await _fachada.ObtenerVentasAsync(
+                    solicitud, UsuarioActual(), cancelacion);
+
+                return Ok(new
+                {
+                    exito = true,
+                    reporte = MapearVentas(reporte)
+                });
+            }, "No se pudo generar el reporte detallado de ventas.");
+        }
+
+        [HttpGet("ventas/pdf")]
+        public Task<IActionResult> VentasPdf(
+            [FromQuery] SolicitudReporteVentas solicitud,
+            CancellationToken cancelacion)
+        {
+            return EjecutarAsync(async () =>
+            {
+                ArchivoReporte archivo = await _fachada.ExportarVentasPdfAsync(
+                    solicitud, UsuarioActual(), cancelacion);
+
+                return File(
+                    archivo.Contenido,
+                    archivo.TipoContenido,
+                    archivo.NombreArchivo);
+            }, "No se pudo generar el PDF del reporte detallado de ventas.");
+        }
+
+        [HttpGet("ventas/excel")]
+        public Task<IActionResult> VentasExcel(
+            [FromQuery] SolicitudReporteVentas solicitud,
+            CancellationToken cancelacion)
+        {
+            return EjecutarAsync(async () =>
+            {
+                ArchivoReporte archivo = await _fachada.ExportarVentasExcelAsync(
+                    solicitud, UsuarioActual(), cancelacion);
+
+                return File(
+                    archivo.Contenido,
+                    archivo.TipoContenido,
+                    archivo.NombreArchivo);
+            }, "No se pudo generar el Excel del reporte detallado de ventas.");
+        }
+
+        // ---------- Reporte estadístico ----------
+
+        [HttpGet("estadisticas")]
+        public Task<IActionResult> Estadisticas(
+            [FromQuery] SolicitudReporteEstadisticas solicitud,
+            CancellationToken cancelacion)
+        {
+            return EjecutarAsync(async () =>
+            {
+                ReporteEstadisticas reporte =
+                    await _fachada.ObtenerEstadisticasAsync(
+                        solicitud, UsuarioActual(), cancelacion);
+
+                return Ok(new
+                {
+                    exito = true,
+                    reporte = MapearEstadisticas(reporte)
+                });
+            }, "No se pudo generar el informe estadístico de ventas.");
+        }
+
+        [HttpGet("estadisticas/pdf")]
+        public Task<IActionResult> EstadisticasPdf(
+            [FromQuery] SolicitudReporteEstadisticas solicitud,
+            CancellationToken cancelacion)
+        {
+            return EjecutarAsync(async () =>
+            {
+                ArchivoReporte archivo =
+                    await _fachada.ExportarEstadisticasPdfAsync(
+                        solicitud, UsuarioActual(), cancelacion);
+
+                return File(
+                    archivo.Contenido,
+                    archivo.TipoContenido,
+                    archivo.NombreArchivo);
+            }, "No se pudo generar el PDF del informe estadístico.");
+        }
+
+        [HttpGet("estadisticas/excel")]
+        public Task<IActionResult> EstadisticasExcel(
+            [FromQuery] SolicitudReporteEstadisticas solicitud,
+            CancellationToken cancelacion)
+        {
+            return EjecutarAsync(async () =>
+            {
+                ArchivoReporte archivo =
+                    await _fachada.ExportarEstadisticasExcelAsync(
+                        solicitud, UsuarioActual(), cancelacion);
+
+                return File(
+                    archivo.Contenido,
+                    archivo.TipoContenido,
+                    archivo.NombreArchivo);
+            }, "No se pudo generar el Excel del informe estadístico.");
+        }
+
+        // ---------- Mapeo y manejo de errores ----------
+
+        private static object MapearVentas(ReporteVentas reporte)
+        {
+            return new
+            {
+                reporte.Titulo,
+                filtro = new
+                {
+                    reporte.Filtro.StockMinimo,
+                    reporte.Filtro.PrecioMaximo,
+                    reporte.Filtro.FiltroTexto
+                },
+                reporte.GeneradoPor,
+                reporte.GeneradoPorCompleto,
+                reporte.GeneradoEl,
+                reporte.TotalRegistros,
+                reporte.TotalStock,
+                reporte.PrecioPromedio,
+                lineas = reporte.Lineas.Select(linea => new
+                {
+                    linea.Codigo,
+                    linea.Producto,
+                    linea.Precio,
+                    linea.Descripcion,
+                    linea.Marca,
+                    linea.Categoria,
+                    linea.CantidadStock
+                })
+            };
+        }
+
+        private static object MapearEstadisticas(ReporteEstadisticas reporte)
+        {
+            return new
+            {
+                reporte.Titulo,
+                filtro = new
+                {
+                    reporte.Filtro.CantidadMinima,
+                    reporte.Filtro.MetodoPago,
+                    reporte.Filtro.FiltroTexto
+                },
+                reporte.GeneradoPor,
+                reporte.GeneradoPorCompleto,
+                reporte.GeneradoEl,
+                reporte.TotalProductos,
+                reporte.TotalUnidades,
+                reporte.TotalImporte,
+                filas = reporte.FilasOrdenadas.Select(fila => new
+                {
+                    fila.Producto,
+                    fila.CantidadTotal,
+                    fila.TotalRecaudado,
+                    fila.Participacion
+                })
+            };
+        }
+
+        private async Task<IActionResult> EjecutarAsync(
+            Func<Task<IActionResult>> accion,
+            string mensajeError)
+        {
+            try
+            {
+                return await accion();
+            }
+            catch (ReporteValidacionException ex)
+            {
+                return BadRequest(new { exito = false, mensaje = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "{MensajeError}", mensajeError);
+
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, new
+                {
+                    exito = false,
+                    mensaje = mensajeError
+                });
+            }
+        }
+
+        private string UsuarioActual()
+        {
+            return User.Identity?.Name ?? "Usuario del sistema";
+        }
+    }
 }

@@ -120,7 +120,8 @@
                             </button>
 
                             <div class="fj-dropdown-menu">
-                                <a asp-page="/Reportes">Reportes y estadísticas</a>
+                                <a asp-page="/Reportes/Ventas">Reporte de ventas</a>
+                                <a asp-page="/Reportes/Estadisticas">Estadísticas de ventas</a>
                                 <span class="disabled">Clientes</span>
                                 <a asp-page="/Personal">Personal y bajas</a>
                                 <a asp-page="/Bitacora">Bitácora de auditoría</a>
@@ -148,6 +149,25 @@
                                     <a asp-page="/Venta">Registrar venta</a>
                                     <a asp-page="/Ventas">Historial de ventas</a>
                                     <span class="disabled">Recibos</span>
+                                </div>
+                            </li>
+
+                            <!-- Reportes (EmpleadoVenta) -->
+                            <li class="fj-menu-item fj-dropdown @(activo == "Reportes" ? "is-active" : null)">
+                                <button class="fj-menu-link fj-dropdown-toggle" type="button"
+                                        aria-expanded="false">
+                                    <span>Reportes</span>
+                                    <svg class="fj-dropdown-chevron" viewBox="0 0 24 24"
+                                         fill="none" stroke="currentColor" stroke-width="1.8"
+                                         stroke-linecap="round" stroke-linejoin="round"
+                                         aria-hidden="true">
+                                        <polyline points="6 9 12 15 18 9" />
+                                    </svg>
+                                </button>
+
+                                <div class="fj-dropdown-menu">
+                                    <a asp-page="/Reportes/Ventas">Reporte de inventario</a>
+                                    <a asp-page="/Reportes/Estadisticas">Estadísticas de ventas</a>
                                 </div>
                             </li>
                         }
