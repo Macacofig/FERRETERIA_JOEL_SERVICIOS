@@ -94,6 +94,19 @@ if (sirveHttps)
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.Use(async (context, next) =>
+{
+    try
+    {
+        await next();
+    }
+    catch (ArgumentException ex) when (context.Request.Path.StartsWithSegments("/api/reportes"))
+    {
+        context.Response.StatusCode = StatusCodes.Status400BadRequest;
+        await context.Response.WriteAsJsonAsync(new { mensaje = ex.Message });
+    }
+});
+
 app.MapControllers();
 
 // Sonda de salud usada por Docker Compose. Es pública a propósito.

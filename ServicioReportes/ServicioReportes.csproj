@@ -12,6 +12,7 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
     <PackageReference Include="ClosedXML" Version="0.104.2" />
     <PackageReference Include="QuestPDF" Version="2025.4.1" />
+    <PackageReference Include="SkiaSharp" Version="3.116.1" />
   </ItemGroup>
 
 </Project>

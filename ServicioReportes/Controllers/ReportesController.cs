@@ -2,70 +2,96 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ServicioReportes.Aplicacion;
+using ServicioReportes.Dominio.Puertos;
 
 namespace ServicioReportes.Controllers;
 
 [ApiController]
 [Route("api/reportes")]
-[Authorize]
+[Authorize(Roles = "Administrador")]
 public sealed class ReportesController : ControllerBase
 {
     private readonly ReporteService _reportes;
+    public ReportesController(ReporteService reportes) => _reportes = reportes;
 
-    public ReportesController(ReporteService reportes)
+    [HttpGet("productos-estables")]
+    public Task<IReadOnlyList<ProductoEstable>> ProductosEstables(
+        [FromQuery] decimal? precioMinimo, [FromQuery] decimal? precioMaximo,
+        [FromQuery] int? cantidadVendidaMinima, CancellationToken cancellationToken)
+        => _reportes.ObtenerProductosEstablesAsync(
+            ValidarProductos(precioMinimo, precioMaximo, cantidadVendidaMinima), cancellationToken);
+
+    [HttpGet("productos-estables/pdf")]
+    public async Task<IActionResult> ProductosEstablesPdf(
+        [FromQuery] decimal? precioMinimo, [FromQuery] decimal? precioMaximo,
+        [FromQuery] int? cantidadVendidaMinima, CancellationToken cancellationToken)
     {
-        _reportes = reportes;
+        var filtros = ValidarProductos(precioMinimo, precioMaximo, cantidadVendidaMinima);
+        var pdf = await _reportes.GenerarProductosEstablesPdfAsync(filtros, UsuarioGenerador(), cancellationToken);
+        return File(pdf, "application/pdf", $"productos-stock-estable-{DateTime.Now:yyyyMMdd-HHmm}.pdf");
     }
 
-    [HttpGet("ventas-detalle/pdf")]
-    public async Task<IActionResult> VentasDetallePdf(
-        [FromQuery] DateTime desde, [FromQuery] DateTime hasta,
-        [FromQuery] int? empleadoId, [FromQuery] string? estado,
-        CancellationToken cancellationToken)
+    [HttpGet("productos-estables/excel")]
+    public async Task<IActionResult> ProductosEstablesExcel(
+        [FromQuery] decimal? precioMinimo, [FromQuery] decimal? precioMaximo,
+        [FromQuery] int? cantidadVendidaMinima, CancellationToken cancellationToken)
     {
-        var filtros = ValidarFiltros(desde, hasta, empleadoId, estado, null);
-        var pdf = await _reportes.GenerarDetallePdfAsync(filtros, UsuarioGenerador(), cancellationToken);
-        return File(pdf, "application/pdf", $"ventas-detalladas-{DateTime.Now:yyyyMMdd-HHmm}.pdf");
-    }
-
-    [HttpGet("ventas-detalle/excel")]
-    public async Task<IActionResult> VentasDetalleExcel(
-        [FromQuery] DateTime desde, [FromQuery] DateTime hasta,
-        [FromQuery] int? empleadoId, [FromQuery] string? estado,
-        CancellationToken cancellationToken)
-    {
-        var filtros = ValidarFiltros(desde, hasta, empleadoId, estado, null);
-        var excel = await _reportes.GenerarDetalleExcelAsync(filtros, UsuarioGenerador(), cancellationToken);
+        var filtros = ValidarProductos(precioMinimo, precioMaximo, cantidadVendidaMinima);
+        var excel = await _reportes.GenerarProductosEstablesExcelAsync(filtros, UsuarioGenerador(), cancellationToken);
         return File(excel, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            $"ventas-detalladas-{DateTime.Now:yyyyMMdd-HHmm}.xlsx");
+            $"productos-stock-estable-{DateTime.Now:yyyyMMdd-HHmm}.xlsx");
     }
 
-    [HttpGet("ventas-resumen/pdf")]
-    public async Task<IActionResult> VentasResumenPdf(
-        [FromQuery] DateTime desde, [FromQuery] DateTime hasta,
-        [FromQuery] int? categoriaId, CancellationToken cancellationToken)
+    [HttpGet("ventas-producto")]
+    public Task<IReadOnlyList<VentaProducto>> VentasProducto(
+        [FromQuery] DateTime? desde, [FromQuery] DateTime? hasta,
+        [FromQuery] string? metodoPago, CancellationToken cancellationToken)
+        => _reportes.ObtenerVentasPorProductoAsync(
+            ValidarVentas(desde, hasta, metodoPago), cancellationToken);
+
+    [HttpGet("ventas-producto/pdf")]
+    public async Task<IActionResult> VentasProductoPdf([FromQuery] DateTime? desde, [FromQuery] DateTime? hasta,
+        [FromQuery] string? metodoPago, CancellationToken cancellationToken)
     {
-        var filtros = ValidarFiltros(desde, hasta, null, null, categoriaId);
-        var pdf = await _reportes.GenerarResumenPdfAsync(filtros, UsuarioGenerador(), cancellationToken);
-        return File(pdf, "application/pdf", $"resumen-ventas-{DateTime.Now:yyyyMMdd-HHmm}.pdf");
+        var filtros = ValidarVentas(desde, hasta, metodoPago);
+        var pdf = await _reportes.GenerarVentasProductoPdfAsync(filtros, UsuarioGenerador(), cancellationToken);
+        return File(pdf, "application/pdf", $"ventas-producto-{DateTime.Now:yyyyMMdd-HHmm}.pdf");
     }
 
-    [HttpGet("ventas-resumen/excel")]
-    public async Task<IActionResult> VentasResumenExcel(
-        [FromQuery] DateTime desde, [FromQuery] DateTime hasta,
-        [FromQuery] int? categoriaId, CancellationToken cancellationToken)
+    [HttpGet("ventas-producto/excel")]
+    public async Task<IActionResult> VentasProductoExcel([FromQuery] DateTime? desde, [FromQuery] DateTime? hasta,
+        [FromQuery] string? metodoPago, CancellationToken cancellationToken)
     {
-        var filtros = ValidarFiltros(desde, hasta, null, null, categoriaId);
-        var excel = await _reportes.GenerarResumenExcelAsync(filtros, UsuarioGenerador(), cancellationToken);
+        var filtros = ValidarVentas(desde, hasta, metodoPago);
+        var excel = await _reportes.GenerarVentasProductoExcelAsync(filtros, UsuarioGenerador(), cancellationToken);
         return File(excel, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            $"resumen-ventas-{DateTime.Now:yyyyMMdd-HHmm}.xlsx");
+            $"ventas-producto-{DateTime.Now:yyyyMMdd-HHmm}.xlsx");
     }
 
-    private ReporteFiltros ValidarFiltros(DateTime desde, DateTime hasta, int? empleadoId, string? estado, int? categoriaId)
+    private static ReporteProductoFiltros ValidarProductos(
+        decimal? minimo, decimal? maximo, int? cantidad)
     {
-        if (desde == default || hasta == default || hasta.Date < desde.Date)
-            throw new ArgumentException("Debe indicar un rango de fechas válido.");
-        return new ReporteFiltros(desde, hasta, empleadoId, estado?.Trim(), categoriaId);
+        if (minimo.HasValue && maximo.HasValue && minimo.Value > maximo.Value)
+            throw new ArgumentException("El precio mínimo no puede superar el precio máximo.");
+        if (cantidad.HasValue && cantidad.Value < 0)
+            throw new ArgumentException("La cantidad vendida mínima no puede ser negativa.");
+        return new(minimo, maximo, cantidad);
+    }
+
+    private static ReporteVentaProductoFiltros ValidarVentas(
+        DateTime? desde, DateTime? hasta, string? metodoPago)
+    {
+        var inicio = desde ?? new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+        var fin = hasta ?? inicio.AddMonths(1).AddDays(-1);
+        if (fin.Date < inicio.Date) throw new ArgumentException("El rango de fechas no es válido.");
+        var pago = string.IsNullOrWhiteSpace(metodoPago) ? "Efectivo" : metodoPago.Trim();
+        if (!pago.Equals("Efectivo", StringComparison.OrdinalIgnoreCase)
+            && !pago.Equals("Tarjeta", StringComparison.OrdinalIgnoreCase)
+            && !pago.Equals("QR/Transferencia", StringComparison.OrdinalIgnoreCase)
+            && !pago.Equals("Transferencia", StringComparison.OrdinalIgnoreCase))
+            throw new ArgumentException("El método de pago no es válido.");
+        return new(inicio.Date, fin.Date,
+            pago.Equals("QR/Transferencia", StringComparison.OrdinalIgnoreCase) ? "QR/Transferencia" : pago);
     }
 
     private string UsuarioGenerador() =>

@@ -67,8 +67,13 @@ builder.Services.AddHttpClient<VentasApiCliente>(client =>
 
 string reportesApiUrl = builder.Configuration["Servicios:ReportesApiUrl"]
     ?? builder.Configuration["Servicios__ReportesApiUrl"]
-    ?? "http://localhost:5080";
+    ?? "http://localhost:5073";
 builder.Services.AddHttpClient("ReportesApi", client =>
+{
+    client.BaseAddress = new Uri(reportesApiUrl.TrimEnd('/') + "/");
+    client.Timeout = TimeSpan.FromSeconds(60);
+});
+builder.Services.AddHttpClient<ReportesApiCliente>(client =>
 {
     client.BaseAddress = new Uri(reportesApiUrl.TrimEnd('/') + "/");
     client.Timeout = TimeSpan.FromSeconds(60);
